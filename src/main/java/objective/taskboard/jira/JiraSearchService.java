@@ -55,7 +55,7 @@ public class JiraSearchService {
     private static final String START_AT_ATTRIBUTE = "startAt";
     private static final String FIELDS_ATTRIBUTE = "fields";
 
-    private static final Set<String> EXPAND = newHashSet("schema", "names", "changelog", "transitions");
+    private static final Set<String> EXPAND = newHashSet("schema", "names", "changelog");
     private static final int MAX_RESULTS = 100;
 
     private static final String PATH_REST_API_SEARCH = "/rest/api/latest/search";
