@@ -52,7 +52,6 @@
 		<url>https://github.com/objective-solutions/taskboard</url>
 		<connection>scm:git:git@github.com/objective-solutions/taskboard.git</connection>
 		<developerConnection>scm:git:git@github.com:objective-solutions/taskboard.git</developerConnection>
-		<branch>taskboard-0.0.17.X</branch>
 	</scm>
 	<build>
 		<plugins>
