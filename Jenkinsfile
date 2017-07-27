@@ -68,7 +68,7 @@ node("general-purpose") {
             handleError('objective-solutions/taskboard', 'devops@objective.com.br', 'objective-solutions-user')
             throw ex
         }
-        if (BRANCH_NAME == 'master') {
+        if (BRANCH_NAME == 'master' || BRANCH_NAME.matches("taskboard-.*\\.X")) {
             stage('Deploy Maven') {
                 sh "${mvnHome}/bin/mvn --batch-mode -V clean deploy -DskipTests -P packaging-war,dev -DaltDeploymentRepository=repo::default::http://repo:8080/archiva/repository/snapshots"
                 if (!params.RELEASE) {
@@ -76,12 +76,15 @@ node("general-purpose") {
                     addDownloadBadge(downloadUrl)
                 }
             }
-            stage('Deploy Docker') {
-                sh 'git clone https://github.com/objective-solutions/liferay-environment-bootstrap.git'
-                dir('liferay-environment-bootstrap/dockers/taskboard') {
-                    sh 'cp ../../../target/taskboard-*-SNAPSHOT.war ./taskboard.war'
-                    sh 'sudo docker build -t dockercb:5000/taskboard-snapshot .'
-                    sh 'sudo docker push dockercb:5000/taskboard-snapshot'
+
+            if (BRANCH_NAME == 'master') {
+                stage('Deploy Docker') {
+                    sh 'git clone https://github.com/objective-solutions/liferay-environment-bootstrap.git'
+                    dir('liferay-environment-bootstrap/dockers/taskboard') {
+                        sh 'cp ../../../target/taskboard-*-SNAPSHOT.war ./taskboard.war'
+                        sh 'sudo docker build -t dockercb:5000/taskboard-snapshot .'
+                        sh 'sudo docker push dockercb:5000/taskboard-snapshot'
+                    }
                 }
             }
             if (params.RELEASE) {
