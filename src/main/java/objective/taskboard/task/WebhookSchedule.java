@@ -1,5 +1,3 @@
-package objective.taskboard.task;
-
 /*-
  * [LICENSE]
  * Taskboard
@@ -20,6 +18,7 @@ package objective.taskboard.task;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * [/LICENSE]
  */
+package objective.taskboard.task;
 
 import static objective.taskboard.config.CacheConfiguration.PROJECTS;
 import static objective.taskboard.issueBuffer.WebhookEvent.VERSION_UPDATED;
@@ -41,15 +40,11 @@ import objective.taskboard.issue.IssueUpdateType;
 import objective.taskboard.issue.IssuesUpdateEvent;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.issueBuffer.WebhookEvent;
+import objective.taskboard.jira.JiraServiceUnavailable;
 
 @Slf4j
 @Component
 public class WebhookSchedule {
-
-    private static final long RATE_MILISECONDS = 1 * 1000;
-
-    List<Item> list = Collections.synchronizedList(new ArrayList<Item>());
-
     @Autowired
     private IssueBufferService issueBufferService;
     
@@ -59,6 +54,10 @@ public class WebhookSchedule {
     @Autowired
     public ApplicationEventPublisher eventPublisher;
 
+    private static final long RATE_MILISECONDS = 1 * 1000;
+    
+    List<Item> list = Collections.synchronizedList(new ArrayList<Item>());
+    
     private class Item {
         private WebhookEvent event;
         private String issueKey;
@@ -109,8 +108,15 @@ public class WebhookSchedule {
 
                 log.warn("WEBHOOK PROCESSED: (" + item.event.toString() +  ") issue=" + item.issueKey);
                 toRemove.add(item);
-            } catch (Exception ex) {
-                log.error("WebhookScheduleError:", ex);
+            }
+            catch(JiraServiceUnavailable ex) {
+                log.warn("WEBHOOK PROCESS FAILED FOR ITEM: (" + item.event.toString() +  ") issue=" + item.issueKey);
+                log.warn("Jira was not available. Will retry later", ex);
+            }
+            catch (Exception ex) {
+                log.warn("WEBHOOK PROCESS FAILED: (" + item.event.toString() +  ") issue=" + item.issueKey);
+                log.error("WebhookScheduleError, unrecoverable error. Event will be discarded:", ex);
+                toRemove.add(item);
             }
         
         if (updatedIssues.size() > 0)

@@ -1,5 +1,3 @@
-package objective.taskboard.jira;
-
 /*-
  * [LICENSE]
  * Taskboard
@@ -20,6 +18,7 @@ package objective.taskboard.jira;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * [/LICENSE]
  */
+package objective.taskboard.jira;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -29,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,55 +69,62 @@ public class JiraSearchService {
 
     static int seq = 0;
     public List<Issue> searchIssues(String jql) {
+        Validate.notNull(jql);
         log.debug("⬣⬣⬣⬣⬣  searchIssues");
         try {
-            String jqlNotNull = jql == null ? "" : jql;
             SearchResultJsonParser searchResultParser = new SearchResultJsonParser();
             List<Issue> listIssues = new ArrayList<>();
 
             for (int i = 0; true; i++) {
-                try {
-                    JSONObject searchRequest = new JSONObject();
-                    searchRequest.put(JQL_ATTRIBUTE, jqlNotNull)
-                                 .put(EXPAND_ATTRIBUTE, EXPAND)
-                                 .put(MAX_RESULTS_ATTRIBUTE, MAX_RESULTS)
-                                 .put(START_AT_ATTRIBUTE, i * MAX_RESULTS)
-                                 .put(FIELDS_ATTRIBUTE, getFields());
+                JSONObject searchRequest = new JSONObject();
+                searchRequest.put(JQL_ATTRIBUTE, jql)
+                             .put(EXPAND_ATTRIBUTE, EXPAND)
+                             .put(MAX_RESULTS_ATTRIBUTE, MAX_RESULTS)
+                             .put(START_AT_ATTRIBUTE, i * MAX_RESULTS)
+                             .put(FIELDS_ATTRIBUTE, getFields());
 
-                    String jsonResponse = jiraEndpointAsMaster.postWithRestTemplate(PATH_REST_API_SEARCH, APPLICATION_JSON, searchRequest);
-                    SearchResult searchResult = searchResultParser.parse(new JSONObject(jsonResponse));
-                    log.debug("⬣⬣⬣⬣⬣  searchIssues... ongoing..." + (searchResult.getStartIndex() + searchResult.getMaxResults())+ "/" + searchResult.getTotal());
-                    
-                    List<Issue> issuesSearchResult = newArrayList(searchResult.getIssues());
+                String jsonResponse = jiraEndpointAsMaster.postWithRestTemplate(PATH_REST_API_SEARCH, APPLICATION_JSON, searchRequest);
+                SearchResult searchResult = searchResultParser.parse(new JSONObject(jsonResponse));
+                
+                log.debug("⬣⬣⬣⬣⬣  searchIssues... ongoing..." + (searchResult.getStartIndex() + searchResult.getMaxResults())+ "/" + searchResult.getTotal());
+                
+                List<Issue> issuesSearchResult = newArrayList(searchResult.getIssues());
 
-                    listIssues.addAll(issuesSearchResult);
-                    
-                    if (issuesSearchResult.isEmpty() || issuesSearchResult.size() < searchResult.getMaxResults())
-                        break;
+                listIssues.addAll(issuesSearchResult);
+                
+                if (issuesSearchResult.isEmpty() || issuesSearchResult.size() < searchResult.getMaxResults())
+                    break;
 
-                } catch (JSONException e) {
-                    log.error(jqlNotNull);
-                    throw new IllegalStateException(e);
-                }
             }
             log.debug("⬣⬣⬣⬣⬣  searchIssues complete");
             return listIssues;
-        } catch (RestClientException e) {
-            if (HttpStatus.FORBIDDEN.value() == e.getStatusCode().or(0))
-                throw new PermissaoNegadaException(e);
-            if (HttpStatus.BAD_REQUEST.value() == e.getStatusCode().or(0))
-                throw new ParametrosDePesquisaInvalidosException(e);
-            throw e;
+        } 
+        catch (JSONException e) {
+            log.error(jql);
+            throw new IllegalStateException(e);        
         }
-        catch(HttpClientErrorException e) {
-            if (HttpStatus.BAD_REQUEST == e.getStatusCode()) {
-                log.error(e.getMessage());
+        catch (RestClientException|HttpClientErrorException e) {
+            long statusCode = extractStatusCode(e);
+            
+            log.error("Request failed: " + jql);
+            if (HttpStatus.SERVICE_UNAVAILABLE.value() == statusCode)
+                throw new JiraServiceUnavailable(e);
+            
+            if (HttpStatus.FORBIDDEN.value() == statusCode)
+                throw new PermissaoNegadaException(e);
+            
+            if (HttpStatus.BAD_REQUEST.value() == statusCode)
                 throw new ParametrosDePesquisaInvalidosException(e);
-            }
-            throw e;
+            throw new IllegalStateException(e);
         }
     }
     
+    private long extractStatusCode(Exception e) {
+        if (e instanceof RestClientException)
+            return ((RestClientException) e).getStatusCode().or(0);
+        return ((HttpClientErrorException)e).getRawStatusCode();
+    }
+
     private Set<String> getFields() {
         Set<String> fields = newHashSet(
             "parent", "project", "status", "created", "updated", "issuelinks",
