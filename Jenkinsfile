@@ -90,7 +90,7 @@ node("general-purpose") {
             if (params.RELEASE) {
                 stage('Release') {
                     echo 'Releasing...'
-                    sh "git checkout ${$BRANCH_NAME}"
+                    sh "git checkout ${BRANCH_NAME}"
                     sh "${mvnHome}/bin/mvn --batch-mode -Dresume=false release:prepare release:perform -DaltReleaseDeploymentRepository=repo::default::http://repo:8080/archiva/repository/internal -Darguments=\"-DaltDeploymentRepository=internal::default::http://repo:8080/archiva/repository/internal -P packaging-war,dev -DskipTests=true -Dmaven.test.skip=true -Dmaven.javadoc.skip=true\""
                     def downloadUrl = extractDownloadUrlFromLogs()
                     addDownloadBadge(downloadUrl)
