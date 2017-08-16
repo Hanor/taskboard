@@ -48,10 +48,12 @@ import objective.taskboard.jira.JiraProperties;
 @Data
 public class IssueMetadata {
 
-    private final Issue issue;
     private final JiraProperties jiraProperties;
     private final Logger log;
 
+    private final String projectKey;
+    private final String assignee;
+    private final String reporter;
     private final IssueParent realParent;
     private final List<IssueCoAssignee> coAssignees;
     private final CustomField classOfService;
@@ -67,25 +69,27 @@ public class IssueMetadata {
     private final List<String> components;
 
     public IssueMetadata(Issue issue, JiraProperties jiraProperties, List<String> parentIssueLinks, Logger log) {
-        this.issue = issue;
         this.jiraProperties = jiraProperties;
         this.log = log;
-        this.realParent = extractRealParent();
-        this.linkedParentKey = extractLinkedParentKey(parentIssueLinks);
-        this.coAssignees = extractCoAssignees();
-        this.classOfService = extractClassOfService();
-        this.blocked = extractBlocked();
-        this.lastBlockReason = extractLastBlockReason();
-        this.tShirtSizes = extractTShirtSizes();
-        this.comments = extractComments();
-        this.dependenciesIssuesKey = extractDependenciesIssues();
-        this.additionalEstimatedHours = extractAdditionalEstimatedHours();
-        this.release = extractRelease();
-        this.labels = extractLabels();
-        this.components = extractComponents();
+        this.projectKey = issue.getProject().getKey();
+        this.assignee = issue.getAssignee() == null ? null : issue.getAssignee().getName();
+        this.reporter = issue.getReporter() == null ? null : issue.getReporter().getName();
+        this.realParent = extractRealParent(issue);
+        this.linkedParentKey = extractLinkedParentKey(issue, parentIssueLinks);
+        this.coAssignees = extractCoAssignees(issue);
+        this.classOfService = extractClassOfService(issue);
+        this.blocked = extractBlocked(issue);
+        this.lastBlockReason = extractLastBlockReason(issue);
+        this.tShirtSizes = extractTShirtSizes(issue);
+        this.comments = extractComments(issue);
+        this.dependenciesIssuesKey = extractDependenciesIssues(issue);
+        this.additionalEstimatedHours = extractAdditionalEstimatedHours(issue);
+        this.release = extractRelease(issue);
+        this.labels = extractLabels(issue);
+        this.components = extractComponents(issue);
     }
 
-    private IssueParent extractRealParent() {
+    private IssueParent extractRealParent(Issue issue) {
         IssueField field = issue.getField("parent");
 
         if (field == null)
@@ -103,12 +107,12 @@ public class IssueMetadata {
             String typeIconUrl = type.getString("iconUrl");
             return new IssueParent(key, typeId, typeIconUrl);
         } catch (JSONException e) {
-            logErrorExtractField(field, e);
+            logErrorExtractField(issue, field, e);
             return null;
         }
     }
 
-    private String extractLinkedParentKey(List<String> parentIssueLinks) {
+    private String extractLinkedParentKey(Issue issue, List<String> parentIssueLinks) {
         if (issue.getIssueLinks() == null || issue.getIssueType().getId() == jiraProperties.getIssuetype().getDemand().getId())
             return null;
 
@@ -122,7 +126,7 @@ public class IssueMetadata {
         return links.get(0).getTargetIssueKey();
     }
 
-    private List<IssueCoAssignee> extractCoAssignees() {
+    private List<IssueCoAssignee> extractCoAssignees(Issue issue) {
         IssueField field = issue.getField(jiraProperties.getCustomfield().getCoAssignees().getId());
 
         if (field == null)
@@ -140,14 +144,14 @@ public class IssueMetadata {
                 String avatarUrl = value.getJSONObject(i).getJSONObject("avatarUrls").getString("24x24");
                 coAssignees.add(new IssueCoAssignee(name, avatarUrl));
             } catch (JSONException e) {
-                logErrorExtractField(field, e);
+                logErrorExtractField(issue, field, e);
             }
         }
 
         return coAssignees;
     }
 
-    private CustomField extractClassOfService() {
+    private CustomField extractClassOfService(Issue issue) {
         IssueField field = issue.getField(jiraProperties.getCustomfield().getClassOfService().getId());
 
         if (field == null)
@@ -163,12 +167,12 @@ public class IssueMetadata {
             String value = json.getString("value");
             return new CustomField(field.getName(), value, optionId);
         } catch (JSONException e) {
-            logErrorExtractField(field, e);
+            logErrorExtractField(issue, field, e);
             return null;
         }
     }
 
-    private String extractBlocked() {
+    private String extractBlocked(Issue issue) {
         IssueField field = issue.getField(jiraProperties.getCustomfield().getBlocked().getId());
 
         if (field == null)
@@ -182,12 +186,12 @@ public class IssueMetadata {
         try {
             return jsonArray.getJSONObject(0).getString("value");
         } catch (JSONException e) {
-            logErrorExtractField(field, e);
+            logErrorExtractField(issue, field, e);
             return "";
         }
     }
 
-    private String extractLastBlockReason() {
+    private String extractLastBlockReason(Issue issue) {
         IssueField field = issue.getField(jiraProperties.getCustomfield().getLastBlockReason().getId());
 
         if (field == null || field.getValue() == null)
@@ -197,11 +201,11 @@ public class IssueMetadata {
         return lastBlockReason.length() > 200 ? lastBlockReason.substring(0, 200) + "..." : lastBlockReason;
     }
 
-    private Map<String, CustomField> extractTShirtSizes() {
+    private Map<String, CustomField> extractTShirtSizes(Issue issue) {
         Map<String, CustomField> tShirtSizes = newHashMap();
 
         for (String tSizeId : jiraProperties.getCustomfield().getTShirtSize().getIds()) {
-            String tShirtSizeValue = extractTShirtSize(tSizeId);
+            String tShirtSizeValue = extractTShirtSize(issue, tSizeId);
 
             if (isNullOrEmpty(tShirtSizeValue))
                 continue;
@@ -214,7 +218,7 @@ public class IssueMetadata {
         return tShirtSizes;
     }
 
-    private String extractTShirtSize(String tShirtSizeId) {
+    private String extractTShirtSize(Issue issue, String tShirtSizeId) {
         IssueField field = issue.getField(tShirtSizeId);
 
         if (field == null)
@@ -225,12 +229,12 @@ public class IssueMetadata {
         try {
             return json != null ? json.getString("value") : "";
         } catch (JSONException e) {
-            logErrorExtractField(field, e);
+            logErrorExtractField(issue, field, e);
             return "";
         }
     }
 
-    private List<String> extractComments() {
+    private List<String> extractComments(Issue issue) {
         if (issue.getComments() == null)
             return newArrayList();
 
@@ -239,7 +243,7 @@ public class IssueMetadata {
                .collect(toList());
     }
 
-    private List<String> extractDependenciesIssues() {
+    private List<String> extractDependenciesIssues(Issue issue) {
         if (issue.getIssueLinks() == null)
             return newArrayList();
 
@@ -254,7 +258,7 @@ public class IssueMetadata {
             && link.getIssueLinkType().getDirection() == Direction.OUTBOUND;
     }
 
-    private Map<String, CustomField> extractAdditionalEstimatedHours() {
+    private Map<String, CustomField> extractAdditionalEstimatedHours(Issue issue) {
         String additionalHoursId = jiraProperties.getCustomfield().getAdditionalEstimatedHours().getId();
         IssueField field = issue.getField(additionalHoursId);
         if (field == null || field.getValue() == null)
@@ -267,7 +271,7 @@ public class IssueMetadata {
         return mapAdditionalHours;
     }
 
-    private Map<String, CustomField> extractRelease() {
+    private Map<String, CustomField> extractRelease(Issue issue) {
         String releaseId = jiraProperties.getCustomfield().getRelease().getId();
         IssueField field = issue.getField(releaseId);
 
@@ -286,19 +290,19 @@ public class IssueMetadata {
             mapRelease.put(releaseId, customFieldRelease);
             return mapRelease;
         } catch (JSONException e) {
-            logErrorExtractField(field, e);
+            logErrorExtractField(issue, field, e);
             return newHashMap();
         }
     }
 
-    private List<String> extractLabels() {
+    private List<String> extractLabels(Issue issue) {
         if (issue.getLabels() == null)
             return newArrayList();
 
         return issue.getLabels().stream().collect(toList());
     }
 
-    private List<String> extractComponents() {
+    private List<String> extractComponents(Issue issue) {
         if (issue.getComponents() == null)
             return newArrayList();
 
@@ -307,7 +311,7 @@ public class IssueMetadata {
                 .collect(toList());
     }
 
-    private void logErrorExtractField(IssueField field, JSONException e) {
+    private void logErrorExtractField(Issue issue, IssueField field, JSONException e) {
         log.error("Error extracting " + field.getName() + " from issue " + issue.getKey() + ": " + e.getMessage(), e);
     }
 

@@ -32,8 +32,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.User;
-
 import objective.taskboard.domain.converter.IssueMetadata.IssueCoAssignee;
 import objective.taskboard.filterConfiguration.TeamFilterConfigurationService;
 
@@ -52,19 +50,19 @@ public class IssueTeamService {
         if (!parentUsersTeam.isEmpty())
             return parentUsersTeam;
 
-        User reporter = metadata.getIssue().getReporter();
+        String reporter = metadata.getReporter();
         if (reporter == null)
             return newHashMap();
 
-        return getUsersTeams(newArrayList(reporter.getName()), metadata.getIssue().getProject().getKey());
+        return getUsersTeams(newArrayList(reporter), metadata.getProjectKey());
     }
 
     private Map<String, List<String>> getIssueUsersTeams(IssueMetadata metadata) throws InvalidTeamException {
         List<String> users = newArrayList();
 
-        User assignee = metadata.getIssue().getAssignee();
+        String assignee = metadata.getAssignee();
         if (assignee != null)
-            users.add(assignee.getName());
+            users.add(assignee);
         for (IssueCoAssignee coAssignee : metadata.getCoAssignees())
             users.add(coAssignee.getName());
 
@@ -72,7 +70,7 @@ public class IssueTeamService {
                 .distinct()
                 .collect(toList());
 
-        return getUsersTeams(users, metadata.getIssue().getProject().getKey());
+        return getUsersTeams(users, metadata.getProjectKey());
     }
 
     private Map<String, List<String>> getUsersTeams(List<String> users, String projectKey) throws InvalidTeamException {

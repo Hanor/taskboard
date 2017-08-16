@@ -24,6 +24,7 @@ package objective.taskboard.issueBuffer;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,12 +71,16 @@ public class AllIssuesBufferService {
                 stopWatch.start();
                 state = state.start();
                 log.debug("updateAllIssuesBuffer start");
+                allIssuesBuffer.clear();
                 List<Issue> list = issueConverter.convertIssues(jiraIssueService.searchAllProjectIssues(), allMetadatasByIssueKey);
                 
-                allIssuesBuffer.clear();
-                for (Issue issue : list) 
+                Iterator<Issue> it = list.iterator();
+                while (it.hasNext()) {
+                    Issue issue = it.next();
                     allIssuesBuffer.put(issue.getIssueKey(), issue);
-                log.debug("All issues count: " + list.size());
+                    it.remove();
+                }
+                log.debug("All issues count: " + allIssuesBuffer.size());
                 log.debug("updateAllIssuesBuffer complete");
                 log.debug("updateAllIssuesBuffer time spent " +stopWatch.getTime());
                 state = state.done();

@@ -35,10 +35,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.atlassian.jira.rest.client.api.domain.BasicProject;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.User;
-
 import objective.taskboard.domain.converter.IssueMetadata.IssueCoAssignee;
 import objective.taskboard.domain.converter.IssueTeamService.InvalidTeamException;
 import objective.taskboard.filterConfiguration.TeamFilterConfigurationService;
@@ -60,15 +56,7 @@ public class IssueTeamServiceTest {
     @Mock
     private TeamFilterConfigurationService teamFilterConfigurationService;
     @Mock
-    private User userJira;
-    @Mock
-    private BasicProject project;
-    @Mock
-    private Issue issue;
-    @Mock
     private IssueMetadata issueMetadata;
-    @Mock
-    private Issue parentIssue;
     @Mock
     private IssueMetadata parentMetadata;
     @Mock
@@ -77,16 +65,11 @@ public class IssueTeamServiceTest {
     @Before
     public void before() {
         when(teamFilterConfigurationService.getConfiguredTeamsNamesByUserAndProject(anyString(), anyString())).thenReturn(asList("Team"));
-        when(issue.getProject()).thenReturn(project);
-        when(issueMetadata.getIssue()).thenReturn(issue);
-        when(parentIssue.getProject()).thenReturn(project);
-        when(parentMetadata.getIssue()).thenReturn(parentIssue);
     }
 
     @Test
     public void issueWithValidAssignee() throws InvalidTeamException {
-        when(userJira.getName()).thenReturn(NAME_ASSIGNEE);
-        when(issue.getAssignee()).thenReturn(userJira);
+        when(issueMetadata.getAssignee()).thenReturn(NAME_ASSIGNEE);
 
         Map<String, List<String>> issueTeams = subject.getIssueTeams(issueMetadata, null);
         assertUserTeam(issueTeams, NAME_ASSIGNEE);
@@ -103,8 +86,7 @@ public class IssueTeamServiceTest {
 
     @Test
     public void issueWithInvalidAssignee() {
-        when(userJira.getName()).thenReturn(NAME_ASSIGNEE);
-        when(issue.getAssignee()).thenReturn(userJira);
+        when(issueMetadata.getAssignee()).thenReturn(NAME_ASSIGNEE);
         when(teamFilterConfigurationService.getConfiguredTeamsNamesByUserAndProject(anyString(), anyString())).thenReturn(asList());
 
         try {
@@ -124,8 +106,7 @@ public class IssueTeamServiceTest {
 
     @Test
     public void parentIssueWithValidAssignee() throws InvalidTeamException {
-        when(userJira.getName()).thenReturn(NAME_PARENT_ASSIGNEE);
-        when(parentIssue.getAssignee()).thenReturn(userJira);
+        when(parentMetadata.getAssignee()).thenReturn(NAME_PARENT_ASSIGNEE);
 
         Map<String, List<String>> issueTeams = subject.getIssueTeams(issueMetadata, parentMetadata);
         assertUserTeam(issueTeams, NAME_PARENT_ASSIGNEE);
@@ -142,8 +123,7 @@ public class IssueTeamServiceTest {
 
     @Test
     public void issueWithValidReporter() throws InvalidTeamException {
-        when(userJira.getName()).thenReturn(NAME_REPORTER);
-        when(issue.getReporter()).thenReturn(userJira);
+        when(issueMetadata.getReporter()).thenReturn(NAME_REPORTER);
 
         Map<String, List<String>> issueTeams = subject.getIssueTeams(issueMetadata, parentMetadata);
         assertUserTeam(issueTeams, NAME_REPORTER);
