@@ -41,6 +41,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
+import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
@@ -125,6 +126,8 @@ public class IssueMetadataTest {
     private Logger log;
     @Mock
     private BasicComponent basicComponent;
+    @Mock
+    private BasicProject basicProject;
 
     private void mockIssueField(String fieldId, Object fieldValue) {
         when(issueField.getValue()).thenReturn(fieldValue);
@@ -166,6 +169,7 @@ public class IssueMetadataTest {
         when(jiraProperties.getIssuetype()).thenReturn(issueTypeProperty);
 
         when(issue.getIssueType()).thenReturn(issueType);
+        when(issue.getProject()).thenReturn(basicProject);
     }
 
     @Test

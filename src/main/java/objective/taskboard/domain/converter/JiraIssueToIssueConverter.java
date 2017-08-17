@@ -25,9 +25,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,12 +94,15 @@ public class JiraIssueToIssueConverter {
     public List<objective.taskboard.data.Issue> convertIssues(List<Issue> issueList, Map<String, IssueMetadata> issuesMetadataByKey) {
         loadParentIssueLinks();
 
-        issuesMetadataByKey.putAll(issueList.stream()
-            .collect(toMap(i -> i.getKey(), i -> new IssueMetadata(i, jiraProperties, parentIssueLinks, log))));
+        for (Issue issue : issueList)
+            issuesMetadataByKey.put(issue.getKey(), new IssueMetadata(issue, jiraProperties, parentIssueLinks, log));
 
-        List<objective.taskboard.data.Issue> converted = issueList.stream()
-                                  .map(i -> convert(i, issuesMetadataByKey))
-                                  .collect(toList());
+        List<objective.taskboard.data.Issue> converted = new ArrayList<>();
+        Iterator<Issue> it = issueList.iterator();
+        while (it.hasNext()) {
+            converted.add(convert(it.next(), issuesMetadataByKey));
+            it.remove();
+        }
         System.out.println("Converted issues: " + converted.size());
         return converted;
     }
