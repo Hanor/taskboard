@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Rule;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -35,6 +36,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 
 import com.safaribooks.junitattachments.CaptureFile;
 import com.safaribooks.junitattachments.RecordAttachmentRule;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 public abstract class AbstractUIIntegrationTest extends AbstractIntegrationTest {
     protected WebDriver webDriver;
@@ -48,8 +50,12 @@ public abstract class AbstractUIIntegrationTest extends AbstractIntegrationTest 
             throw new IllegalStateException("To run integration tests, you must run 'mvn clean install' at least once to download gecko driver");
         
         super.setup();
-        
-        webDriver = new FirefoxDriver();
+
+        FirefoxOptions options = new FirefoxOptions();
+        options.addPreference("dom.file.createInChild", true);
+        options.addPreference("browser.link.open_newwindow", 3);
+        options.addPreference("browser.link.open_newwindow.restriction", 2);
+        webDriver = new FirefoxDriver(options);
         webDriver.manage().window().setSize(new Dimension(1280,1080));
     }
     
@@ -89,7 +95,7 @@ public abstract class AbstractUIIntegrationTest extends AbstractIntegrationTest 
     }
 
     protected ArrayList<String> createAndSwitchToNewTab() {
-        webDriver.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"t");
+        ((JavascriptExecutor)webDriver).executeScript("window.open('about:blank','_blank');");
         ArrayList<String> tabs = new ArrayList<>(webDriver.getWindowHandles());
 
         webDriver.switchTo().window(tabs.get(1));
