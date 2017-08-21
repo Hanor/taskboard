@@ -41,7 +41,7 @@ public class WebhookSubtaskCreatorService {
     }
 
     public void createSubtaskOnTransition(com.atlassian.jira.rest.client.api.domain.Issue parent, Changelog changelog) {
-        if (changelog == null)
+        if (changelog == null || parent == null)
             return;
         
         Optional<Map<String, Object>> statusChangeOpt = changelog.items.stream()

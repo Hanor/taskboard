@@ -109,7 +109,14 @@ public class WebhookSubtaskCreatorServiceTest {
         configureTransition(22L, 2222L, 5555L);
         verifyZeroInteractions(subtaskCreatorService);
     }
-      
+
+    @Test
+    public void dontCreateSubtask_whenIssueIsNull() {
+        configureTransition(22L, 2222L, 3333L);
+        service.createSubtaskOnTransition(null, changelog);
+        verifyZeroInteractions(subtaskCreatorService);
+    }
+
     private void configureTransition(Long issueTypeId, Long statusFromId, Long statusToId) {
         when(issueType.getId()).thenReturn(issueTypeId);
         changelogItems.clear();
