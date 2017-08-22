@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>br.com.objective</groupId>
 	<artifactId>taskboard</artifactId>
-	<version>0.0.21.3</version>
+	<version>0.0.21.4-SNAPSHOT</version>
 	<packaging>${packaging.type}</packaging>
 
 	<properties>
@@ -52,7 +52,7 @@
 		<url>https://github.com/objective-solutions/taskboard</url>
 		<connection>scm:git:git@github.com/objective-solutions/taskboard.git</connection>
 		<developerConnection>scm:git:git@github.com:objective-solutions/taskboard.git</developerConnection>
-		<tag>taskboard-0.0.21.3</tag>
+		<tag>taskboard-0.0.21</tag>
 	</scm>
 	<build>
 		<plugins>
