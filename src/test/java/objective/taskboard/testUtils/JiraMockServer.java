@@ -304,11 +304,11 @@ public class JiraMockServer {
     
     @SuppressWarnings("rawtypes")
     private static String makeFakeRequest(Map searchData) {
-        long startAt = Math.round((Double)searchData.get("startAt"));        
+        long startAt = Math.round((Double)searchData.get("startAt"));
         String jql = searchData.get("jql").toString();
         String result = loadSearchFile(startAt, jql);
         if (result == null)
-            return "{\"startAt\":0,\"maxResults\":100,\"total\":605,\"issues\":[]}";
+            return "{\"startAt\":" + startAt + ",\"maxResults\":100,\"total\":288,\"issues\":[]}";
         return result;
     }
 

@@ -58,4 +58,10 @@ public class MenuFilters extends AbstractUiFragment {
         checkAll.click();
         return this;
     }
+
+    public void closeMenuFilters() {
+        WebElement title = webDriver.findElement(By.className("title"));
+        title.click();
+        waitInvisibilityOfElement(aspectsFilterButton);
+    }
 }

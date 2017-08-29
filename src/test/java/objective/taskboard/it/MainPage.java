@@ -74,26 +74,24 @@ public class MainPage extends AbstractUiFragment {
         waitTextInElement(userLabelButton, expected);
     }
     
-    public void typeSearch(String searchValue) {
+    public MainPage typeSearch(String searchValue) {
         searchIssuesInput.sendKeys(Keys.CONTROL,"a");
         searchIssuesInput.sendKeys(Keys.DELETE);
         searchIssuesInput.sendKeys(searchValue);
         waitUntil(textToBePresentInElementValue(searchIssuesInput, searchValue));
+        return this;
     }
     
-    public void clearSearch() {
+    public MainPage clearSearch() {
         searchIssuesInput.sendKeys(Keys.CONTROL,"a");
         searchIssuesInput.sendKeys(Keys.DELETE);
-        waitUntil(textToBePresentInElementValue(searchIssuesInput, ""));        
-    }
-
-    public MainPage openMenuFilters() {
-        waitVisibilityOfElement(menuFiltersButton);
-        menuFiltersButton.click();
+        waitUntil(textToBePresentInElementValue(searchIssuesInput, ""));
         return this;
     }
 
-    public MenuFilters getMenuFilters() {
+    public MenuFilters openMenuFilters() {
+        waitVisibilityOfElement(menuFiltersButton);
+        menuFiltersButton.click();
         return initElements(webDriver, MenuFilters.class);
     }
 
@@ -120,7 +118,7 @@ public class MainPage extends AbstractUiFragment {
         return this;
     }
 
-    public void assertVisibleIssues(String ... expectedIssueKeyList) {
+    public MainPage assertVisibleIssues(String ... expectedIssueKeyList) {
         waitUntil(ExpectedConditions.numberOfElementsToBe(By.cssSelector("paper-material.issue"), expectedIssueKeyList.length));
         List<WebElement> findElements = webDriver.findElements(By.cssSelector("paper-material.issue"));
         ArrayList<String> actualIssueKeyList = new ArrayList<String>(); 
@@ -130,16 +128,21 @@ public class MainPage extends AbstractUiFragment {
         Collections.sort(actualIssueKeyList);
         
         assertEquals(join(expectedIssueKeyList,"\n"), join(actualIssueKeyList,"\n"));
+        return this;
     }
 
     public TestIssue issue(String issueKey) {
         return TestIssue.forKey(webDriver, issueKey);
     }
-    
+
     public RefreshToast refreshToast() {
         return initElements(webDriver, RefreshToast.class);
     }
-    
+
+    public ErrorToast errorToast() {
+        return initElements(webDriver, ErrorToast.class);
+    }
+
     public FollowupDialog openFollowUp() {
         return FollowupDialog.open(webDriver);
     }

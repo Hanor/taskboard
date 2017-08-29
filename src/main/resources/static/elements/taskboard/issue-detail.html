@@ -464,8 +464,13 @@
                         <div class="column-block half-column">
                             <div class="sub-header">Assignees</div>
                             <div class="sub-content flex horizontal layout wrap">
-                                <template is="dom-repeat" items="{{listaResponsaveis(item)}}" as="responsavel">
-                                    <paper-material class="highlightPanel">{{responsavel}}</paper-material>
+                                <template is="dom-repeat" items="{{getAssignees(item)}}" as="assignee">
+                                    <paper-material class="assignee highlightPanel">
+                                        <span>{{assignee}}</span>
+                                        <template is="dom-if" if="{{isInvalidTeam(item)}}">
+                                            <iron-icon class="icon icon-cancelada icon-small" icon="warning" title="Assignee is not on team of this project"></iron-icon>
+                                        </template>
+                                    </paper-material>
                                 </template>
                             </div>
                         </div>
@@ -978,32 +983,27 @@
                     this.canUnblock = this.issueBlocked(item) && !this.issueFechada(item);
                 },
 
-                listaResponsaveis: function (item) {
-                    var responsaveis = "";
+                getAssignees: function (item) {
+                    var assignees = "";
 
                     if (item.subResponsaveis) {
                         if (item.subResponsaveis.indexOf(item.assignee) < 0) {
-                            responsaveis = item.assignee + ',' + item.subResponsaveis;
+                            assignees = item.assignee + ',' + item.subResponsaveis;
                         } else {
-                            responsaveis = item.subResponsaveis;
+                            assignees = item.subResponsaveis;
                         }
                     } else {
-                        responsaveis = item.assignee;
+                        assignees = item.assignee;
                     }
 
-                    var responsaveisArray = [];
+                    if (!assignees)
+                        return [];
 
-                    if (!responsaveis) {
-                        return responsaveisArray;
-                    }
+                    return assignees.split(',');
+                },
 
-                    var values = responsaveis.split(',');
-
-                    for (var i = 0; i < values.length; i++) {
-                        responsaveisArray.push(values[i]);
-                    }
-
-                    return responsaveisArray;
+                isInvalidTeam: function(item) {
+                    return taskboard.isInvalidTeam(item.teams);
                 },
 
                 getDescription: function (issue) {

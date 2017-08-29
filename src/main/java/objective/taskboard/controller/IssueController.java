@@ -21,6 +21,7 @@
 package objective.taskboard.controller;
 
 import static java.util.stream.Collectors.toList;
+import static objective.taskboard.domain.converter.JiraIssueToIssueConverter.INVALID_TEAM;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -264,10 +265,12 @@ public class IssueController {
     }
 
     private List<AspectSubitemFilter> getTeamFilterItems() {
-        return teamFilterConfigurationService.getTeamsVisibleToUser().stream()
+        List<AspectSubitemFilter> teamsFilter = teamFilterConfigurationService.getTeamsVisibleToUser().stream()
                 .map(t -> AspectSubitemFilter.from(t.getName(), t.getName(), true))
                 .sorted(this::compareFilter)
                 .collect(toList());
+        teamsFilter.add(AspectSubitemFilter.from(INVALID_TEAM, INVALID_TEAM, true));
+        return teamsFilter;
     }
 
     private int compareFilter(AspectSubitemFilter f1, AspectSubitemFilter f2) {

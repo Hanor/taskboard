@@ -214,33 +214,14 @@ function Taskboard() {
         });
     };
 
-    this.hasTeamSelected = function() {
-        var teams = this.getTeams();
-        for (var index in teams) {
-            var team = teams[index];
-            if (team.visible && team.selected)
-                return true;
-        }
-        return false;
-    };
-
     this.isInvalidTeam = function(teams) {
-        if (teams.indexOf(INVALID_TEAM) != -1)
-            return true;
-
-        var visibleTeamsToUser = this.getTeams();
-        for (var index in visibleTeamsToUser) {
-            var visibleTeam = visibleTeamsToUser[index];
-            if (teams.indexOf(visibleTeam.name) != -1)
-                return false;
-        }
-        return true;
+        return teams.indexOf(INVALID_TEAM) != -1;
     };
 
     this.applyFilterPreferences = function() {
         var filterPreferences = userPreferences.getFilters();
 
-        var filterTeams = [];
+        var filterTeams = [INVALID_TEAM];
         aspectFilters.forEach(function(item) {
             if (item.description !== 'Project')
                 return;
@@ -411,7 +392,7 @@ function Taskboard() {
             additionalEstimatedHours: issue[CUSTOMFIELD.ADDITIONAL_ESTIMATED_HOURS],
             release: issue[CUSTOMFIELD.RELEASE]
         };
-        
+
         return issue;
     }
 }

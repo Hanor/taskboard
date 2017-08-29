@@ -56,7 +56,7 @@ import objective.taskboard.repository.ParentIssueLinkRepository;
 @Service
 public class JiraIssueToIssueConverter {
 
-    public static final String INVALID_TEAM = "INVALID_TEAM";
+    public static final String INVALID_TEAM = "NO PROJECT TEAM";
 
     @Autowired
     private ParentIssueLinkRepository parentIssueLinkRepository;

@@ -59,4 +59,19 @@ class IssueDetails extends AbstractUiFragment {
         confirmButton.click();
         return this;
     }
+
+    public void closeDialog() {
+        issueDetailRoot.findElement(By.className("buttonClose")).click();
+    }
+
+    public IssueDetails assertInvalidTeamWarnIsVisible() {
+        WebElement icon = issueDetailRoot.findElement(By.cssSelector(".assignee .icon"));
+        waitVisibilityOfElement(icon);
+        return this;
+    }
+
+    public IssueDetails assertInvalidTeamWarnIsInvisible() {
+        waitUntilElementNotExists(By.cssSelector(".assignee .icon"));
+        return this;
+    }
 }

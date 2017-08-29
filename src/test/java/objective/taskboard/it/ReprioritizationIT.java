@@ -26,6 +26,7 @@ public class ReprioritizationIT extends AuthenticatedIntegrationTest {
     @Test
     public void whenIssueIsDragged_AfterReloadItShouldKeepOrder() {
         MainPage mainPage = MainPage.produce(webDriver);
+        mainPage.errorToast().close();
         
         LaneFragment operational = mainPage.lane("Operational");
         operational.boardStep("To Do").assertIssueList(
@@ -71,6 +72,7 @@ public class ReprioritizationIT extends AuthenticatedIntegrationTest {
         
         MainPage secondTabPage = MainPage.to(webDriver);
         secondTabPage.waitUserLabelToBe("foo");
+        secondTabPage.errorToast().close();
         
         LaneFragment operationalInSecondTab = secondTabPage.lane("Operational");
         secondTabPage.issue("TASKB-643").dragOver("TASKB-627");

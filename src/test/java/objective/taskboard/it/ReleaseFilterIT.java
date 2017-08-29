@@ -29,8 +29,7 @@ public class ReleaseFilterIT extends AuthenticatedIntegrationTest {
     public void whenNoProjectsIsSelected_noReleasesLabelShowup() {
         MainPage mainPage = MainPage.produce(webDriver);
         MenuFilters menuFilters = mainPage.assertLabelRelease("Release")
-                .openMenuFilters()
-                .getMenuFilters();
+                .openMenuFilters();
         menuFilters.openAspectsFilter()
                 .clickCheckAllFilter("Project");
         mainPage.assertLabelRelease("No releases for visible projects");

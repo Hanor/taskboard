@@ -116,7 +116,7 @@
 
                     this.fire("iron-signal", {name:"show-error-message",
                                               data:issuesInvalidTeam.length > 0 ?
-                                                       "Assignee must be in a team: " +
+                                                       "Assignee must be on team of project: " +
                                                        issuesInvalidTeam.slice(0, 5).join("; ") +
                                                        (issuesInvalidTeam.length > 5 ? " ..." : ";") +
                                                        " Total: " + issuesInvalidTeam.length
@@ -128,7 +128,7 @@
                     var filteredIssues = [];
 
                     this.conf.forEach(function(lane) {
-                        if (!lane.showLevel || !taskboard.hasTeamSelected())
+                        if (!lane.showLevel)
                             return;
 
                         var stepsOfLane = self.getStepsOfLane(lane);
@@ -141,7 +141,7 @@
                                 return;
 
                             var allIssuesStep = taskboard.getIssuesByStep(step.id);
-                            var filteredIssuesStep = boardStep.filterIssuesInvalidTeam(allIssuesStep);
+                            var filteredIssuesStep = boardStep.filterIssuesDisabledTeam(allIssuesStep);
                             filteredIssues = filteredIssues.concat(filteredIssuesStep);
                         });
                     });
@@ -159,8 +159,9 @@
                 getIssuesInvalidTeam: function(issues) {
                     var issuesInvalidTeam = [];
                     issues.forEach(function(issue) {
-                        if (taskboard.isInvalidTeam(issue.teams))
-                            issuesInvalidTeam.push(issue.issueKey + ": " + issue.usersTeam);
+                        if (!taskboard.isInvalidTeam(issue.teams))
+                            return;
+                        issuesInvalidTeam.push(issue.issueKey + ": " + issue.usersTeam);
                     });
                     return issuesInvalidTeam;
                 }
