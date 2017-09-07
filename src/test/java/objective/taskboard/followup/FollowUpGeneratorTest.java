@@ -34,6 +34,8 @@ import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 
 import objective.taskboard.followup.impl.DefaultFollowUpTemplateStorage;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.Resource;
 import org.xml.sax.SAXException;
@@ -166,24 +168,6 @@ public class FollowUpGeneratorTest {
         FollowUpGenerator subject = getDefaultFollowUpGenerator(provider);
         Resource resource = subject.generate(emptyArray());
         assertNotNull("Resource shouldn't be null", resource);
-    }
-
-    @Test
-    public void whenLineCountHigherThanOriginalTable7_generateWithNewLineCount() {
-        FollowupDataProvider provider = getFollowupDataProvider(FollowUpHelper.getFollowUpDataDefaultList());
-        FollowUpGenerator subject = getFollowUpGeneratorUsingTestTemplates(provider);
-        String originalTable7 = getStringExpected("followup/original-table7.xml");
-        String table7 = subject.generateTable7(originalTable7, 3042);
-        assertEquals(getStringExpected("followup/expectedTable7.xml"), table7);
-    }
-    
-    @Test
-    public void whenLineCountSmallerThanOriginalTable7_generateWithOldLineCount() {
-        FollowupDataProvider provider = getFollowupDataProvider(FollowUpHelper.getFollowUpDataDefaultList());
-        FollowUpGenerator subject = getFollowUpGeneratorUsingTestTemplates(provider);
-        String originalTable7 = getStringExpected("followup/original-table7.xml");
-        String table7 = subject.generateTable7(originalTable7, 100);
-        assertEquals(originalTable7, table7);
     }
 
     private FollowUpGenerator getDefaultFollowUpGenerator(FollowupDataProvider provider) {

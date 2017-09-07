@@ -219,14 +219,12 @@ public class FollowUpGenerator {
         return StrSubstitutor.replace(sharedStringsTemplate, sharedStringsValues);
     }
 
+    // for now, keep the original table7 to avoid corruption
     String generateTable7(String originalTable7, int lineCount) {
-        String template = getStringFromXML(this.template.getPathTable7Template());
-        int newLineCount = computeLineCount(originalTable7, lineCount);
-        Map<String, Object> values = new HashMap<>();
-        values.put("LINE_COUNT", newLineCount+1);
-        return StrSubstitutor.replace(template, values);
+        return originalTable7;    
     }
 
+    @SuppressWarnings("unused")
     private int computeLineCount(String originalTable7, int lineCount) {
         String ref = parseLineCountFromXmlString(originalTable7);
         int oldLineCount = Integer.parseInt(ref);
