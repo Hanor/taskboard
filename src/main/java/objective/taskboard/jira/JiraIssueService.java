@@ -63,10 +63,10 @@ public class JiraIssueService {
 
     public void searchIssueSubTasksAndDemandedByKey(String key, SearchIssueVisitor visitor) {
         IssuelinksType demandLink = metadataService.getIssueLinksMetadata().get(properties.getIssuelink().getDemandId().toString());
-    	String jql = "parent = " + key +  " OR" + 
-    	        " issuefunction in linkedIssuesOf('key = " + key + "', '" + demandLink.getOutward() + "')";
+        String jql = "parent = " + key +  " OR" + 
+                " issuefunction in linkedIssuesOf('key = " + key + "', '" + demandLink.getOutward() + "')";
 
-        searchIssues(visitor, jql);
+        jiraSearchService.searchIssues(jql, visitor);
     }
 
     public void searchAllWithParents(SearchIssueVisitor visitor) {
