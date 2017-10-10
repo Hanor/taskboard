@@ -20,6 +20,7 @@
  */
 package objective.taskboard.followup;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static objective.taskboard.utils.IOUtilities.resourceToString;
@@ -161,13 +162,19 @@ public class FollowUpHelper {
         headers.add("Doing");
         headers.add("To Do");
 
-        List<ZonedDateTime> lastTransitionsDate = new LinkedList<>();
-        lastTransitionsDate.add(DateTimeUtils.parseDate("2017-09-27"));
-        lastTransitionsDate.add(DateTimeUtils.parseDate("2017-09-26"));
-        lastTransitionsDate.add(DateTimeUtils.parseDate("2017-09-25"));
-        AnalyticsTransitionsDataRow row = new AnalyticsTransitionsDataRow("I-1", "Demand", lastTransitionsDate);
+        AnalyticsTransitionsDataRow row0 = new AnalyticsTransitionsDataRow("I-1", "Demand"
+                , asList(
+                        DateTimeUtils.parseDate("2017-09-27")
+                        , DateTimeUtils.parseDate("2017-09-26")
+                        , DateTimeUtils.parseDate("2017-09-25")));
 
-        return singletonList(new AnalyticsTransitionsDataSet("Demands", headers, singletonList(row)));
+        AnalyticsTransitionsDataRow row1 = new AnalyticsTransitionsDataRow("I-2", "OS"
+                , asList(
+                        null
+                        , DateTimeUtils.parseDate("2017-09-26")
+                        , DateTimeUtils.parseDate("2017-09-25")));
+
+        return singletonList(new AnalyticsTransitionsDataSet("Demands", headers, asList(row0, row1)));
     }
 
     public static List<AnalyticsTransitionsDataSet> getEmptyAnalyticsTransitionsDataSet() {
@@ -182,9 +189,9 @@ public class FollowUpHelper {
         headers.add("To Do");
 
         List<SyntheticTransitionsDataRow> rows = new LinkedList<>();
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 1)));
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), Ints.asList(0, 1, 0)));
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), Ints.asList(1, 0, 0)));
+        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 2)));
+        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), Ints.asList(0, 2, 0)));
+        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), Ints.asList(1, 1, 0)));
 
         return singletonList(new SyntheticTransitionsDataSet("Demands", headers, rows));
     }

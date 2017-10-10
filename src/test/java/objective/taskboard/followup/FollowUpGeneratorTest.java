@@ -130,14 +130,14 @@ public class FollowUpGeneratorTest {
     }
 
     @Test
-    public void givenOneIssue_whenGenerateTransitionsSheets_thenSheetsShouldBeGenerated() {
+    public void givenIssues_whenGenerateTransitionsSheets_thenSheetsShouldBeGenerated() {
         subject.getEditor().open();
         List<Sheet> transitionsSheets = subject.generateTransitionsSheets(getDefaultFollowupData());
         assertEquals("Transitions sheets quantity", 2, transitionsSheets.size());
 
-        String analyticTransitionsSheetExpected = normalizedXmlResource("followup/analyticTransitionsWithOneIssue.xml");
+        String analyticTransitionsSheetExpected = normalizedXmlResource("followup/analyticTransitionsWithIssues.xml");
         assertEquals("Analytic transitions sheet", analyticTransitionsSheetExpected, transitionsSheets.get(0).stringValue());
-        String syntheticTransitionsSheetExpected = normalizedXmlResource("followup/syntheticTransitionsWithOneIssue.xml");
+        String syntheticTransitionsSheetExpected = normalizedXmlResource("followup/syntheticTransitionsWithIssues.xml");
         assertEquals("Synthetic transitions sheet", syntheticTransitionsSheetExpected, transitionsSheets.get(1).stringValue());
     }
 

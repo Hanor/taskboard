@@ -179,7 +179,7 @@ public class FollowUpDataProviderFromHistory implements FollowupDataProvider {
 
         private AnalyticsTransitionsDataRow convertDates(AnalyticsTransitionsDataRow row) {
             List<ZonedDateTime> dates = row.transitionsDates.stream()
-                    .map(date -> date.withZoneSameInstant(timezone))
+                    .map(date -> date != null ? date.withZoneSameInstant(timezone) : null)
                     .collect(Collectors.toList());
             return new AnalyticsTransitionsDataRow(row.issueKey, row.issueType, dates);
         }
