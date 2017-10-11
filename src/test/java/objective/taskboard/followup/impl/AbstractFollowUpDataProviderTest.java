@@ -58,12 +58,12 @@ public abstract class AbstractFollowUpDataProviderTest {
 
     @Mock
     protected IssueBufferService issueBufferService;
-    
+
     @Mock
     private Clock localDateTimeService;
-    
+
     @Mock
-    private IssueTeamService issueTeamService;    
+    private IssueTeamService issueTeamService;
 
     CustomField propertiesCustomField;
     protected TShirtSize tshirtSizeInfo;

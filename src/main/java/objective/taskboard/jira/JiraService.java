@@ -23,14 +23,13 @@ package objective.taskboard.jira;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import objective.taskboard.jira.data.JiraIssue;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
@@ -39,7 +38,6 @@ import org.springframework.stereotype.Service;
 
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.Resolution;
 import com.atlassian.jira.rest.client.api.domain.ServerInfo;
 import com.atlassian.jira.rest.client.api.domain.User;
@@ -57,6 +55,7 @@ import objective.taskboard.jira.endpoint.JiraEndpoint.Request;
 import objective.taskboard.jira.endpoint.JiraEndpointAsLoggedInUser;
 import objective.taskboard.jira.endpoint.JiraEndpointAsMaster;
 import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 @Service
 @EnableConfigurationProperties(JiraProperties.class)
@@ -98,7 +97,7 @@ public class JiraService {
             JiraServiceException jse = (JiraServiceException) ex;
             if (!jse.getStatusCode().isPresent())
                 throw new IllegalStateException("Jira return an unrecognized error during authentication.");
-            
+
             HttpStatus httpStatus = jse.getStatusCode().get();
             log.error("Authentication error " + httpStatus.value() + " for user " + username);
 
@@ -135,21 +134,8 @@ public class JiraService {
         }
     }
 
-    private void assignSubResponsavel(String issueKey) {
-        log.debug("⬣⬣⬣⬣⬣  assignSubResponsavel");
-        final Set<String> subResponsaveis = getSubResponsaveis(issueKey);
-        final String jiraUser = CredentialsHolder.username();
-        if (!subResponsaveis.contains(jiraUser)) {
-            subResponsaveis.add(jiraUser);
-            List<ComplexIssueInputFieldValue> issueFieldValues =
-                    subResponsaveis.stream().map(subResponsavel -> ComplexIssueInputFieldValue.with("name", subResponsavel)).collect(Collectors.toList());
-            updateIssue(issueKey, new IssueInputBuilder().setFieldValue(properties.getCustomfield().getCoAssignees().getId(), issueFieldValues));
-        }
-    }
-
-    private void assignIssue(String key, String assignee) {
-        log.debug("⬣⬣⬣⬣⬣  assignIssue");
-        updateIssue(key, new IssueInputBuilder().setAssigneeName(assignee));
+    public boolean assignToMe(objective.taskboard.data.Issue issue) {
+        return new AssignIssueToUserAction(issue, CredentialsHolder.username()).call();
     }
 
     public String getResolutions(String transitionName) {
@@ -200,50 +186,6 @@ public class JiraService {
         log.debug("⬣⬣⬣⬣⬣  createIssue (master)");
         BasicIssue issue = jiraEndpointAsMaster.executeRequest(client -> client.getIssueClient().createIssue(issueInput));
         return issue.getKey();
-    }
-
-    public void toggleAssignAndSubresponsavelToUser(String key) {
-        final Set<String> subResponsaveis = getSubResponsaveis(key);
-        String jiraUser = CredentialsHolder.username();
-        String assignee = "";
-
-        if (subResponsaveis.contains(jiraUser)) {
-            subResponsaveis.remove(jiraUser);
-        } else {
-            subResponsaveis.add(jiraUser);
-            assignee = jiraUser;
-        }
-
-        if (!subResponsaveis.isEmpty() && assignee.isEmpty()) {
-            assignee = subResponsaveis.iterator().next();
-        }
-
-        if (assignee.isEmpty()) {
-            return;
-        }
-
-        assignSubResponsavel(key);
-        assignIssue(key, assignee);
-    }
-
-    private Set<String> getSubResponsaveis(String key) {
-        try {
-            Set<String> subResponsaveis = new HashSet<>();
-            final IssueField fieldSubResponsaveis = getIssueByKey(key)
-                    .getField(properties.getCustomfield().getCoAssignees().getId());
-
-            if (fieldSubResponsaveis != null && fieldSubResponsaveis.getValue() != null) {
-                final JSONArray subResponsaveisJson = (JSONArray) fieldSubResponsaveis.getValue();
-
-                for (int i = 0; i < subResponsaveisJson.length(); i++) {
-                    subResponsaveis.add(subResponsaveisJson.getJSONObject(i).getString("name"));
-                }
-            }
-
-            return subResponsaveis;
-        } catch (JSONException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     public User getLoggedUser() {
@@ -301,4 +243,62 @@ public class JiraService {
         }
     }
 
+    /**
+     * Tries to assign issue to user. Moves last assignee to co-assignees if already has assignee.
+     * Throws {@link FrontEndMessageException} if action failed
+     */
+    private class AssignIssueToUserAction implements Callable<Boolean> {
+
+        private final objective.taskboard.data.Issue issue;
+        private final String assignee;
+
+        public AssignIssueToUserAction(objective.taskboard.data.Issue issue, String username) {
+            this.issue = issue;
+            assignee = username;
+        }
+
+        @Override
+        public Boolean call() {
+            if (alreadyAssignedToUser())
+                return false;
+
+            JiraIssue.Update request = buildRequest();
+            send(request);
+
+            return true;
+        }
+
+        private boolean alreadyAssignedToUser() {
+            return assignee.equals(issue.getAssignee());
+        }
+
+        private JiraIssue.Update buildRequest() {
+            // add last assignee as co-assignee
+            final Set<String> coAssignees = issue.getCoAssignees()
+                    .stream()
+                    .map(co -> co.getName())
+                    .collect(Collectors.toSet());
+            coAssignees.add(issue.getAssignee());
+            coAssignees.remove(assignee);
+
+            // build request
+            String assigneeField = "assignee";
+            String coAssigneeField = properties.getCustomfield().getCoAssignees().getId();
+            return JiraIssue.Update.builder()
+                    .field(assigneeField).byName(assignee)
+                    .field(coAssigneeField).byNames(coAssignees)
+                    .build();
+        }
+
+        private void send(JiraIssue.Update request) {
+            JiraIssue.Service issueService = jiraEndpointAsUser.request(JiraIssue.Service.class);
+            try {
+                Response result = issueService.update(issue.getIssueKey(), request);
+                if (HttpStatus.valueOf(result.getStatus()) != HttpStatus.NO_CONTENT)
+                    throw new FrontEndMessageException("Unexpected return code during AssignIssueToUserAction: " + result.getStatus());
+            } catch (RetrofitError ex) {
+                throw new FrontEndMessageException(ex);
+            }
+        }
+    }
 }

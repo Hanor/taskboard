@@ -14,12 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import objective.taskboard.jira.data.JiraIssue;
 import objective.taskboard.jira.data.Status;
 import objective.taskboard.jira.data.StatusCategory;
 import objective.taskboard.jira.endpoint.AuthorizedJiraEndpoint;
@@ -27,7 +29,7 @@ import objective.taskboard.jira.endpoint.JiraEndpoint;
 import objective.taskboard.jira.endpoint.JiraEndpointAsLoggedInUser;
 import objective.taskboard.jira.endpoint.JiraEndpointAsMaster;
 import objective.taskboard.testUtils.JiraMockServer;
-
+import retrofit.client.Response;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = AuthorizedJiraEndpointTest.Configuration.class)
@@ -88,11 +90,17 @@ public class AuthorizedJiraEndpointTest {
     @Before
     public void setupProperties() {
         doReturn("http://localhost:" + jira.port()).when(jiraProperties).getUrl();
+        JiraProperties.CustomField.CustomFieldDetails coAssignees = new JiraProperties.CustomField.CustomFieldDetails();
+        coAssignees.setId("customfield_11456");
+        JiraProperties.CustomField customField = new JiraProperties.CustomField();
+        customField.setCoAssignees(coAssignees);
+        doReturn(customField).when(jiraProperties).getCustomfield();
     }
 
     @Test
     public void getStatusCategories() {
-        List<StatusCategory> categories = jiraEndpointAsMaster.request(StatusCategory.Service.class).all();
+        StatusCategory.Service service = jiraEndpointAsMaster.request(StatusCategory.Service.class);
+        List<StatusCategory> categories = service.all();
         assertThat(categories.get(0).id, is(1L));
         assertThat(categories.get(0).key, is("undefined"));
         assertThat(categories.get(0).name, is("No Category"));
@@ -104,8 +112,25 @@ public class AuthorizedJiraEndpointTest {
 
     @Test
     public void getStatuses() {
-        List<Status> statuses = jiraEndpointAsMaster.request(Status.Service.class).all();
+        Status.Service service = jiraEndpointAsMaster.request(Status.Service.class);
+        List<Status> statuses = service.all();
         assertThat(statuses.get(0).name, is("To Do"));
         assertThat(statuses.get(0).statusCategory.name, is("To Do"));
+    }
+
+    @Test
+    public void updateIssue() {
+        // given
+        JiraIssue.Update request = JiraIssue.Update.builder()
+                .field("assignee").byName("foo")
+                .field(jiraProperties.getCustomfield().getCoAssignees().getId()).byNames("bar", "baz")
+                .build();
+
+        // when
+        JiraIssue.Service service = jiraEndpointAsMaster.request(JiraIssue.Service.class);
+        Response response = service.update("TASKB-6", request);
+
+        // then
+        assertThat(HttpStatus.valueOf(response.getStatus()), is(HttpStatus.NO_CONTENT));
     }
 }

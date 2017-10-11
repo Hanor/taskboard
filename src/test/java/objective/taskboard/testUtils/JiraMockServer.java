@@ -162,7 +162,7 @@ public class JiraMockServer {
             
             if (loadMockData == null)
                 return null;
-            
+
             
             JSONObject issueData = new JSONObject(loadMockData);
             String self = issueData.getString("self").replace("54.68.128.117:8100", "localhost:4567");
@@ -327,7 +327,7 @@ public class JiraMockServer {
         avatarUrls.put("48x48", "http://www.gravatar.com/avatar/c2b78b1ds52b346ff4528044ee123cc74?d=mm&s=48");
         return avatarUrls;
     }
-    
+
     @SuppressWarnings("rawtypes")
     private static String makeFakeRequest(Map searchData) {
         long startAt = Math.round((Double)searchData.get("startAt"));
@@ -340,7 +340,7 @@ public class JiraMockServer {
 
     private static String loadSearchFile(long startAt, String jql) {
         String datFileName = "search"+startAt+".json";
-        
+
         if (jql.toLowerCase().contains("key in")) { 
             String issueKey = jql.replaceAll("(?i).*key in [(]([^)]*)[)].*", "$1");
             if (issueKey.equals("TASKB-673,TASKB-665,TASKB-648,TASKB-628,TASKB-619,TASKB-621,TASKB-616,TASKB-6,TASKB-206,TASKB-186,TASKB-142,TASKB-136,TASKB-135,TASKB-130,TASKB-125,TASKB-123,TASKB-122,TASKB-99,TASKB-71,TASKB-171,TASKB-225,TASKB-194,TASKB-182,TASKB-179,TASKB-158,TASKB-150,TASKB-96,TASKB-68"))
@@ -456,7 +456,7 @@ public class JiraMockServer {
         ensureInitialized();
         server.put(path, route);
     }
-    
+
     private String loaduser() {
         String loadMockData = loadMockData("user.response.json");
         loadMockData = loadMockData.replace("\"displayName\": \"Taskboard\",", "\"displayName\": \"" + username + "\",");

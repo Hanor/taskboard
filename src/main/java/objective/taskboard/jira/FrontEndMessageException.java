@@ -18,6 +18,10 @@ public class FrontEndMessageException extends RuntimeException {
 
     private static final long serialVersionUID = -3096553868407268805L;
 
+    public FrontEndMessageException(String message) {
+        super(message);
+    }
+
     public FrontEndMessageException(RetrofitError e) {
         super(parseExceptionMessage(e), e);
     }

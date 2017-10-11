@@ -108,8 +108,8 @@ public class IssueController {
     }
 
     @RequestMapping(path = "assign", method = RequestMethod.POST)
-    public Issue assign(@RequestBody Issue issue) throws JSONException {
-        return issueBufferService.toggleAssignAndSubresponsavelToUser(issue.getIssueKey());
+    public Issue assign(@RequestBody String issueKey) throws JSONException {
+        return issueBufferService.assignToMe(issueKey);
     }
 
     @Deprecated

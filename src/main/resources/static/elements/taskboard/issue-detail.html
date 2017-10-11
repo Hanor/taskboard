@@ -826,7 +826,7 @@
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
                         },
-                        data: JSON.stringify(this.item),
+                        data: this.item.issueKey,
                         success: function (issue) {
                             taskboard.fireIssueUpdated('client', self, issue, 'UPDATED');
                             self.setCard(taskboard.convertIssue(issue))

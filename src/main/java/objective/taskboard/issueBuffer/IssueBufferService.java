@@ -238,9 +238,13 @@ public class IssueBufferService {
         return cardsRepo.get(key);
     }
 
-    public synchronized Issue toggleAssignAndSubresponsavelToUser(String issueKey) {
-        jiraBean.toggleAssignAndSubresponsavelToUser(issueKey);
-        return updateIssueBuffer(issueKey);
+    public synchronized Issue assignToMe(String issueKey) {
+        Issue issue = getIssueByKey(issueKey);
+        if(jiraBean.assignToMe(issue)) {
+            return updateIssueBuffer(issueKey);
+        } else {
+            return issue;
+        }
     }
 
     public synchronized Issue doTransition(String issueKey, Long transitionId, String resolutionName) {
