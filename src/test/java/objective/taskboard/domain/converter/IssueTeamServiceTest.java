@@ -68,6 +68,7 @@ public class IssueTeamServiceTest {
     @Before
     public void before() {
         when(teamFilterConfigurationService.getConfiguredTeamsNamesByUserAndProject(anyString(), anyString())).thenReturn(asList("Team"));
+        issue.setIssueKey("FOO-34");
     }
 
     @Test

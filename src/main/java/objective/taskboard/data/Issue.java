@@ -24,6 +24,7 @@ import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class Issue extends IssueScratch implements Serializable {
     @JsonIgnore
     private transient Issue parentCard;
     
-    private transient List<Issue> subtasks = new LinkedList<>();
+    private transient Set<Issue> subtasks = new LinkedHashSet<>();
 
     private transient JiraProperties jiraProperties;
     
@@ -636,7 +637,7 @@ public class Issue extends IssueScratch implements Serializable {
                 changelog);
     }
 
-    public List<Issue> getSubtaskCards() {
+    public Set<Issue> getSubtaskCards() {
         return subtasks;
     }
    
@@ -645,7 +646,7 @@ public class Issue extends IssueScratch implements Serializable {
     }
     
     private Object readResolve() {
-        this.subtasks = new LinkedList<>();
+        this.subtasks = new LinkedHashSet<>();
         return this;
     }
 
@@ -660,5 +661,22 @@ public class Issue extends IssueScratch implements Serializable {
         this.issueTeamService = issueTeamService;
         this.filterRepository = filterRepository;
         this.cardVisibilityEvalService = cardVisibilityEvalService;
+    }
+    
+    @Override
+    public int hashCode() {
+        if (this.issueKey == null)
+            return 0;
+        return this.issueKey.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Issue) {
+            Issue other = (Issue)obj;
+            
+            return (issueKey+"").equals(other.issueKey+"");
+        }
+        return false;
     }
 }
