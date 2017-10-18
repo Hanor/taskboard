@@ -815,8 +815,10 @@
 
                 assignIssue: function () {
                     var self = this;
-                    self.showSpinnerTransitions();
+                    var issueBefore = this.item;
+                    var issue = clone(this.item);
 
+                    var requestBody = issue.issueKey;
                     $.ajax({
                         url: '/ws/issues/assign',
                         type: 'post',
@@ -826,18 +828,35 @@
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'
                         },
-                        data: this.item.issueKey,
-                        success: function (issue) {
-                            taskboard.fireIssueUpdated('client', self, issue, 'UPDATED');
-                            self.setCard(taskboard.convertIssue(issue))
+                        data: requestBody,
+                        success: function (issueFromServer) {
+                            taskboard.fireIssueUpdated('client', self, issueFromServer, 'UPDATED');
+                            self.setCard(issueFromServer);
                         },
                         error: function (jqXhr, textStatus, errorThrown) {
                             console.error(errorThrown);
                             self.errorMessage = jqXhr.responseJSON.message;
-                            self.hideSpinnerTransitions();
+                            var toastMessage = 'Assign to me on issue "' + issueBefore.issueKey + '" failed: ' + jqXhr.responseJSON.message;
+                            self.fire("iron-signal", {name:"show-error-message", data: toastMessage});
+                            taskboard.fireIssueUpdated('client', self, issueBefore, 'UPDATED');
+                            self.item = issueBefore;
                         },
                         async: true
                     });
+
+                    var current = issue.assignee;
+                    var assignee = window.user.name;
+                    if(current != assignee) {
+                        var coAssignees = issue.subResponsaveis.split(",");
+                        coAssignees = _.without(coAssignees, assignee, "");
+                        if(current && !_.contains(coAssignees, current))
+                            coAssignees.push(current);
+
+                        issue.assignee = assignee;
+                        issue.subResponsaveis = coAssignees.join();
+                    }
+                    taskboard.fireIssueUpdated('client', self, issue, 'UPDATED');
+                    this.item = issue;
                 },
 
                 block: function () {
