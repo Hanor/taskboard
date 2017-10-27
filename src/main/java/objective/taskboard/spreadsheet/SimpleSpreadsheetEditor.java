@@ -1,6 +1,5 @@
 package objective.taskboard.spreadsheet;
 
-import static java.util.stream.Collectors.toList;
 import static objective.taskboard.google.SpreadsheetUtils.columnIndexToLetter;
 import static objective.taskboard.utils.DateTimeUtils.toDoubleExcelFormat;
 import static objective.taskboard.utils.IOUtilities.write;
@@ -17,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,17 +40,13 @@ import objective.taskboard.utils.XmlUtils;
 
 public class SimpleSpreadsheetEditor implements Closeable {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SimpleSpreadsheetEditor.class);
-    private static final String TAG_T_IN_SHARED_STRINGS = "t";
-    private static final String PATH_SHARED_STRINGS = "xl/sharedStrings.xml";
 
-    
-    public Map<String, Long> sharedStrings;
     FollowUpTemplate template;
-    private File extractedSheetDirectory;
+    protected File extractedSheetDirectory;
     private Map<String,String> sheetPathByName = new LinkedHashMap<>();
-    private int initialSharedStringCount;
-    private WorkbookEditor workbookEditor = new WorkbookEditor();
-    protected SpreadsheetStylesEditor stylesEditor = new SpreadsheetStylesEditor();
+    private final WorkbookEditor workbookEditor = new WorkbookEditor();
+    protected final SharedStringsEditor sharedStringsEditor = new SharedStringsEditor(this);
+    protected final SpreadsheetStylesEditor stylesEditor = new SpreadsheetStylesEditor();
 
     public SimpleSpreadsheetEditor(FollowUpTemplate template) {
         this.template = template;
@@ -60,7 +54,6 @@ public class SimpleSpreadsheetEditor implements Closeable {
     
     public void open() {
         extractedSheetDirectory = decompressTemplate().toFile();
-        sharedStrings = initializeSharedStrings();
         initializeWorkbookRelations();
     }
 
@@ -96,16 +89,20 @@ public class SimpleSpreadsheetEditor implements Closeable {
     }
 
     private String addWorkbookRel(int next) {
+        return addWorkbookRel("http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet", "worksheets/sheet" + next + ".xml");
+    }
+
+    public String addWorkbookRel(String type, String target) {
         Document workbookRelsDoc = getWorkbookRelsDoc();
-        
+
         Element relationship = workbookRelsDoc.createElement("Relationship");
         String relationId = "rId"+computeNextRelationId(workbookRelsDoc);
         relationship.setAttribute("Id", relationId);
-        relationship.setAttribute("Target", "worksheets/sheet" + next + ".xml");
-        relationship.setAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet");
+        relationship.setAttribute("Target", target);
+        relationship.setAttribute("Type", type);
         workbookRelsDoc.getElementsByTagName("Relationships").item(0).appendChild(relationship);
         IOUtilities.write(getWorkbookRelsFile(), XmlUtils.asString(workbookRelsDoc));
-        
+
         return relationId;
     }
     
@@ -139,7 +136,6 @@ public class SimpleSpreadsheetEditor implements Closeable {
                 }
         }
     }
-    
 
     @Override
     public void close() {
@@ -188,14 +184,18 @@ public class SimpleSpreadsheetEditor implements Closeable {
     }
 
     private void addContentTypeOverride(String sheetPath) {
+        addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", "/"+sheetPath);
+    }
+
+    protected void addContentTypeOverride(String contentType, String partName) {
         File contentTypeOverrideFile = new File(extractedSheetDirectory, "[Content_Types].xml");
         Document contentTypeOverride = XmlUtils.asDocument(contentTypeOverrideFile);
         Node root = contentTypeOverride.getElementsByTagName("Types").item(0);
         Element override = contentTypeOverride.createElement("Override");
-        override.setAttribute("ContentType", "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
-        override.setAttribute("PartName", "/"+sheetPath);
+        override.setAttribute("ContentType", contentType);
+        override.setAttribute("PartName", partName);
         root.appendChild(override);
-        
+
         IOUtilities.write(contentTypeOverrideFile, XmlUtils.asString(contentTypeOverride));
     }
 
@@ -225,57 +225,6 @@ public class SimpleSpreadsheetEditor implements Closeable {
         }
     }
     
-    private InputStream getSharedStringsInputStream() {
-        InputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(new File(extractedSheetDirectory, PATH_SHARED_STRINGS));
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
-        return inputStream;
-    }
-    
-    Map<String, Long> getSharedStrings() {
-        return sharedStrings;
-    }
-    
-    String generateSharedStrings() throws IOException {
-        Document sharedStringsDoc = XmlUtils.asDocument(getSharedStringsInputStream());
-        Node root = sharedStringsDoc.getElementsByTagName("sst").item(0);
-        
-        List<String> sharedStringsSorted = sharedStrings.keySet().stream()
-            .sorted((s1, s2) -> sharedStrings.get(s1).compareTo(sharedStrings.get(s2)))
-            .collect(toList());
-        
-        List<String> newStrings = sharedStringsSorted.subList(initialSharedStringCount, sharedStringsSorted.size());
-        if (newStrings.size() > 0)
-            root.appendChild(sharedStringsDoc.createTextNode("  "));
-
-        for (String sharedString : newStrings) {
-            Node si = sharedStringsDoc.createElement("si");
-            Node t = sharedStringsDoc.createElement("t");
-            si.appendChild(t);
-            t.appendChild(sharedStringsDoc.createTextNode(sharedString));
-            root.appendChild(si);
-        }
-        root.getAttributes().getNamedItem("uniqueCount").setNodeValue(Integer.toString(sharedStringsSorted.size()));
-
-        return XmlUtils.asString(sharedStringsDoc);
-    }
-
-    private String getOrSetIndexInSharedStrings(String followUpDataAttrValue) {
-        if (followUpDataAttrValue == null || followUpDataAttrValue.isEmpty())
-            return "";
-
-        Long index = sharedStrings.get(followUpDataAttrValue);
-        if (index != null)
-            return index+"";
-
-        index = Long.valueOf(sharedStrings.size());
-        sharedStrings.put(followUpDataAttrValue, index);
-        return index+"";
-    }
-
     private Path decompressTemplate() {
         Path pathFollowup;
         try {
@@ -288,8 +237,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
     }
 
     public void save() throws IOException {
-        File fileSharedStrings = new File(extractedSheetDirectory, PATH_SHARED_STRINGS);
-        write(fileSharedStrings, generateSharedStrings());
+        sharedStringsEditor.save();
         ensureFullCalcOnReloadIsSet();
         resetCalcChainToAvoidFormulaCorruption();
         stylesEditor.save();
@@ -352,25 +300,6 @@ public class SimpleSpreadsheetEditor implements Closeable {
         return new File(extractedSheetDirectory, "xl/_rels/workbook.xml.rels");
     }
 
-    private Map<String, Long> initializeSharedStrings() {
-        InputStream inputStream = getSharedStringsInputStream();
-        
-        Map<String, Long> sharedStrings = new HashMap<>();
-        Document doc = XmlUtils.asDocument(inputStream);
-        doc.getDocumentElement().normalize();
-        NodeList nodes = doc.getElementsByTagName(TAG_T_IN_SHARED_STRINGS);
-
-        for (Long index = 0L; index < nodes.getLength(); index++) {
-            Node node = nodes.item(index.intValue());
-            if (node.getNodeType() != Node.ELEMENT_NODE)
-                continue;
-
-            sharedStrings.put(node.getTextContent(), index);
-        }
-        initialSharedStringCount = sharedStrings.size();
-        return sharedStrings;
-    }
-    
     public class Sheet {
         List<SheetRow> rowsList = new LinkedList<>();
         private File sheetFile;
@@ -457,7 +386,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
         }
 
         public void addColumn(String value) {
-            Element column = addColumn(getOrSetIndexInSharedStrings(value), "v");
+            Element column = addColumn(sharedStringsEditor.getOrSetIndexInSharedStrings(value), "v");
             column.setAttribute("t", "s");
         }
 
