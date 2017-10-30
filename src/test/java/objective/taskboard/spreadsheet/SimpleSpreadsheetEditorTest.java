@@ -2,22 +2,18 @@ package objective.taskboard.spreadsheet;
 
 import static objective.taskboard.utils.IOUtilities.resourceToString;
 import static objective.taskboard.utils.XmlUtils.normalizeXml;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.google.common.collect.Streams;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -130,37 +126,6 @@ public class SimpleSpreadsheetEditorTest extends AbstractEditorTest {
             Node fullCalcOnLoad = calcPr.getAttributes().getNamedItem("fullCalcOnLoad");
             
             assertEquals("1", fullCalcOnLoad.getNodeValue());
-        }
-    }
-
-    @Test
-    public void whenCustomFormatAdded_stylesXmlShouldContainNewFormat() throws IOException {
-        try (SimpleSpreadsheetEditor subject = new SimpleSpreadsheetEditor(getBasicTemplate())) {
-            subject.open();
-
-            // given
-            String dateFormat = "yyyy/mm/dd\\ hh:mm:ss";
-            String currencyFormat = "[$R$-416]\\ #,##0.00;[RED]\\-[$R$-416]\\ #,##0.00";
-
-            // when
-            subject.stylesEditor.getOrCreateNumberFormat(dateFormat);
-            subject.save();
-            subject.stylesEditor.getOrCreateNumberFormat(currencyFormat);
-            subject.save();
-
-            // then
-            NodeList formatList = XmlUtils.xpath(new File(subject.getExtractedSheetDirectory(), SimpleSpreadsheetEditor.SpreadsheetStylesEditor.PATH_STYLES), "//numFmts/numFmt");
-            assertThat(Streams.stream(XmlUtils.iterable(formatList))
-                    .filter(node -> node instanceof Element)
-                    .map(node -> (Element)node)
-                    .filter(element -> dateFormat.equals(element.getAttribute("formatCode")))
-                    .count(), is(1L));
-
-            assertThat(Streams.stream(XmlUtils.iterable(formatList))
-                    .filter(node -> node instanceof Element)
-                    .map(node -> (Element)node)
-                    .filter(element -> currencyFormat.equals(element.getAttribute("formatCode")))
-                    .count(), is(1L));
         }
     }
 
