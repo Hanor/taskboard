@@ -136,6 +136,6 @@ class SharedStringsEditor extends Editor {
     }
 
     private void createContentTypeOverride() {
-        spreadsheetEditor.addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", "/"+PATH_SHARED_STRINGS);
+        spreadsheetEditor.contentTypeEditor.addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", "/"+PATH_SHARED_STRINGS);
     }
 }

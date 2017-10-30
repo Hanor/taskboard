@@ -84,6 +84,8 @@ public class SimpleSpreadsheetEditorTest extends AbstractEditorTest {
             Sheet sheetAgain = subject.getSheet("A New Sheet");
             
             assertNotNull(sheetAgain);
+
+            subject.save();
             
             checkXmlElementInSpreadsheetFile(subject, 
                     "xl/_rels/workbook.xml.rels", 

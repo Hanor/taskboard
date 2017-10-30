@@ -47,6 +47,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
     private final WorkbookEditor workbookEditor = new WorkbookEditor();
     protected final SharedStringsEditor sharedStringsEditor = new SharedStringsEditor(this);
     protected final SpreadsheetStylesEditor stylesEditor = new SpreadsheetStylesEditor();
+    protected final ContentTypeEditor contentTypeEditor = new ContentTypeEditor(this);
 
     public SimpleSpreadsheetEditor(FollowUpTemplate template) {
         this.template = template;
@@ -184,19 +185,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
     }
 
     private void addContentTypeOverride(String sheetPath) {
-        addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", "/"+sheetPath);
-    }
-
-    protected void addContentTypeOverride(String contentType, String partName) {
-        File contentTypeOverrideFile = new File(extractedSheetDirectory, "[Content_Types].xml");
-        Document contentTypeOverride = XmlUtils.asDocument(contentTypeOverrideFile);
-        Node root = contentTypeOverride.getElementsByTagName("Types").item(0);
-        Element override = contentTypeOverride.createElement("Override");
-        override.setAttribute("ContentType", contentType);
-        override.setAttribute("PartName", partName);
-        root.appendChild(override);
-
-        IOUtilities.write(contentTypeOverrideFile, XmlUtils.asString(contentTypeOverride));
+        contentTypeEditor.addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", "/"+sheetPath);
     }
 
     private void createEmptySheet(String sheetPath) {
@@ -241,6 +230,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
         ensureFullCalcOnReloadIsSet();
         resetCalcChainToAvoidFormulaCorruption();
         stylesEditor.save();
+        contentTypeEditor.save();
     }
     
     private void ensureFullCalcOnReloadIsSet() {
