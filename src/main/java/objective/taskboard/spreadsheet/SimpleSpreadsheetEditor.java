@@ -16,10 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.collect.BiMap;
@@ -28,7 +26,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -43,8 +40,7 @@ public class SimpleSpreadsheetEditor implements Closeable {
 
     FollowUpTemplate template;
     protected File extractedSheetDirectory;
-    private Map<String,String> sheetPathByName = new LinkedHashMap<>();
-    private final WorkbookEditor workbookEditor = new WorkbookEditor();
+    protected final WorkbookEditor workbookEditor = new WorkbookEditor(this);
     protected final SharedStringsEditor sharedStringsEditor = new SharedStringsEditor(this);
     protected final SpreadsheetStylesEditor stylesEditor = new SpreadsheetStylesEditor();
     protected final ContentTypeEditor contentTypeEditor = new ContentTypeEditor(this);
@@ -55,67 +51,18 @@ public class SimpleSpreadsheetEditor implements Closeable {
     
     public void open() {
         extractedSheetDirectory = decompressTemplate().toFile();
-        initializeWorkbookRelations();
     }
 
     public Sheet getSheet(String sheetName) {
-        return new Sheet(sheetPathByName.get(sheetName));
+        return workbookEditor.getSheet(sheetName);
     }
 
     public Sheet createSheet(String sheetName) {
-        Optional<Integer> max = sheetPathByName.values().stream()
-            .filter(v->v.startsWith("xl/worksheets/sheet"))
-            .map(v->Integer.parseInt(v.replaceAll("xl/worksheets/sheet([0-9]+).xml", "$1")))
-            .sorted()
-            .max(Integer::compareTo);
-        int sheetFileNumber = max.orElse(0)+1;
-        
-        String sheetPath = "xl/worksheets/sheet"+sheetFileNumber+".xml";
-        createEmptySheet(sheetPath);
-        
-        sheetPathByName.put(sheetName, sheetPath);
-        String relId = addWorkbookRel(sheetFileNumber);
-        addWorkbook(sheetName, relId);
-        addContentTypeOverride(sheetPath);
-        
-        return new Sheet(sheetPath);
+        return workbookEditor.createSheet(sheetName);
     }
 
     public Sheet getOrCreateSheet(String sheetName) {
-        if(sheetPathByName.containsKey(sheetName)) {
-            return getSheet(sheetName);
-        } else {
-            return createSheet(sheetName);
-        }
-    }
-
-    private String addWorkbookRel(int next) {
-        return addWorkbookRel("http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet", "worksheets/sheet" + next + ".xml");
-    }
-
-    public String addWorkbookRel(String type, String target) {
-        Document workbookRelsDoc = getWorkbookRelsDoc();
-
-        Element relationship = workbookRelsDoc.createElement("Relationship");
-        String relationId = "rId"+computeNextRelationId(workbookRelsDoc);
-        relationship.setAttribute("Id", relationId);
-        relationship.setAttribute("Target", target);
-        relationship.setAttribute("Type", type);
-        workbookRelsDoc.getElementsByTagName("Relationships").item(0).appendChild(relationship);
-        IOUtilities.write(getWorkbookRelsFile(), XmlUtils.asString(workbookRelsDoc));
-
-        return relationId;
-    }
-    
-    private void addWorkbook(String sheetName, String relationId) {
-        Document workbookDoc = getWorkbook();
-        
-        Element sheetEl = workbookDoc.createElement("sheet");
-        sheetEl.setAttribute("name", sheetName);
-        sheetEl.setAttribute("r:id", relationId);
-        sheetEl.setAttribute("sheetId", Integer.toString(computeNextSheetId(workbookDoc)));
-        workbookDoc.getElementsByTagName("sheets").item(0).appendChild(sheetEl);
-        IOUtilities.write(getWorkbookFile(), XmlUtils.asString(workbookDoc));
+        return workbookEditor.getOrCreateSheet(sheetName);
     }
 
     public byte[] toBytes() {
@@ -154,66 +101,6 @@ public class SimpleSpreadsheetEditor implements Closeable {
     }
     
 
-    private int computeNextRelationId(Document workbookRelsDoc) {
-        final NodeList relationShips = workbookRelsDoc.getElementsByTagName("Relationship");
-        int nextRelationId = 0;
-        for(int i = 0; i < relationShips.getLength(); i++) {
-            Node item = relationShips.item(i);
-            int id = Integer.parseInt(item.getAttributes().getNamedItem("Id").getNodeValue().replaceAll("[^0-9]", ""));
-            if (id > nextRelationId)
-                nextRelationId = id;
-        }
-        nextRelationId++;
-        return nextRelationId;
-    }
-
-    private int computeNextSheetId(Document workbookDoc) {
-        final NodeList sheet = workbookDoc.getElementsByTagName("sheet");
-        
-        int sheetId = 0;
-        for(int i = 0; i < sheet.getLength(); i++) {
-            Node item = sheet.item(i);
-            Node sheetIdAttr = item.getAttributes().getNamedItem("sheetId");
-            if (sheetIdAttr == null) continue;
-            
-            int id = Integer.parseInt(sheetIdAttr.getNodeValue().replaceAll("[^0-9]", ""));
-            if (id > sheetId)
-                sheetId = id;
-        }
-        sheetId++;
-        return sheetId;
-    }
-
-    private void addContentTypeOverride(String sheetPath) {
-        contentTypeEditor.addContentTypeOverride("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", "/"+sheetPath);
-    }
-
-    private void createEmptySheet(String sheetPath) {
-        try {
-            FileUtils.write(new File(extractedSheetDirectory,sheetPath), 
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-                    "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" "
-                    + "xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" "
-                    + "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" "
-                    + "xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" "
-                    + "xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" "
-                    + "xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" "
-                    + "xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" "
-                    + "mc:Ignorable=\"x14ac xr xr2 xr3\">\n" + 
-                    "  <dimension ref=\"A1\"/>\n" + 
-                    "  <sheetViews>\n" + 
-                    "    <sheetView workbookViewId=\"0\"/>\n" + 
-                    "  </sheetViews>\n" + 
-                    "  <sheetFormatPr defaultRowHeight=\"15.0\"/>\n" + 
-                    "  <sheetData/>\n" + 
-                    "  <pageMargins bottom=\"0.75\" footer=\"0.3\" header=\"0.3\" left=\"0.7\" right=\"0.7\" top=\"0.75\"/>\n" + 
-                    "</worksheet>", 
-                    "UTF-8");
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-    
     private Path decompressTemplate() {
         Path pathFollowup;
         try {
@@ -227,19 +114,10 @@ public class SimpleSpreadsheetEditor implements Closeable {
 
     public void save() throws IOException {
         sharedStringsEditor.save();
-        ensureFullCalcOnReloadIsSet();
+        workbookEditor.save();
         resetCalcChainToAvoidFormulaCorruption();
         stylesEditor.save();
         contentTypeEditor.save();
-    }
-    
-    private void ensureFullCalcOnReloadIsSet() {
-        Document workbook = getWorkbook();
-        Node calcPr = workbook.getElementsByTagName("calcPr").item(0);
-        Attr fullCalcOnLoad = workbook.createAttribute("fullCalcOnLoad");
-        fullCalcOnLoad.setValue("1");
-        calcPr.getAttributes().setNamedItem(fullCalcOnLoad);
-        IOUtilities.write(getWorkbookFile(), XmlUtils.asString(workbook));
     }
     
     private void resetCalcChainToAvoidFormulaCorruption() {
@@ -252,52 +130,13 @@ public class SimpleSpreadsheetEditor implements Closeable {
         return pathFollowupXLSM;
     }
     
-    private void initializeWorkbookRelations() {
-        final Document workbookRels = getWorkbookRelsDoc();
-        final NodeList relationShips = workbookRels.getElementsByTagName("Relationship");
-        final Map<String,String> relations = new LinkedHashMap<>();
-        for (int i = 0; i < relationShips.getLength(); i++) {
-            Node sheetNode = relationShips.item(i);
-            sheetNode.getAttributes().getNamedItem("Id");
-            relations.put(sheetNode.getAttributes().getNamedItem("Id").getNodeValue(), 
-                    sheetNode.getAttributes().getNamedItem("Target").getNodeValue());
-        }
-        
-        final Document workbook = getWorkbook();
-        
-        final NodeList sheetList = workbook.getElementsByTagName("sheet");
-        for (int i = 0; i < sheetList.getLength(); i++) {
-            Node sheetNode = sheetList.item(i);
-            String id = sheetNode.getAttributes().getNamedItem("r:id").getNodeValue();
-            String name = sheetNode.getAttributes().getNamedItem("name").getNodeValue();
-            sheetPathByName.put(name, "xl/"+relations.get(id));
-        }
-    }
-
-    private Document getWorkbook() {
-        return XmlUtils.asDocument(getWorkbookFile());
-    }
-
-    private File getWorkbookFile() {
-        return new File(extractedSheetDirectory, "xl/workbook.xml");
-    }
-
-    private Document getWorkbookRelsDoc() {
-        return XmlUtils.asDocument(getWorkbookRelsFile());
-    }
-
-    private File getWorkbookRelsFile() {
-        return new File(extractedSheetDirectory, "xl/_rels/workbook.xml.rels");
-    }
-
     public class Sheet {
-        List<SheetRow> rowsList = new LinkedList<>();
         private File sheetFile;
         int maxCol = 0;
         private Document sheetDoc;
         private Node sheetData;
         int rowCount;
-        
+
         public Sheet(String sheetPath) {
             sheetFile = new File(extractedSheetDirectory, sheetPath);
             sheetDoc = XmlUtils.asDocument(sheetFile);
@@ -307,11 +146,11 @@ public class SimpleSpreadsheetEditor implements Closeable {
             sheetData = sheetDataTags.item(0);
             rowCount = sheetDoc.getElementsByTagName("row").getLength();
         }
-        
+
         public void save() {
             IOUtilities.write(sheetFile, XmlUtils.asString(sheetDoc));
         }
-        
+
         public SheetRow createRow() {
             int nextRowNumber = getRowCount() + 1;
             return new SheetRow(this, nextRowNumber, sheetDoc);
@@ -320,30 +159,30 @@ public class SimpleSpreadsheetEditor implements Closeable {
         private int getRowCount() {
             return rowCount;
         }
-       
+
         public void truncate(int starting) {
             NodeList xmlRow = sheetDoc.getElementsByTagName("row");
-            
+
             List<Node> rowsToKeep = new LinkedList<>();
             int rows = Math.min(starting, xmlRow.getLength());
             for (int i = 0; i < rows; i++)
                 rowsToKeep.add(xmlRow.item(i));
-            
-            while(sheetData.hasChildNodes()) 
+
+            while(sheetData.hasChildNodes())
                 sheetData.removeChild(sheetData.getFirstChild());
-            
+
             rowsToKeep.stream().forEach(node->sheetData.appendChild(node));
             rowCount = rows;
         }
-        
+
         public String stringValue() {
             return XmlUtils.asString(sheetDoc);
         }
-        
+
         public String getSheetPath() {
             return sheetFile.getPath().replace(extractedSheetDirectory.getPath()+File.separator, "");
         }
-        
+
         private void addRow(SheetRow r) {
             if (r.getColumnIndex() > maxCol)
                 maxCol = r.getColumnIndex();
@@ -351,9 +190,8 @@ public class SimpleSpreadsheetEditor implements Closeable {
             rowCount++;
         }
     }
-    
+
     public class SheetRow {
-        public StringBuilder rowString = new StringBuilder();
         private int rowNumber;
         private int columnIndex = 0;
         private Sheet sheet;
@@ -366,12 +204,12 @@ public class SimpleSpreadsheetEditor implements Closeable {
             this.sheetDoc = sheetDoc;
             this.row = sheetDoc.createElement("row");
         }
-        
+
         public Node buildNode() {
             row.setAttribute("r", Integer.toString(rowNumber));
             row.setAttribute("spans", "1:"+columnIndex);
             row.setAttribute("x14ac:dyDescent", "0.25");
-            
+
             return row;
         }
 
@@ -405,43 +243,17 @@ public class SimpleSpreadsheetEditor implements Closeable {
             columnIndex++;
             return column;
         }
-        
+
         private String columnLabel() {
             return columnIndexToLetter(columnIndex)+rowNumber;
         }
-        
+
         public int getColumnIndex() {
             return columnIndex;
         }
 
         public void save() {
             sheet.addRow(this);
-        }
-    }
-
-    private class WorkbookEditor {
-
-        private static final String PATH_WORKBOOK = "xl/workbook.xml";
-
-        private boolean loaded = false;
-        private boolean date1904;
-
-        public boolean isDate1904() {
-            ensureLoaded();
-            return date1904;
-        }
-
-        private void ensureLoaded() {
-            if(!loaded) {
-                try (InputStream inputStream = new FileInputStream(new File(extractedSheetDirectory, PATH_WORKBOOK))) {
-                    Document doc = XmlUtils.asDocument(inputStream);
-                    Element node = (Element) doc.getElementsByTagName("workbookPr").item(0);
-                    date1904 = node.hasAttribute("date1904") && asBoolean(node.getAttribute("date1904"));
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-                loaded = true;
-            }
         }
     }
 
@@ -610,7 +422,4 @@ public class SimpleSpreadsheetEditor implements Closeable {
         }
     }
 
-    private boolean asBoolean(String value) {
-        return "1".equals(value) || "true".equals(value);
-    }
 }

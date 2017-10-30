@@ -132,7 +132,7 @@ class SharedStringsEditor extends Editor {
             throw new IllegalStateException(e);
         }
         createContentTypeOverride();
-        spreadsheetEditor.addWorkbookRel("http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings", "sharedStrings.xml");
+        spreadsheetEditor.workbookEditor.addWorkbookRel("http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings", "sharedStrings.xml");
     }
 
     private void createContentTypeOverride() {
