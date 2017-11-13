@@ -457,6 +457,45 @@ function Taskboard() {
         });
         return stepsOfLane;
     }
+
+    this.messageTypes = {
+        SUCCESS: 'SUCCESS',
+        WARN: 'WARN',
+        ERROR: 'ERROR'
+    }
+
+    this.flagMessagesSuccess = function(triggerSource, key, title, description, buttons) {
+        var flagMessage = new FlagMessageBuilder(key).type(this.messageTypes.ERROR).title(title).description(description).build();
+        this.flagMessagesAdd(triggerSource, flagMessage);
+    }
+
+    this.flagMessagesWarn = function(triggerSource, key, title, description, buttons) {
+        var flagMessage = new FlagMessageBuilder(key).type(this.messageTypes.WARN).title(title).description(description).build();
+        this.flagMessagesAdd(triggerSource, flagMessage);
+    }
+
+    this.flagMessagesError = function(triggerSource, key, title, description, buttons) {
+        var flagMessage = new FlagMessageBuilder(key).type(this.messageTypes.ERROR).title(title).description(description).build();
+        this.flagMessagesAdd(triggerSource, flagMessage);
+    }
+
+    this.flagMessagesAdd = function(triggerSource, flagMessage) {
+        triggerSource.fire("iron-signal", {name: 'flag-message-add', data: flagMessage});
+    }
+
+    this.flagMessagesRemove = function(triggerSource, key) {
+        triggerSource.fire("iron-signal", {name: 'flag-message-remove', data: key});
+    }
+    
+    this.addFlagMessageToTest = function() {
+        var flagMessage = new FlagMessageBuilder('OCDT3-5').
+            type(this.messageTypes.SUCCESS).
+            title('Flag Message Title').
+            description('Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.').
+            build();
+        var taskboardHome = document.querySelector('taskboard-home');
+        this.flagMessagesAdd(taskboardHome, flagMessage);
+    }
 }
 
 function flash(el, color) {
@@ -465,3 +504,47 @@ function flash(el, color) {
 }
 
 var taskboard = new Taskboard();
+
+function FlagMessage(key) {
+    var key = key;
+    this.title = null;
+    this.description = null;
+    this.type = null;
+    this.buttons = [];
+
+    this.getKey = function() {
+        return key;
+    }
+    this.addButton = function(text, callback) {
+        var button = {
+                text: text,
+                callback: callback
+            }
+        this.buttons.push(button);
+    }
+}
+
+function FlagMessageBuilder(key) {
+    var flagMessage = new FlagMessage(key);
+    return {
+        title: function(title) {
+            flagMessage.title = title;
+            return this;
+        },
+        description: function(description) {
+            flagMessage.description = description;
+            return this;
+        },
+        type: function(type) {
+            flagMessage.type = type;
+            return this;
+        },
+        button: function(text, callback) {
+            flagMessage.addButton(text, callback);
+            return this;
+        },
+        build: function() {
+            return flagMessage;
+        }
+    }
+}

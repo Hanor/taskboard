@@ -1,0 +1,255 @@
+<!--
+  [LICENSE]
+  Taskboard
+  - - -
+  Copyright (C) 2015 - 2016 Objective Solutions
+  - - -
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  [/LICENSE]
+  -->
+<dom-module id="flag-messages">
+
+    <template>
+
+        <style>
+            :host {
+            }
+
+            .flag-messages__toast {
+                background: transparent !important;
+                width: 300px !important;
+                height: auto !important;
+                min-width: initial !important;
+                min-height: initial !important;
+                max-width: initial !important;
+                max-height: initial !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                top: initial !important;
+                right: 8px !important;
+                bottom: 8px !important;
+                left: initial !important;
+            }
+
+            .flag-messages__messages {
+                display: flex;
+                flex-direction: row-reverse;
+
+                padding: 0;
+                margin: 0;
+            }
+
+            .flag-message {
+                animation: fade-in .7s;
+
+                display: flex;
+
+                background: #CCC;
+                padding: 8px;
+                position: relative;
+                border-radius: 5px;
+            }
+
+            .flag-message--SUCCESS {
+                background: green;
+            }
+
+            .flag-message--WARN {
+                background: yellow;
+            }
+
+            .flag-message--ERROR {
+                background: red;
+            }
+
+            .flag-message__icon {
+                flex: 0 0 auto;
+
+                width: 16px;
+                height: 16px;
+                margin-right: 8px;
+            }
+
+            .flag-message__content {
+                flex: 1;
+            }
+
+            .flag-message__title {
+                margin: 0;
+                font-weight: bold;
+                color: black;
+            }
+
+            .flag-message__description {
+                margin: 8px 0 0 0;
+                color: black;
+            }
+
+            .flag-message__buttons {
+                display: flex;
+            }
+
+            .flag-message__button {
+                flex: 0 0 auto;
+                color: #999;
+            }
+
+            .flag-message__close {
+                flex: 0 0 auto;
+
+                background: #FFF;
+                width: 12px;
+                height: 12px;
+                min-width: initial;
+                min-height: initial;
+                max-width: initial;
+                max-height: initial;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+                text-indent: -9000px; 
+                border-radius: 50%;
+            }
+
+            @keyframes fade-in {
+                from {opacity: 0;}
+                to {opacity: 1;}
+            }
+
+            @keyframes fade-out {
+                from {opacity: 1;}
+                to {opacity: 0;}
+            }
+        </style>
+
+        <iron-signals
+            on-iron-signal-flag-message-add="_addByEvent"
+            on-iron-signal-flag-message-remove="_removeByEvent"
+            ></iron-signals>
+
+        <paper-toast id="flagMessages" duration="0" class="flag-messages__toast">
+            <ul class="flag-messages__messages">
+                <template is="dom-repeat" items="{{_messages}}" as="message">
+                    <li id$="flag-message-{{_getMessageKey(message)}}" class$="flag-messages__message flag-message flag-message--{{message.type}}">
+                        <iron-icon class="flag-message__icon"icon="icons:error"></iron-icon>
+                        <div class="flag-message__content">
+                            <template is="dom-if" if="{{message.title}}">
+                                <h3 class="flag-message__title">
+                                    {{message.title}}
+                                </h3>
+                            </template>
+                            <template is="dom-if" if="{{message.description}}">
+                                <p class="flag-message__description">
+                                    {{message.description}}
+                                </p>
+                            </template>
+                            <template is="dom-if" if="{{_shouldShowButtons(message.buttons)}}">
+                                <div class="flag-message__buttons">
+                                    <template is="dom-repeat" items="{{message.buttons}}" as="button" index-as="buttonIndex">
+                                        <paper-button class="flag-message__button" data-button-index$="{{buttonIndex}}" data-key$="{{_getMessageKey(message)}}" on-tap="_callbackTapped">{{button.text}}</paper-button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <paper-button class="flag-message__close" data-key$="{{_getMessageKey(message)}}" on-tap="_removeByList">Close</paper-button>
+                    </li>
+                </template>
+            </ul>
+        </paper-toast>
+
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'flag-messages',
+
+                properties: {
+                    _messages: {
+                        type: Array,
+                        value: []
+                    }
+                },
+
+                _addByEvent: function(e) {
+                    var flagMessage = e.detail;
+                    this.add(flagMessage);
+                },
+
+                add: function(flagMessage) {
+                    this._removeIfExists(flagMessage.getKey());
+                    this.push('_messages', flagMessage);
+                    if (!this._isOpened())
+                        this._open();
+                },
+
+                _removeByEvent: function(e) {
+                    var key = e.detail;
+                    this.remove(key);
+                },
+
+                _removeByList: function(e) {
+                    var key = e.target.dataset.key;
+                    this.remove(key);
+                },
+
+                remove: function(key) {
+                    this._removeIfExists(key);
+                    if (this._messages.length === 0)
+                        this._close();
+                },
+
+                _removeIfExists: function(key) {
+                    var indexToRemove = this._findIndexByKey(key);
+                    if (indexToRemove > -1)
+                        this.splice('_messages', indexToRemove, 1);
+                },
+
+                _findIndexByKey: function(key) {
+                    return this._messages.findIndex(flagMessage => flagMessage.getKey() === key);
+                },
+
+                _open: function() {
+                    this.$.flagMessages.open();
+                },
+
+                _close: function() {
+                    this.$.flagMessages.close();
+                },
+
+                _isOpened: function() {
+                    return this.$.flagMessages.opened;
+                },
+
+                _shouldShowButtons: function(buttons) {
+                    return buttons.length > 0;
+                },
+
+                _callbackTapped: function(e) {
+                    var key = e.target.dataset.key;
+                    var buttonIndex = e.target.dataset.buttonIndex;
+                    var flagMessageIndex = this._findIndexByKey(key);
+                    var callback = this.get(['_messages', flagMessageIndex, 'buttons', buttonIndex, 'callback']);
+                    callback();
+                },
+
+                _getMessageKey: function(flagMessage) {
+                    return flagMessage.getKey();
+                }
+
+            });
+        })();
+    </script>
+
+</dom-module>
