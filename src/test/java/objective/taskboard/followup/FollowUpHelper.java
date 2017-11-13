@@ -23,6 +23,9 @@ package objective.taskboard.followup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_DEMAND;
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_FEATURES;
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
 import static objective.taskboard.utils.IOUtilities.resourceToString;
 import static org.junit.Assert.assertEquals;
 
@@ -162,23 +165,31 @@ public class FollowUpHelper {
         headers.add("Doing");
         headers.add("To Do");
 
-        AnalyticsTransitionsDataRow row0 = new AnalyticsTransitionsDataRow("I-1", "Demand"
+        AnalyticsTransitionsDataRow rowDemand = new AnalyticsTransitionsDataRow("I-1", "Demand"
                 , asList(
                         DateTimeUtils.parseDate("2017-09-27")
                         , DateTimeUtils.parseDate("2017-09-26")
                         , DateTimeUtils.parseDate("2017-09-25")));
 
-        AnalyticsTransitionsDataRow row1 = new AnalyticsTransitionsDataRow("I-2", "OS"
+        AnalyticsTransitionsDataRow rowFeature = new AnalyticsTransitionsDataRow("I-2", "Feature"
                 , asList(
                         null
                         , DateTimeUtils.parseDate("2017-09-26")
                         , DateTimeUtils.parseDate("2017-09-25")));
 
-        return singletonList(new AnalyticsTransitionsDataSet("Demands", headers, asList(row0, row1)));
+        AnalyticsTransitionsDataRow rowSubtask = new AnalyticsTransitionsDataRow("I-3", "Sub-task"
+                , asList(
+                        null
+                        , null
+                        , DateTimeUtils.parseDate("2017-09-25")));
+
+        return asList(new AnalyticsTransitionsDataSet(TYPE_DEMAND, headers, asList(rowDemand)),
+                new AnalyticsTransitionsDataSet(TYPE_FEATURES, headers, asList(rowFeature)),
+                new AnalyticsTransitionsDataSet(TYPE_SUBTASKS, headers, asList(rowSubtask)));
     }
 
     public static List<AnalyticsTransitionsDataSet> getEmptyAnalyticsTransitionsDataSet() {
-        return singletonList(new AnalyticsTransitionsDataSet("Demands", emptyList(), emptyList()));
+        return singletonList(new AnalyticsTransitionsDataSet(TYPE_DEMAND, emptyList(), emptyList()));
     }
 
     public static List<SyntheticTransitionsDataSet> getDefaultSyntheticTransitionsDataSet() {
@@ -188,16 +199,25 @@ public class FollowUpHelper {
         headers.add("Doing");
         headers.add("To Do");
 
-        List<SyntheticTransitionsDataRow> rows = new LinkedList<>();
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 2)));
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), Ints.asList(0, 2, 0)));
-        rows.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), Ints.asList(1, 1, 0)));
+        List<SyntheticTransitionsDataRow> rowsDemand = new LinkedList<>();
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 1)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), Ints.asList(0, 1, 0)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), Ints.asList(1, 0, 0)));
 
-        return singletonList(new SyntheticTransitionsDataSet("Demands", headers, rows));
+        List<SyntheticTransitionsDataRow> rowsFeature = new LinkedList<>();
+        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 1)));
+        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), Ints.asList(0, 1, 0)));
+
+        List<SyntheticTransitionsDataRow> rowsSubtask = new LinkedList<>();
+        rowsSubtask.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), Ints.asList(0, 0, 1)));
+
+        return asList(new SyntheticTransitionsDataSet(TYPE_DEMAND, headers, rowsDemand),
+                new SyntheticTransitionsDataSet(TYPE_FEATURES, headers, rowsFeature),
+                new SyntheticTransitionsDataSet(TYPE_SUBTASKS, headers, rowsSubtask));
     }
 
     public static List<SyntheticTransitionsDataSet> getEmptySyntheticTransitionsDataSet() {
-        return singletonList(new SyntheticTransitionsDataSet("Demands", emptyList(), emptyList()));
+        return singletonList(new SyntheticTransitionsDataSet(TYPE_DEMAND, emptyList(), emptyList()));
     }
 
     public static String followupEmptyV0() {

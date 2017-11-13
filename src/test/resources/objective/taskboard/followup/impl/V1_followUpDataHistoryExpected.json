@@ -43,7 +43,7 @@
   },
   "analyticsTransitionsDsList": [
     {
-      "issueType": "Demands",
+      "issueType": "Demand",
       "headers": [
         "PKEY",
         "ISSUE_TYPE",
@@ -60,13 +60,46 @@
             "2017-09-26T00:00-03:00[America/Sao_Paulo]",
             "2017-09-25T00:00-03:00[America/Sao_Paulo]"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "issueType": "Features",
+      "headers": [
+        "PKEY",
+        "ISSUE_TYPE",
+        "Done",
+        "Doing",
+        "To Do"
+      ],
+      "rows": [
         {
           "issueKey": "I-2",
-          "issueType": "OS",
+          "issueType": "Feature",
           "transitionsDates": [
             null,
             "2017-09-26T00:00-03:00[America/Sao_Paulo]",
+            "2017-09-25T00:00-03:00[America/Sao_Paulo]"
+          ]
+        }
+      ]
+    },
+    {
+      "issueType": "Subtasks",
+      "headers": [
+        "PKEY",
+        "ISSUE_TYPE",
+        "Done",
+        "Doing",
+        "To Do"
+      ],
+      "rows": [
+        {
+          "issueKey": "I-3",
+          "issueType": "Sub-task",
+          "transitionsDates": [
+            null,
+            null,
             "2017-09-25T00:00-03:00[America/Sao_Paulo]"
           ]
         }
@@ -75,7 +108,25 @@
   ],
   "syntheticsTransitionsDsList": [
     {
-      "issueType": "Demands",
+      "issueType": "Demand",
+      "headers": [
+        "Date",
+        "Done",
+        "Doing",
+        "To Do"
+      ]
+    },
+    {
+      "issueType": "Features",
+      "headers": [
+        "Date",
+        "Done",
+        "Doing",
+        "To Do"
+      ]
+    },
+    {
+      "issueType": "Subtasks",
       "headers": [
         "Date",
         "Done",

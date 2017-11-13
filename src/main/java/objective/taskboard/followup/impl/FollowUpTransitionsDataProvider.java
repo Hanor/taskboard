@@ -34,6 +34,10 @@ import objective.taskboard.utils.DateTimeUtils;
 
 public class FollowUpTransitionsDataProvider {
 
+    public static final String TYPE_DEMAND = "Demand";
+    public static final String TYPE_FEATURES = "Features";
+    public static final String TYPE_SUBTASKS = "Subtasks";
+
     private static final long STATUS_CATEGORY_DONE = 3L;
 
     private static final String HEADER_ISSUE_KEY_COLUMN_NAME = "PKEY";
@@ -62,9 +66,9 @@ public class FollowUpTransitionsDataProvider {
         });
 
         List<AnalyticsTransitionsDataSet> analyticsTransitionsDSs = new LinkedList<>();
-        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs("Demand", jiraProperties.getStatusPriorityOrder().getDemandsInOrder(), demands, timezone));
-        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs("Features", jiraProperties.getStatusPriorityOrder().getTasksInOrder(), features, timezone));
-        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs("Subtasks", jiraProperties.getStatusPriorityOrder().getSubtasksInOrder(), subtasks, timezone));
+        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs(TYPE_DEMAND, jiraProperties.getStatusPriorityOrder().getDemandsInOrder(), demands, timezone));
+        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs(TYPE_FEATURES, jiraProperties.getStatusPriorityOrder().getTasksInOrder(), features, timezone));
+        analyticsTransitionsDSs.add(getAnalyticsTransitionsDs(TYPE_SUBTASKS, jiraProperties.getStatusPriorityOrder().getSubtasksInOrder(), subtasks, timezone));
         return analyticsTransitionsDSs;
     }
 

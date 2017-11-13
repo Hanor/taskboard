@@ -25,8 +25,6 @@ import java.util.List;
  */
 
 public abstract class Constants {
-    
-    public static final int STATUS_CATEGORY_ID_IN_PROGRESS = 4;
 
     public static final List<String> FROMJIRA_HEADERS = Arrays.asList("project", "demand_type", "demand_status", "demand_num", "DEMAND_SUMMARY", "demand_description", "TASK_TYPE", "TASK_STATUS", "TASK_NUM", "TASK_SUMMARY", "TASK_DESCRIPTION", "TASK_FULL_DESCRIPTION", "SUBTASK_TYPE", "SUBTASK_STATUS", "SUBTASK_NUM", "SUBTASK_SUMMARY", "SUBTASK_DESCRIPTION", "SUBTASK_FULL_DESCRIPTION", "DEMAND_ID", "TASK_ID", "SUBTASK_ID", "planning_type", "task_release", "worklog", "wrong_worklog", "Demand_ballpark", "TASK_BALLPARK", "tshirt_size", "Query_Type", "EffortEstimate", "CycleEstimate", "EffortOnBacklog", "CycleOnBacklog", "BallparkEffort", "PlannedEffort", "EffortDone", "CycleDone", "WorklogDone", "WorklogDoing", "CountTasks", "CountDemands", "CountSubtasks", "SubtaskEstimativeForEEPCalculation", "PlannedEffortOnBug", "WorklogOnBug");
 

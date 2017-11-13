@@ -39,6 +39,7 @@ import objective.taskboard.followup.data.Template;
 import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
 import objective.taskboard.followup.impl.FollowUpDataProviderFromHistory;
 import objective.taskboard.issueBuffer.IssueBufferState;
+import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.ProjectService;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor;
 import objective.taskboard.utils.IOUtilities;
@@ -66,10 +67,13 @@ public class FollowUpFacade implements FollowUpFacadeInterface {
     @Autowired
     private DataBaseDirectory dataBaseDirectory;
 
+    @Autowired
+    private JiraProperties jiraProperties;
+
     @Override
     public FollowUpGenerator getGenerator(String templateName, Optional<String> date) {
         Template template = templateService.getTemplate(templateName);
-        return new FollowUpGenerator(getProvider(date), new SimpleSpreadsheetEditor(followUpTemplateStorage.getTemplate(template.getPath())));
+        return new FollowUpGenerator(getProvider(date), new SimpleSpreadsheetEditor(followUpTemplateStorage.getTemplate(template.getPath())), jiraProperties);
     }
 
     @Override

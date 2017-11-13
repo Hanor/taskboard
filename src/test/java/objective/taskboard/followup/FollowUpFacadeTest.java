@@ -61,6 +61,7 @@ import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.followup.data.Template;
 import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
 import objective.taskboard.followup.impl.FollowUpTemplateStorage;
+import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.rules.CleanupDataFolderRule;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -70,6 +71,7 @@ public class FollowUpFacadeTest {
     public CleanupDataFolderRule clean = new CleanupDataFolderRule(Paths.get("data/followup-templates"));
 
     private static final String FORMULA = "someFormula";
+    private static final String DATE_NULL = "12/31/99 0:00";
 
     @Mock
     private TemplateService templateService;
@@ -79,6 +81,9 @@ public class FollowUpFacadeTest {
 
     @Mock
     private DataBaseDirectory dataBaseDirectory;
+
+    @Mock
+    private JiraProperties jiraProperties;
 
     @Spy
     @InjectMocks
@@ -104,6 +109,13 @@ public class FollowUpFacadeTest {
         String path = argCaptor.getValue();
         template = mock(Template.class);
         when(template.getPath()).thenReturn(path);
+
+        String[] statusOrder = new String[] { "Done", "Doing", "To Do" };
+        JiraProperties.StatusPriorityOrder statusPriorityOrder = new JiraProperties.StatusPriorityOrder();
+        statusPriorityOrder.setDemands(statusOrder);
+        statusPriorityOrder.setTasks(statusOrder);
+        statusPriorityOrder.setSubtasks(statusOrder);
+        when(jiraProperties.getStatusPriorityOrder()).thenReturn(statusPriorityOrder);
     }
 
     @Test
@@ -135,7 +147,8 @@ public class FollowUpFacadeTest {
                 , "1", "2", "3", "Ballpark", "Release", "1", "1", "1", "1", "M", "Type"
                 , FORMULA, FORMULA, FORMULA, FORMULA, FORMULA, FORMULA, FORMULA
                 , FORMULA, FORMULA, FORMULA, FORMULA, FORMULA, FORMULA, FORMULA
-                , FORMULA, FORMULA};
+                , FORMULA, FORMULA, "9/27/17 0:00", "9/26/17 0:00", "9/25/17 0:00"
+                , DATE_NULL, "9/26/17 0:00", "9/25/17 0:00", DATE_NULL, DATE_NULL, "9/25/17 0:00"};
     }
 
     private String[] expectedRowContentOfAnalytics() {
@@ -158,7 +171,7 @@ public class FollowUpFacadeTest {
     }
 
     private String[] formattedContentOfFirstRowOfAnalyticsWorksheet(SpreadsheetMLPackage excelDoc) throws Docx4JException, Xlsx4jException {
-        assertThat(excelDoc.getWorkbookPart().getContents().getSheets().getSheet().get(9).getName(), is("Analytic - Demands"));
+        assertThat(excelDoc.getWorkbookPart().getContents().getSheets().getSheet().get(9).getName(), is("Analytic - Demand"));
         WorksheetPart analytics = excelDoc.getWorkbookPart().getWorksheet(9);
 
         Row row = analytics.getContents().getSheetData().getRow().get(1);

@@ -20,13 +20,19 @@
  */
 package objective.taskboard.followup;
 
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_DEMAND;
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_FEATURES;
+import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 
+import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor.Sheet;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor.SheetRow;
@@ -39,9 +45,12 @@ public class FollowUpGenerator {
 
 	private SimpleSpreadsheetEditor editor;
 
-    public FollowUpGenerator(FollowupDataProvider provider, SimpleSpreadsheetEditor editor) {
+    private JiraProperties jiraProperties;
+
+    public FollowUpGenerator(FollowupDataProvider provider, SimpleSpreadsheetEditor editor, JiraProperties jiraProperties) {
         this.provider = provider;
         this.editor = editor;
+        this.jiraProperties = jiraProperties;
     }
 
     public Resource generate(String [] includedProjects, ZoneId timezone) {
@@ -64,7 +73,19 @@ public class FollowUpGenerator {
 
     Sheet generateFromJiraSheet(FollowupData followupData) {
         Sheet sheet = editor.getSheet("From Jira");
-        sheet.truncate(1);
+        sheet.truncate(0);
+
+        SheetRow rowHeader = sheet.createRow();
+        for (String header : followupData.fromJiraDs.headers)
+            rowHeader.addColumn(header);
+        for (String statusDemand : jiraProperties.getStatusPriorityOrder().getDemandsInOrder())
+            rowHeader.addColumn(TYPE_DEMAND + " - " + statusDemand);
+        for (String statusTask : jiraProperties.getStatusPriorityOrder().getTasksInOrder())
+            rowHeader.addColumn(TYPE_FEATURES + " - " + statusTask);
+        for (String statusSubtask : jiraProperties.getStatusPriorityOrder().getSubtasksInOrder())
+            rowHeader.addColumn(TYPE_SUBTASKS + " - " + statusSubtask);
+        rowHeader.save();
+
         for (FromJiraDataRow fromJiraDataRow : followupData.fromJiraDs.rows) {
             SheetRow row = sheet.createRow();
 
@@ -114,11 +135,44 @@ public class FollowUpGenerator {
             row.addFormula("IF(AllIssues[TASK_TYPE]=\"Bug\",AllIssues[EffortEstimate], 0)");
             row.addFormula("IF(AllIssues[TASK_TYPE]=\"Bug\",AllIssues[worklog],0)");
 
+            addTransitionsDates(followupData.analyticsTransitionsDsList, TYPE_DEMAND, fromJiraDataRow.demandNum, row,
+                    jiraProperties.getStatusPriorityOrder().getDemandsInOrder().length);
+            addTransitionsDates(followupData.analyticsTransitionsDsList, TYPE_FEATURES, fromJiraDataRow.taskNum, row,
+                    jiraProperties.getStatusPriorityOrder().getTasksInOrder().length);
+            addTransitionsDates(followupData.analyticsTransitionsDsList, TYPE_SUBTASKS, fromJiraDataRow.subtaskNum, row,
+                    jiraProperties.getStatusPriorityOrder().getSubtasksInOrder().length);
+
             row.save();
         }
         sheet.save();
 
         return sheet;
+    }
+
+    private void addTransitionsDates(List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList, String type,
+            String issueKey, SheetRow row, int statusCount) {
+        if (analyticsTransitionsDsList == null)
+            return;
+
+        Optional<AnalyticsTransitionsDataSet> transitionsDS = analyticsTransitionsDsList.stream()
+            .filter(dataset -> type.equals(dataset.issueType))
+            .findFirst();
+
+        if (!transitionsDS.isPresent())
+            return;
+
+        Optional<AnalyticsTransitionsDataRow> transitionsRowIssue = transitionsDS.get().rows.stream()
+            .filter(r -> r.issueKey.equals(issueKey))
+            .findFirst();
+
+        if (transitionsRowIssue.isPresent()) {
+            transitionsRowIssue.get().transitionsDates.stream()
+                .forEach(td -> row.addColumn(td));
+        } else {
+            ZonedDateTime dateNull = null;
+            for (int i = 0; i < statusCount; i++)
+                row.addColumn(dateNull);
+        }
     }
 
     List<Sheet> generateTransitionsSheets(FollowupData followupData) {
