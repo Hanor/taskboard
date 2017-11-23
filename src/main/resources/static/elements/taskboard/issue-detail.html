@@ -1298,9 +1298,11 @@
                     }
 
                     var step = taskboard.getIssueStep(this.item);
-                    var stepLocalState = this.localStates.steps[step.id];
-                    if (stepLocalState)
-                        isUpdating = isUpdating || stepLocalState.isUpdating;
+                    if (step) {
+                        var stepLocalState = this.localStates.steps[step.id];
+                        if (stepLocalState)
+                            isUpdating = isUpdating || stepLocalState.isUpdating;
+                    }
 
                     this.set('isUpdating', isUpdating);
                     this.set('errorMessage', errorMessage);

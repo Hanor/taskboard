@@ -354,10 +354,10 @@
                 },
 
                 handleUpdatedIssues: function(event, data) {
-                    var issueBoardStep = taskboard.getIssueStep(data.issue)
-                    if (issueBoardStep == null)
+                    var issueStep = taskboard.getIssueStep(data.issue)
+                    if (issueStep == null)
                         return;
-                    var belongsToThisStep = this.stepMetadata.id === issueBoardStep.id;
+                    var belongsToThisStep = this.stepMetadata.id === issueStep.id;
                     var self = this;
                     var issueIndex = findIndexInArray(this.issues, function(issue) {
                             return issue.issueKey === data.issue.issueKey;

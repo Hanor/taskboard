@@ -337,13 +337,15 @@ function Taskboard() {
                 self.issues[previousInstance.index] = converted; 
 
             updatedIssueKeys.push(anEvent.target.issueKey)
-            var stepId = self.getIssueStep(converted).id;
-            if (Object.keys(updateByStep).indexOf(stepId) === -1)
-                updateByStep[stepId] = [];
+            var step = self.getIssueStep(converted);
 
-            updateByStep[stepId].push(anEvent.target);
+            if (step) {
+                if (Object.keys(updateByStep).indexOf(step.id) === -1)
+                    updateByStep[step.id] = [];
 
-            self.fireIssueUpdated('server', taskboardHome, anEvent.target, anEvent.updateType);
+                updateByStep[step.id].push(anEvent.target);
+                self.fireIssueUpdated('server', taskboardHome, anEvent.target, anEvent.updateType);
+            }
         });
 
         if (updatedIssueKeys.length === 0)

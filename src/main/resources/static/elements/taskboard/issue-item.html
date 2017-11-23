@@ -403,7 +403,11 @@
                     if (typeof this.item.__eventInfo === 'undefined')
                         return;
 
-                    var belongsToThisStep = this.boardstepid == taskboard.getIssueStep(this.item).id;
+                    var step = taskboard.getIssueStep(this.item);
+                    if (!step)
+                        return;
+
+                    var belongsToThisStep = this.boardstepid === step.id;
                     if (!belongsToThisStep)
                         return;
 
