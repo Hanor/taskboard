@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 
+import objective.taskboard.followup.impl.FollowUpEffortProgressDataProvider;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor.Sheet;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor.SheetRow;
@@ -59,6 +60,7 @@ public class FollowUpGenerator {
 
             generateFromJiraSheet(followupData);
             generateTransitionsSheets(followupData);
+            generateEffortProgress(followupData);
 
             return IOUtilities.asResource(editor.toBytes());
         } catch (Exception e) {
@@ -258,4 +260,31 @@ public class FollowUpGenerator {
     public SimpleSpreadsheetEditor getEditor() {
         return editor;
     }
+
+    private Sheet generateEffortProgress(FollowupData followupData) {
+
+        EffortProgressDataSet effortProgressDs = FollowUpEffortProgressDataProvider.getEffortProgressDs(followupData.followupDataVersion, followupData.fromJiraDs);
+
+        Sheet sheet = editor.getOrCreateSheet("Effort Progress");
+        sheet.truncate(0);
+
+        SheetRow rowHeader = sheet.createRow();
+        for(String header : effortProgressDs.headers) {
+            rowHeader.addColumn(header);
+        }
+        rowHeader.save();
+
+        for (EffortProgressDataRow efforProgressDataRow : effortProgressDs.rows) {
+            SheetRow row = sheet.createRow();
+            row.addColumn(efforProgressDataRow.date);
+            row.addColumn(efforProgressDataRow.effortDone);
+            row.addColumn(efforProgressDataRow.effortOnBacklog);
+            row.save();
+        }
+
+        sheet.save();
+
+        return sheet;
+    }
+
 }
