@@ -50,7 +50,7 @@ function SearchFilter() {
             return true;
         else if (matchByAttribute(issue.summary, searchUpperCase))
             return true;
-        else if (issue.customfields.release && matchByAttribute(issue.customfields.release.value, searchUpperCase))
+        else if (taskboard.getRelease(issue) && matchByAttribute(taskboard.getRelease(issue).value, searchUpperCase))
             return true;
         else if (matchByAttribute(issue.usersTeam, searchUpperCase))
             return true;

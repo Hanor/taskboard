@@ -421,12 +421,7 @@ function Taskboard() {
         });
 
         issue.customfields = {
-            sizes: listSizes,
-            classeDeServico: issue[CUSTOMFIELD.CLASSE_DE_SERVICO],
-            impedido: issue[CUSTOMFIELD.IMPEDIDO],
-            lastBlockReason: issue[CUSTOMFIELD.LAST_BLOCK_REASON],
-            additionalEstimatedHours: issue[CUSTOMFIELD.ADDITIONAL_ESTIMATED_HOURS],
-            release: issue[CUSTOMFIELD.RELEASE]
+            sizes: listSizes
         };
 
         issue.hierarchyMatch = false;
@@ -480,6 +475,26 @@ function Taskboard() {
 
     this.getResolutionFieldName = function() {
         return "resolution";
+    }
+
+    this.getClassOfService = function(issue) {
+        return issue[CUSTOMFIELD.CLASSE_DE_SERVICO];
+    }
+
+    this.isBlocked = function(issue) {
+        return issue[CUSTOMFIELD.IMPEDIDO];
+    }
+
+    this.getLastBlockReason = function(issue) {
+        return issue[CUSTOMFIELD.LAST_BLOCK_REASON];
+    }
+
+    this.getAdditionalEstimatedHours = function(issue) {
+        return issue[CUSTOMFIELD.ADDITIONAL_ESTIMATED_HOURS];
+    }
+
+    this.getRelease = function(issue) {
+        return issue[CUSTOMFIELD.RELEASE];
     }
 
 }

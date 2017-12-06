@@ -135,10 +135,10 @@
                     style$="{{getIssueColor(item)}} -webkit-mask-image:url({{getIssueTypeImage(item, parentTypeIcon)}}); -moz-mask-image:url({{getIssueTypeImage(item, parentTypeIcon)}}); mask-image:url({{getIssueTypeImage(item, parentTypeIcon)}});">
             </div>
 
-            <template is="dom-if" if="{{issueImpedida(item)}}">
+            <template is="dom-if" if="{{_isBlocked(item)}}">
                 <div class="impedida">
                     <iron-icon id="issueImpedidaIcon" class="iconImpedidaCancelada" icon="av:not-interested"
-                               title="Blocked issue. Last Block Reason: {{item.customfields.lastBlockReason}}"></iron-icon>
+                               title="Blocked issue. Last Block Reason: {{_getLastBlockReason(item)}}"></iron-icon>
                 </div>
             </template>
 
@@ -169,10 +169,6 @@
                     hidden: {
                         type: Boolean
                     }
-                },
-
-                issueImpedida: function (item) {
-                    return this.item.customfields.impedido;
                 },
 
                 issueCancelada: function (item) {
@@ -227,6 +223,14 @@
 
                 getStatusName: function(statusId) {
                     return taskboard.getStatusName(statusId);
+                },
+
+                _isBlocked: function (issue) {
+                    return taskboard.isBlocked(issue);
+                },
+
+                _getLastBlockReason: function(issue) {
+                    return taskboard.getLastBlockReason(issue);
                 }
 
             });

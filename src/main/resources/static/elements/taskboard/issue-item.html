@@ -287,10 +287,10 @@
             <paper-material id="issueCard" class$="issue {{_classes}} {{highlightClass}}" elevation="0" style$="{{getIssueColor(item)}}"
                             on-tap="opendialog" title="Issue details">
 
-                <template is="dom-if" if="{{issueImpedida(item)}}">
+                <template is="dom-if" if="{{_isBlocked(item)}}">
                     <div class="impedida">
                         <iron-icon id="issueImpedidaIcon" class="iconImpedidaCancelada" icon="av:not-interested"
-                                   title="Blocked issue. Last Block Reason: {{item.customfields.lastBlockReason}}"></iron-icon>
+                                   title="Blocked issue. Last Block Reason: {{_getLastBlockReason(item)}}"></iron-icon>
                     </div>
                 </template>
 
@@ -537,10 +537,6 @@
                     this.fire('iron-signal', {name: 'show-details', data: {item: this.item}});
                 },
 
-                issueImpedida: function (item) {
-                    return this.item.customfields.impedido;
-                },
-
                 issueCancelada: function (item) {
                     return STATUSES_CANCELED_IDS.indexOf(item.status) != -1;
                 },
@@ -564,6 +560,14 @@
                 _shouldShowErrorIcon: function(isUpdating, hasError) {
                     return !isUpdating && hasError;
                 },
+
+                _isBlocked: function (issue) {
+                    return taskboard.isBlocked(issue);
+                },
+
+                _getLastBlockReason: function(issue) {
+                    return taskboard.getLastBlockReason(issue);
+                }
 
             });
 

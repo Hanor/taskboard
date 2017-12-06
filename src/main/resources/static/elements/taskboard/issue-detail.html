@@ -479,7 +479,7 @@
                             </div>
                         </div>
 
-                        <template is="dom-if" if="{{issueBlocked(item)}}">
+                        <template is="dom-if" if="{{_isBlocked(item)}}">
                             <div class="column-block item-icon-text blocked">
                                 <div class="sub-header">Blocked</div>
                                 <div class="icon-text">
@@ -513,7 +513,7 @@
                         <div class="column-block half-column">
                             <div class="sub-header">Class of Service</div>
                             <div class="sub-content">
-                                {{item.customfields.classeDeServico}}
+                                {{_getClassOfService(item)}}
                             </div>
                         </div>
 
@@ -569,11 +569,11 @@
                             </div>
                         </div>
 
-                        <template is="dom-if" if="{{item.customfields.additionalEstimatedHours}}">
+                        <template is="dom-if" if="{{_getAdditionalEstimatedHours(item)}}">
                             <div class="column-block">
-                                <div class="sub-header">{{item.customfields.additionalEstimatedHours.name}}</div>
+                                <div class="sub-header">{{_getAdditionalEstimatedHoursProperty(item, 'name')}}</div>
                                 <div class="sub-content">
-                                    <span>{{item.customfields.additionalEstimatedHours.value}}</span>
+                                    <span>{{_getAdditionalEstimatedHoursProperty(item, 'value')}}</span>
                                 </div>
                             </div>
                         </template>
@@ -589,12 +589,12 @@
 
                     </div>
 
-                    <template is="dom-if" if="{{issueBlocked(item)}}">
+                    <template is="dom-if" if="{{_isBlocked(item)}}">
                         <div class="content-row">
                             <div class="column-block">
                                 <div class="sub-header">Last Block Reason</div>
                                 <div class="sub-content">
-                                    <textarea class="last-block-reason-textarea" disabled>{{item.customfields.lastBlockReason}}</textarea>
+                                    <textarea class="last-block-reason-textarea" disabled>{{_getLastBlockReason(item)}}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -710,7 +710,6 @@
         <transition-required-modal id="transitionRequiredDialog"></transition-required-modal>
         <confirm-modal id="confirmModal"></confirm-modal>
         <fields-required-modal id="fieldsRequiredDialog"></fields-required-modal>
-        <issue-new-task id="dialogNewTask" item="{{item}}"></issue-new-task>
     </template>
 
     <script>
@@ -1126,8 +1125,8 @@
                     this.subtasks = item.subtasks;
                     this.shouldShowSubtasks = typeof this.subtasks !== undefined && this.subtasks.length > 0;
 
-                    this.canBlock = !this.issueBlocked(item) && !this.issueFechada(item);
-                    this.canUnblock = this.issueBlocked(item) && !this.issueFechada(item);
+                    this.canBlock = !this._isBlocked(item) && !this.issueFechada(item);
+                    this.canUnblock = this._isBlocked(item) && !this.issueFechada(item);
                     this.issueChangeStateClass = '';
                     this.updatedIssue = null;
 
@@ -1229,10 +1228,6 @@
                     return STATUSES_CANCELED_IDS.indexOf(item.status) != -1;
                 },
 
-                issueBlocked: function (item) {
-                    return this.item.customfields.impedido;
-                },
-
                 getIssueTypeName: function(issueTypeId) {
                     return taskboard.getIssueTypeName(issueTypeId);
                 },
@@ -1258,6 +1253,26 @@
                     this.isObserving = true;
                     this.set('updatedIssue', event.detail.issue);
                     this.set('issueChangeStateClass', 'visible-glasspane');
+                },
+
+                _isBlocked: function (issue) {
+                    return taskboard.isBlocked(issue);
+                },
+
+                _getClassOfService: function(issue) {
+                    return taskboard.getClassOfService(issue);
+                },
+
+                _getLastBlockReason: function(issue) {
+                    return taskboard.getLastBlockReason(issue);
+                },
+
+                _getAdditionalEstimatedHours: function(issue) {
+                    return taskboard.getAdditionalEstimatedHours(issue);
+                },
+
+                _getAdditionalEstimatedHoursProperty: function(issue, property) {
+                    return taskboard.getAdditionalEstimatedHours(issue)[property];
                 },
 
                 refreshIfUpdated: function() {
