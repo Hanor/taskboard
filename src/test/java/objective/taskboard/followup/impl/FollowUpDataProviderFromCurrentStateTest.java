@@ -189,7 +189,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
     
@@ -243,7 +243,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 
@@ -437,7 +437,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 
@@ -499,7 +499,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN" +
 
             "\n\n"+
@@ -531,7 +531,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 15.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 
@@ -635,6 +635,60 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
+            " taskBallpark           : 0.0\n" + 
+            " queryType              : SUBTASK PLAN"
+            );
+    }
+    
+    @Test
+    public void featureWithSubtaskWithoutTShirt_ShouldUseParentEstimativeInTaskBallpark() {
+        configureBallparkMappings(
+                taskIssueType + " : \n" +
+                "  - issueType : BALLPARK - Development\n" + 
+                "    tshirtCustomFieldId: Dev_Tshirt\n" + 
+                "    jiraIssueTypes:\n" + 
+                "      - " + devIssueType + "\n"
+                );
+
+        tshirtSizeInfo.setIds(asList("Dev_Tshirt","Alpha_TestTshirt","Review_Tshirt"));
+
+        issues( 
+            demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1),
+
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2).timeSpentInHours(1)
+                    .tshirt("Dev_Tshirt", "L").release("release 66"),
+
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType)
+        );
+
+        assertFollowupsForIssuesEquals(
+            " planningType           : Plan\n" + 
+            " project                : A Project\n" + 
+            " demandType             : Demand\n" + 
+            " demandStatus           : To Do\n" + 
+            " demandId               : 2\n" + 
+            " demandNum              : PROJ-2\n" + 
+            " demandSummary          : Smry 2\n" + 
+            " demandDescription      : 00002 - Smry 2\n" + 
+            " taskType               : Task\n" + 
+            " taskStatus             : To Do\n" + 
+            " taskId                 : 3\n" + 
+            " taskNum                : PROJ-3\n" + 
+            " taskSummary            : Smry 3\n" + 
+            " taskDescription        : 00003 - Smry 3\n" + 
+            " taskFullDescription    : Task | 00003 - Smry 3\n" + 
+            " taskRelease            : release 66\n" + 
+            " subtaskType            : Dev\n" + 
+            " subtaskStatus          : To Do\n" + 
+            " subtaskId              : 4\n" + 
+            " subtaskNum             : PROJ-4\n" + 
+            " subtaskSummary         : Smry 4\n" + 
+            " subtaskDescription     : 00004 - Smry 4\n" + 
+            " subtaskFullDescription : To Do > Dev | 00004 - Smry 4\n" + 
+            " tshirtSize             : \n" + 
+            " worklog                : 5.0\n" + 
+            " wrongWorklog           : 0.0\n" + 
+            " demandBallpark         : 1.0\n" + 
             " taskBallpark           : 2.0\n" + 
             " queryType              : SUBTASK PLAN"
             );
@@ -682,7 +736,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 0.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 
@@ -793,7 +847,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 
@@ -970,7 +1024,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN" +
 
             "\n\n"+
@@ -1002,7 +1056,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN"             
             );
     }
@@ -1057,7 +1111,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN"
             );
     }
@@ -1403,7 +1457,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
                     .tshirt("Alpha_TestTshirt", "S")
                     .priorityOrder(1l),
 
-            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l).originalEstimateInHours(7),
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).priorityOrder(1l).originalEstimateInHours(7),
             subtask().id(5).key("PROJ-5").summary("Smry 5").timeSpentInHours(15).parent("PROJ-3").issueType(alphaIssueType).tshirtSize("L").priorityOrder(1l)
         );
 
@@ -1429,9 +1483,9 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " subtaskId              : 4\n" + 
             " subtaskNum             : PROJ-4\n" + 
             " subtaskSummary         : Smry 4\n" + 
-            " subtaskDescription     : XL | 00004 - Smry 4\n" + 
-            " subtaskFullDescription : To Do > Dev | XL | 00004 - Smry 4\n" + 
-            " tshirtSize             : XL\n" + 
+            " subtaskDescription     : 00004 - Smry 4\n" + 
+            " subtaskFullDescription : To Do > Dev | 00004 - Smry 4\n" + 
+            " tshirtSize             : \n" + 
             " worklog                : 5.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
@@ -1467,7 +1521,66 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                : 15.0\n" + 
             " wrongWorklog           : 0.0\n" + 
             " demandBallpark         : 1.0\n" + 
-            " taskBallpark           : 2.0\n" + 
+            " taskBallpark           : 0.0\n" + 
+            " queryType              : SUBTASK PLAN");
+    }
+    
+    @Test
+    public void ifSubtaskHasOriginalEstimateAndTshirt_shouldNotFillTaskballPark() {
+        configureBallparkMappings(
+                taskIssueType + " : \n" +
+                "  - issueType : BALLPARK - Development\n" + 
+                "    tshirtCustomFieldId: Dev_Tshirt\n" + 
+                "    jiraIssueTypes:\n" + 
+                "      - " + devIssueType + "\n" +
+
+                "  - issueType : BALLPARK - Alpha\n" + 
+                "    tshirtCustomFieldId: Alpha_TestTshirt\n" + 
+                "    jiraIssueTypes:\n" + 
+                "      - " + alphaIssueType + "\n"
+                );
+
+        tshirtSizeInfo.setIds(asList("Dev_Tshirt","Alpha_TestTshirt","Review_Tshirt"));
+
+        issues( 
+            demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
+
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2).timeSpentInHours(1)
+                    .tshirt("Dev_Tshirt", "L")
+                    .priorityOrder(1l),
+
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l).originalEstimateInHours(7)
+        );
+
+        assertFollowupsForIssuesEquals(
+            " planningType           : Plan\n" + 
+            " project                : A Project\n" + 
+            " demandType             : Demand\n" + 
+            " demandStatus           : To Do\n" + 
+            " demandId               : 2\n" + 
+            " demandNum              : PROJ-2\n" + 
+            " demandSummary          : Smry 2\n" + 
+            " demandDescription      : 00002 - Smry 2\n" + 
+            " taskType               : Task\n" + 
+            " taskStatus             : To Do\n" + 
+            " taskId                 : 3\n" + 
+            " taskNum                : PROJ-3\n" + 
+            " taskSummary            : Smry 3\n" + 
+            " taskDescription        : 00003 - Smry 3\n" + 
+            " taskFullDescription    : Task | 00003 - Smry 3\n" + 
+            " taskRelease            : No release set\n" + 
+            " subtaskType            : Dev\n" + 
+            " subtaskStatus          : To Do\n" + 
+            " subtaskId              : 4\n" + 
+            " subtaskNum             : PROJ-4\n" + 
+            " subtaskSummary         : Smry 4\n" + 
+            " subtaskDescription     : XL | 00004 - Smry 4\n" + 
+            " subtaskFullDescription : To Do > Dev | XL | 00004 - Smry 4\n" + 
+            " tshirtSize             : XL\n" + 
+            " worklog                : 5.0\n" + 
+            " wrongWorklog           : 0.0\n" + 
+            " demandBallpark         : 1.0\n" + 
+            " taskBallpark           : 0.0\n" + 
             " queryType              : SUBTASK PLAN");
     }
 

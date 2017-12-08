@@ -43,8 +43,10 @@ import objective.taskboard.jira.JiraProperties.CustomField.TShirtSize;
 import objective.taskboard.jira.JiraProperties.IssueLink;
 import objective.taskboard.jira.JiraProperties.IssueType.IssueTypeDetails;
 import objective.taskboard.jira.MetadataService;
+import objective.taskboard.jira.ProjectService;
 import objective.taskboard.jira.data.Status;
 import objective.taskboard.jira.data.StatusCategory;
+import objective.taskboard.jira.data.Version;
 import objective.taskboard.utils.Clock;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -64,6 +66,9 @@ public abstract class AbstractFollowUpDataProviderTest {
 
     @Mock
     private IssueTeamService issueTeamService;
+    
+    @Mock
+    private ProjectService projectService;
 
     CustomField propertiesCustomField;
     protected TShirtSize tshirtSizeInfo;
@@ -184,6 +189,7 @@ public abstract class AbstractFollowUpDataProviderTest {
         private Long priorityOrder;
         private List<Pair<String, ZonedDateTime>> transitions = new LinkedList<>();
         private Long created = 0L;
+        private String releaseId;
 
         public IssueBuilder id(int id) {
             this.id = (long) id;
@@ -196,8 +202,8 @@ public abstract class AbstractFollowUpDataProviderTest {
         }
 
         public IssueBuilder release(String releaseName) {
-            String releaseId = jiraProperties.getCustomfield().getRelease().getId();
-            customFields.put(releaseId, new objective.taskboard.data.CustomField(releaseId, releaseName));
+            when(projectService.getVersion(releaseName)).thenReturn(new Version(releaseName, releaseName));
+            releaseId = releaseName;
             return this;
         }
 
@@ -316,10 +322,10 @@ public abstract class AbstractFollowUpDataProviderTest {
                     null,//reporter
                     null,//coAssignees
                     null,//classOfService
-                    null,//releaseId
+                    releaseId,
                     buildTransitions()
                     );
-            return new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, null, null, null);
+            return new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, null, projectService, null);
         }
 
         private List<Changelog> buildTransitions() {

@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import objective.taskboard.Constants;
-import objective.taskboard.data.CustomField;
 import objective.taskboard.data.Issue;
 import objective.taskboard.followup.AnalyticsTransitionsDataSet;
 import objective.taskboard.followup.FollowupData;
@@ -341,12 +340,15 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
 
         followUpData.subtaskDescription = issueDescription(subtask);
         followUpData.subtaskFullDescription = subtask.getStatusName() + " > " + issueFullDescription(subtask);
-        followUpData.tshirtSize = subtask.getTShirtSize();
+        followUpData.tshirtSize = subtask.getTShirtSize() == null? "": subtask.getTShirtSize();
         followUpData.worklog = timeSpentInHour(subtask);
         followUpData.wrongWorklog = 0.0;
-
-        final Double subtaskOriginalEstimate = originalEstimateInHour(subtask);
-        followUpData.taskBallpark = subtaskOriginalEstimate == 0 ? originalEstimateInHour(task) : subtaskOriginalEstimate;
+        
+        if (StringUtils.isEmpty(followUpData.tshirtSize)) { 
+            followUpData.taskBallpark = originalEstimateInHour(subtask);
+            if (followUpData.taskBallpark == 0)
+                followUpData.taskBallpark = originalEstimateInHour(task);
+        }
 
         followUpData.queryType = "SUBTASK PLAN";
         return followUpData;
@@ -359,14 +361,10 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
     }
 
     private String getRelease(Issue i) {
-        if (i == null)
+        if (i == null || i.getRelease() == null)
             return null;
-
-        CustomField customField = (CustomField)i.getCustomFields().get(jiraProperties.getCustomfield().getRelease().getId());
-        if (customField == null) return null;
-        if (customField.getValue() == null)
-            return null;
-        return customField.getValue().toString();
+        
+        return i.getRelease().name; 
     }
 
     private String issueDescription(Issue issue) {
