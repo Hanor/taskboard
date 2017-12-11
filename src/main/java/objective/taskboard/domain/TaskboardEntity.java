@@ -28,6 +28,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
+import objective.taskboard.utils.ObjectUtils;
+
 @MappedSuperclass
 public abstract class TaskboardEntity {
 
@@ -45,11 +47,7 @@ public abstract class TaskboardEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        TaskboardEntity that = (TaskboardEntity) o;
-        return Objects.equals(id, that.id);
+        return ObjectUtils.equals(this, o, other -> Objects.equals(id, other.id));
     }
 
     @Override
