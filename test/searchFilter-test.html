@@ -1,0 +1,171 @@
+<!doctype html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Search Filter Test</title>
+
+    <link rel="import" href="/static/bower_components/polymer/polymer.html">
+    <link rel="import" href="/static/bower_components/test-fixture/test-fixture.html">
+
+    <script src="/static/bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="/static/bower_components/web-component-tester/browser.js"></script>
+    <link rel="import" href="/static/bower_components/paper-item/paper-item.html">
+
+    <!-- dependencies -->
+    <script src="/static/bower_components/jquery/dist/jquery.js"></script>
+    <link rel="import" href="/static/bower_components/iron-signals/iron-signals.html">
+
+    <!-- Import the element to test -->
+    <script src="/static/scripts/searchFilter.js"></script>
+
+</head>
+<body>
+    <paper-item id="dummy"></paper-item>
+
+    <script>
+        suite('<searchFilter>', function() {
+            var taskboardMock;
+            var source;
+            setup(function() {
+                source = $('#dummy')[0];
+                window.taskboard = taskboardMock = {
+                    getHierarchyMatch: function() {
+                        return null;
+                    }
+                    , getDependenciesMatch: function() {
+                        return null;
+                    }
+                }
+                // reset
+                searchFilter.updateFilter(source, {
+                    query: null
+                    , release: null
+                    , updatedIssues: null
+                    , hierarchy: null
+                    , dependencies: null
+                });
+                searchFilter.toggleRootHierarchicalFilter(source, null);
+            });
+
+            test('searchFilter loads correctly', function() {
+                assert.isDefined(searchFilter, 'should be defined.');
+            });
+
+            test('matches by default when no filter applied', function() {
+                var issue = {
+                    issueKey: "ISSUE-45"
+                }
+                expect(searchFilter.match(issue)).to.be.true;
+            });
+
+            suite('<text-search>', function() {
+                setup(function() {
+                    searchFilter.updateFilter(source, {
+                        query: "Description"
+                    });
+                });
+
+                test('matches summary', function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                        , summary: "Issue With Some Description"
+                    };
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test('matches release name', function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                        , release: {
+                            id: 1
+                            , name: 'Release Description'
+                        }
+                    };
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test('matches assignee', function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                        , assignee: 'My Name Is Description'
+                    }
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test("don't match other", function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                        , summary: "Nonsense summary"
+                        , release: {
+                            id: 1
+                            , name: 'Not released'
+                        }
+                        , assignee: 'John Doe'
+                    };
+                    expect(searchFilter.match(issue)).to.be.false;
+                });
+            });
+
+            suite('<hierarchies>', function() {
+                setup(function() {
+                    taskboardMock.getHierarchyMatch = function() {
+                        return ["ISSUE-1", "ISSUE-2"];
+                    };
+                    taskboardMock.getDependenciesMatch = function() {
+                        return [];
+                    };
+                    searchFilter.toggleRootHierarchicalFilter(source, "ISSUE-1");
+                });
+
+                test('matches hierarchy', function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                    };
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test("don't match other", function() {
+                    var issue = {
+                        issueKey: "ISSUE-99"
+                    };
+                    expect(searchFilter.match(issue)).to.be.false;
+                });
+            });
+
+            suite('<hierarchies+dependencies>', function() {
+                setup(function() {
+                    taskboardMock.getHierarchyMatch = function() {
+                        return ["ISSUE-1", "ISSUE-2"];
+                    };
+                    taskboardMock.getDependenciesMatch = function() {
+                        return ["ISSUE-3"];
+                    };
+                    searchFilter.toggleRootHierarchicalFilter(source, "ISSUE-1");
+                });
+
+                test('matches hierarchy', function() {
+                    var issue = {
+                        issueKey: "ISSUE-1"
+                    };
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test('matches dependency', function() {
+                    var issue = {
+                        issueKey: "ISSUE-3"
+                    };
+                    expect(searchFilter.match(issue)).to.be.true;
+                });
+
+                test("don't match other", function() {
+                    var issue = {
+                        issueKey: "ISSUE-99"
+                    };
+                    expect(searchFilter.match(issue)).to.be.false;
+                });
+            });
+        });
+    </script>
+
+</body>

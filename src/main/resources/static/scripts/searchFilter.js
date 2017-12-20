@@ -54,7 +54,7 @@ function SearchFilter() {
             return true;
         else if (matchByAttribute(issue.summary, searchUpperCase))
             return true;
-        else if (issue.customfields.release && matchByAttribute(issue.customfields.release.value, searchUpperCase))
+        else if (issue.release && matchByAttribute(issue.release.name, searchUpperCase))
             return true;
         else if (matchByAttribute(issue.usersTeam, searchUpperCase))
             return true;
@@ -85,11 +85,20 @@ function SearchFilter() {
         return issue.releaseId && issue.releaseId == releaseId;
     };
 
-    var matchByKey = function(issue, keys) {
-        if(!keys || !keys.length)
-            return true;
+    var matchByKey = function(issue) {
+        var allEmpty = true;
+        // may receive an arbitrary number of arguments
+        for (var i = 1; i < arguments.length; ++i) {
+            var keys = arguments[i];
+            if(!keys || !keys.length)
+                continue;
 
-        return _.contains(keys, issue.issueKey);
+            allEmpty = false;
+            if(_.contains(keys, issue.issueKey))
+                return true;
+        }
+        // if all keys are empty, return as matched
+        return allEmpty;
     };
 
     this.updateFilter = function(source, change) {
@@ -106,8 +115,7 @@ function SearchFilter() {
 
         return matchByString(issue, searchData.query)
             && matchByRelease(issue, searchData.release)
-            && matchByKey(issue, searchData.hierarchy)
-            && matchByKey(issue, searchData.dependencies);
+            && matchByKey(issue, searchData.hierarchy, searchData.dependencies);
     };
 
     this.isHierarchyRoot = function(issueKey) {
@@ -127,6 +135,12 @@ function SearchFilter() {
 
     this.toggleRootHierarchicalFilter = function(source, issueKey) {
         rootHierarchicalFilter = rootHierarchicalFilter == issueKey ? null : issueKey;
+        var hierarchy = taskboard.getHierarchyMatch(rootHierarchicalFilter);
+        var dependencies = taskboard.getDependenciesMatch(hierarchy);
+        this.updateFilter(source, {
+            hierarchy: hierarchy
+            , dependencies: dependencies
+        });
         source.fire('iron-signal', {name: 'hierarchical-filter-changed'});
 
         if (rootHierarchicalFilter) {
@@ -134,13 +148,6 @@ function SearchFilter() {
         } else {
             source.fire('iron-signal', {name: 'search-filter-restore'});
         }
-
-        var hierarchy = taskboard.getHierarchyMatch(rootHierarchicalFilter);
-        var dependencies = taskboard.getDependenciesMatch(hierarchy);
-        this.updateFilter(source, {
-            hierarchy: hierarchy
-            , dependencies: dependencies
-        });
     };
 }
 

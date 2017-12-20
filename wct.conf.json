@@ -6,7 +6,11 @@
     }
   },
 
-  "suites": ["test/login-test.html", "test/board-search-test.html"],
+  "suites": [
+    "test/login-test.html",
+    "test/board-search-test.html",
+    "test/searchFilter-test.html"
+  ],
   "webserver": {
     "pathMappings": [
       {"/static": "target/classes/static"}
