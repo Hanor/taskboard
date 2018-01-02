@@ -39,7 +39,7 @@
 
             .card-header-custom {
                 width: 100%;
-                margin-bottom: 30px;
+                margin-bottom: 10px;
                 font-size: 24px;
                 display: flex;
             }
@@ -84,7 +84,6 @@
 
             .content-row {
                 display: flex;
-                margin-top: 20px;
                 margin-left: -10px;
                 margin-right: -10px;
             }
@@ -95,6 +94,7 @@
 
             .column-block {
                 flex: 1;
+                margin-top: 20px;
                 margin-left: 10px;
                 margin-right: 10px;
             }
@@ -565,12 +565,14 @@
 
                     <div class="content-row">
 
-                        <div class="column-block">
-                            <div class="sub-header">Cycle Time</div>
-                            <div class="sub-content">
-                                {{item.cycletime}} days
+                        <template is="dom-if" if="{{_shouldShowCycleTime(item.status)}}">
+                            <div class="column-block">
+                                <div class="sub-header">Cycle Time</div>
+                                <div class="sub-content">
+                                    {{cycleTime}} days
+                                </div>
                             </div>
-                        </div>
+                        </template>
 
                         <template is="dom-if" if="{{item.customfields.additionalEstimatedHours}}">
                             <div class="column-block">
@@ -821,6 +823,10 @@
                             OPENED: 'opened',
                             CLOSED: 'closed'
                         }
+                    },
+
+                    cycleTime: {
+                        type: Number
                     }
 
                 },
@@ -1131,8 +1137,8 @@
 
                 setCard: function(item) {
                     var startDateStep = new Date(item.startDateStepMillis);
-                    item.cycletime = cycleTime.getCycleTime(startDateStep, new Date()).toFixed(2);
-                    
+                    this.cycleTime = cycleTime.getCycleTime(startDateStep, new Date()).toFixed(2);
+
                     this.item = item;
                     $(this.$.modal).css('background-color', this.item.color);
 
@@ -1332,6 +1338,10 @@
 
                 _isOpenedAndIsTheSameIssue: function(issueKey) {
                     return this.isOpen && (this.item && this.item.issueKey == issueKey);
+                },
+
+                _shouldShowCycleTime: function(status) {
+                    return !_.contains(STATUSES_COMPLETED_IDS, status);
                 },
 
             });
