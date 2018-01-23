@@ -34,24 +34,23 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueLink;
-import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
-
 import objective.taskboard.data.Changelog;
 import objective.taskboard.data.CustomField;
 import objective.taskboard.jira.JiraProperties;
+import objective.taskboard.jira.client.JiraCommentDto;
+import objective.taskboard.jira.client.JiraComponentDto;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraIssueLinkTypeDto;
+import objective.taskboard.jira.client.JiraLinkDto;
 import objective.taskboard.utils.DateTimeUtils;
 
 public class IssueFieldsExtractor {
     private static final int REASON_WIDTH_LIMIT = 200;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IssueFieldsExtractor.class);
 
-    public static IssueParent extractRealParent(Issue issue) {
-        IssueField field = issue.getField("parent");
+    public static IssueParent extractRealParent(JiraIssueDto issue) {
+        JiraIssueFieldDto field = issue.getField("parent");
 
         if (field == null)
             return null;
@@ -73,7 +72,7 @@ public class IssueFieldsExtractor {
         }
     }
     
-    public static String extractParentKey(JiraProperties jiraProperties, Issue issue, List<String> parentIssueLinks) {
+    public static String extractParentKey(JiraProperties jiraProperties, JiraIssueDto issue, List<String> parentIssueLinks) {
     	IssueParent realParent = extractRealParent(issue);
         if (realParent != null)
             return realParent.getKey();
@@ -84,11 +83,11 @@ public class IssueFieldsExtractor {
         return "";
     }
 
-    public  static String extractLinkedParentKey(JiraProperties jiraProperties, Issue issue, List<String> parentIssueLinks) {
-        if (issue.getIssueLinks() == null || issue.getIssueType().getId() == jiraProperties.getIssuetype().getDemand().getId())
+    public  static String extractLinkedParentKey(JiraProperties jiraProperties, JiraIssueDto issue, List<String> parentIssueLinks) {
+        if (isEmpty(issue.getIssueLinks()) || issue.getIssueType().getId() == jiraProperties.getIssuetype().getDemand().getId())
             return null;
 
-        List<IssueLink> links = newArrayList(issue.getIssueLinks()).stream()
+        List<JiraLinkDto> links = newArrayList(issue.getIssueLinks()).stream()
                 .filter(l -> parentIssueLinks.contains(l.getIssueLinkType().getDescription()))
                 .collect(toList());
 
@@ -98,8 +97,8 @@ public class IssueFieldsExtractor {
         return links.get(0).getTargetIssueKey();
     }
 
-    public  static List<IssueCoAssignee> extractCoAssignees(JiraProperties jiraProperties, Issue issue) {
-        IssueField field = issue.getField(jiraProperties.getCustomfield().getCoAssignees().getId());
+    public  static List<IssueCoAssignee> extractCoAssignees(JiraProperties jiraProperties, JiraIssueDto issue) {
+        JiraIssueFieldDto field = issue.getField(jiraProperties.getCustomfield().getCoAssignees().getId());
 
         if (field == null)
             return newArrayList();
@@ -123,8 +122,8 @@ public class IssueFieldsExtractor {
         return coAssignees;
     }
 
-    public static CustomField extractClassOfService(JiraProperties jiraProperties,Issue issue) {
-        IssueField field = issue.getField(jiraProperties.getCustomfield().getClassOfService().getId());
+    public static CustomField extractClassOfService(JiraProperties jiraProperties,JiraIssueDto issue) {
+        JiraIssueFieldDto field = issue.getField(jiraProperties.getCustomfield().getClassOfService().getId());
 
         if (field == null)
             return null;
@@ -144,8 +143,8 @@ public class IssueFieldsExtractor {
         }
     }
 
-    public static String extractSingleValueCheckbox(String customFieldId, Issue issue) {
-        IssueField field = issue.getField(customFieldId);
+    public static String extractSingleValueCheckbox(String customFieldId, JiraIssueDto issue) {
+        JiraIssueFieldDto field = issue.getField(customFieldId);
 
         if (field == null)
             return "";
@@ -163,12 +162,12 @@ public class IssueFieldsExtractor {
         }
     }
 
-    public  static String extractBlocked(JiraProperties jiraProperties, Issue issue) {
+    public  static String extractBlocked(JiraProperties jiraProperties, JiraIssueDto issue) {
         return extractSingleValueCheckbox(jiraProperties.getCustomfield().getBlocked().getId(), issue);
     }
 
-    public  static String extractLastBlockReason(JiraProperties jiraProperties, Issue issue) {
-        IssueField field = issue.getField(jiraProperties.getCustomfield().getLastBlockReason().getId());
+    public  static String extractLastBlockReason(JiraProperties jiraProperties, JiraIssueDto issue) {
+        JiraIssueFieldDto field = issue.getField(jiraProperties.getCustomfield().getLastBlockReason().getId());
 
         if (field == null || field.getValue() == null)
             return "";
@@ -177,7 +176,7 @@ public class IssueFieldsExtractor {
         return lastBlockReason.length() > REASON_WIDTH_LIMIT ? lastBlockReason.substring(0, REASON_WIDTH_LIMIT) + "..." : lastBlockReason;
     }
 
-    public  static Map<String, CustomField> extractTShirtSizes(JiraProperties jiraProperties, Issue issue) {
+    public  static Map<String, CustomField> extractTShirtSizes(JiraProperties jiraProperties, JiraIssueDto issue) {
         Map<String, CustomField> tShirtSizes = newHashMap();
 
         for (String tSizeId : jiraProperties.getCustomfield().getTShirtSize().getIds()) {
@@ -194,8 +193,8 @@ public class IssueFieldsExtractor {
         return tShirtSizes;
     }
 
-    public  static String extractTShirtSize(Issue issue, String tShirtSizeId) {
-        IssueField field = issue.getField(tShirtSizeId);
+    public  static String extractTShirtSize(JiraIssueDto issue, String tShirtSizeId) {
+        JiraIssueFieldDto field = issue.getField(tShirtSizeId);
 
         if (field == null)
             return "";
@@ -210,33 +209,33 @@ public class IssueFieldsExtractor {
         }
     }
 
-    public  static List<String> extractComments(Issue issue) {
+    public  static List<String> extractComments(JiraIssueDto issue) {
         if (issue.getComments() == null)
             return newArrayList();
 
         return newArrayList(issue.getComments()).stream()
-               .map(Comment::toString)
+               .map(JiraCommentDto::toString)
                .collect(toList());
     }
 
-    public  static List<String> extractDependenciesIssues(JiraProperties jiraProperties, Issue issue) {
-        if (issue.getIssueLinks() == null)
+    public  static List<String> extractDependenciesIssues(JiraProperties jiraProperties, JiraIssueDto issue) {
+        if (isEmpty(issue.getIssueLinks()))
             return newArrayList();
 
         List<String> dependencies = jiraProperties.getIssuelink().getDependencies();
         
         return newArrayList(issue.getIssueLinks()).stream()
                 .filter(link ->{
-					return dependencies.contains(link.getIssueLinkType().getName()) && link.getIssueLinkType().getDirection() == Direction.OUTBOUND;
+					return dependencies.contains(link.getIssueLinkType().getName()) && link.getIssueLinkType().getDirection() == JiraIssueLinkTypeDto.Direction.OUTBOUND;
 				})
                 .map(link -> link.getTargetIssueKey())
                 .collect(toList());
     }
 
 
-    public static Map<String, CustomField> extractAdditionalEstimatedHours(JiraProperties jiraProperties, Issue issue) {
+    public static Map<String, CustomField> extractAdditionalEstimatedHours(JiraProperties jiraProperties, JiraIssueDto issue) {
         String additionalHoursId = jiraProperties.getCustomfield().getAdditionalEstimatedHours().getId();
-        IssueField field = issue.getField(additionalHoursId);
+        JiraIssueFieldDto field = issue.getField(additionalHoursId);
         if (field == null || field.getValue() == null)
             return newHashMap();
 
@@ -247,9 +246,9 @@ public class IssueFieldsExtractor {
         return mapAdditionalHours;
     }
 
-    public static String extractReleaseId(JiraProperties jiraProperties, Issue issue) {
+    public static String extractReleaseId(JiraProperties jiraProperties, JiraIssueDto issue) {
         String releaseFieldId = jiraProperties.getCustomfield().getRelease().getId();
-        IssueField field = issue.getField(releaseFieldId);
+        JiraIssueFieldDto field = issue.getField(releaseFieldId);
 
         if (field == null)
             return null;
@@ -267,23 +266,23 @@ public class IssueFieldsExtractor {
         }
     }
 
-    public static List<String> extractLabels(Issue issue) {
+    public static List<String> extractLabels(JiraIssueDto issue) {
         if (issue.getLabels() == null)
             return newArrayList();
 
         return issue.getLabels().stream().collect(toList());
     }
 
-    public static List<String> extractComponents(Issue issue) {
+    public static List<String> extractComponents(JiraIssueDto issue) {
         if (issue.getComponents() == null)
             return newArrayList();
 
         return newArrayList(issue.getComponents()).stream()
-                .map(BasicComponent::getName)
+                .map(JiraComponentDto::getName)
                 .collect(toList());
     }
 
-    public static List<Changelog> extractChangelog(Issue issue) {
+    public static List<Changelog> extractChangelog(JiraIssueDto issue) {
         if (issue.getChangelog() == null)
             return Collections.emptyList();
 
@@ -303,7 +302,11 @@ public class IssueFieldsExtractor {
         return result;
     }
 
-    private static void logErrorExtractField(Issue issue, IssueField field, JSONException e) {
+    private static void logErrorExtractField(JiraIssueDto issue, JiraIssueFieldDto field, JSONException e) {
         log.error("Error extracting " + field.getName() + " from issue " + issue.getKey() + ": " + e.getMessage());
-    }    
+    }
+
+    private static boolean isEmpty(List<JiraLinkDto> issueLinks) {
+        return issueLinks == null || issueLinks.isEmpty();
+    }
 }

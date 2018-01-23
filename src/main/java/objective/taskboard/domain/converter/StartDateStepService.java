@@ -33,11 +33,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
-import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
-
 import objective.taskboard.domain.Filter;
 import objective.taskboard.domain.Step;
+import objective.taskboard.jira.client.ChangelogGroupDto;
+import objective.taskboard.jira.client.ChangelogItemDto;
+import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.repository.FilterCachedRepository;
 
 @Service
@@ -46,14 +46,14 @@ public class StartDateStepService {
     @Autowired
     private FilterCachedRepository filterRepository;
 
-    public long get(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    public long get(JiraIssueDto jiraIssue) {
         if (jiraIssue == null)
             return 0;
 
         if (jiraIssue.getChangelog() == null)
             return jiraIssue.getCreationDate().getMillis();
 
-        List<ChangelogGroup> changelogStatus = getChangelogsStatus(jiraIssue.getChangelog());
+        List<ChangelogGroupDto> changelogStatus = getChangelogsStatus(jiraIssue.getChangelog());
 
         if (changelogStatus.isEmpty())
             return jiraIssue.getCreationDate().getMillis();
@@ -72,33 +72,33 @@ public class StartDateStepService {
                                                 .collect(groupingBy(Filter::getStep,
                                                                     mapping(Filter::getStatusId, toList())));
 
-        changelogStatus.sort(new Comparator<ChangelogGroup>() {
+        changelogStatus.sort(new Comparator<ChangelogGroupDto>() {
             @Override
-            public int compare(ChangelogGroup c1, ChangelogGroup c2) {
+            public int compare(ChangelogGroupDto c1, ChangelogGroupDto c2) {
                 return -c1.getCreated().compareTo(c2.getCreated());
             }
         });
 
-        ChangelogGroup firstStatusStep = getFirstStatusStep(changelogStatus, statusSteps);
+        ChangelogGroupDto firstStatusStep = getFirstStatusStep(changelogStatus, statusSteps);
         return firstStatusStep == null ?
                    jiraIssue.getCreationDate().getMillis() :
                    firstStatusStep.getCreated().getMillis();
     }
 
-    private List<ChangelogGroup> getChangelogsStatus(Iterable<ChangelogGroup> changelog) {
-        List<ChangelogGroup> changelogStatus = newArrayList();
-        for (ChangelogGroup changelogGroup : changelog)
-            for (ChangelogItem changelogItem : changelogGroup.getItems())
+    private List<ChangelogGroupDto> getChangelogsStatus(Iterable<ChangelogGroupDto> changelog) {
+        List<ChangelogGroupDto> changelogStatus = newArrayList();
+        for (ChangelogGroupDto changelogGroup : changelog)
+            for (ChangelogItemDto changelogItem : changelogGroup.getItems())
                 if (changelogItem.getField().equals("status"))
-                    changelogStatus.add(new ChangelogGroup(changelogGroup.getAuthor(),
+                    changelogStatus.add(new ChangelogGroupDto(changelogGroup.getAuthor(),
                                                            changelogGroup.getCreated(),
                                                            newArrayList(changelogItem)));
         return changelogStatus;
     }
 
-    private ChangelogGroup getFirstStatusStep(List<ChangelogGroup> changelogStatus, Map<Step, List<Long>> statusSteps) {
-        ChangelogGroup firstStatusInStep = null;
-        for (ChangelogGroup changelog : changelogStatus) {
+    private ChangelogGroupDto getFirstStatusStep(List<ChangelogGroupDto> changelogStatus, Map<Step, List<Long>> statusSteps) {
+        ChangelogGroupDto firstStatusInStep = null;
+        for (ChangelogGroupDto changelog : changelogStatus) {
             Long statusTo = Long.valueOf(newArrayList(changelog.getItems()).get(0).getTo());
             if (!isStatusStep(statusSteps, statusTo))
                 break;

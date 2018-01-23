@@ -29,9 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-
 import objective.taskboard.issueBuffer.CardRepo;
+import objective.taskboard.jira.client.JiraIssueDto;
 
 @Service
 public class JiraIssueService {
@@ -49,8 +48,8 @@ public class JiraIssueService {
         searchIssues(visitor, "key IN (" + String.join(",", keys) + ")", "subtasks");
     }
 
-    public Optional<Issue> searchIssueByKey(final String key) {
-        final AtomicReference<Issue> foundIssue = new AtomicReference<Issue>();
+    public Optional<JiraIssueDto> searchIssueByKey(final String key) {
+        final AtomicReference<JiraIssueDto> foundIssue = new AtomicReference<JiraIssueDto>();
         searchIssuesByKeys(asList(key), issue -> foundIssue.set(issue));
         
         return Optional.ofNullable(foundIssue.get());

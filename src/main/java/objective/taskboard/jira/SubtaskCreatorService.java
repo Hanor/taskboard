@@ -23,6 +23,8 @@ package objective.taskboard.jira;
 
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractSingleValueCheckbox;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,15 +34,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.Subtask;
+import com.atlassian.jira.rest.client.api.domain.BasicUser;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 
 import objective.taskboard.jira.JiraProperties.SubtaskCreation;
 import objective.taskboard.jira.JiraProperties.SubtaskCreation.CustomFieldCondition;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraSubtaskDto;
+import objective.taskboard.jira.client.JiraUserDto;
 import objective.taskboard.jira.data.Transition;
 
 @Service
@@ -56,7 +60,7 @@ public class SubtaskCreatorService {
         this.jiraProperties = jiraProperties;
     }
 
-    public void create(Issue parent, SubtaskCreation creationProperties) {
+    public void create(JiraIssueDto parent, SubtaskCreation creationProperties) {
         if (!hasRequiredValueOrHasNoRequirement(parent, creationProperties))
             return;
         
@@ -77,7 +81,7 @@ public class SubtaskCreatorService {
             executeTransitionIfAvailable(transitionId.get(), subtaskKey);
     }
 
-    private boolean hasRequiredValueOrHasNoRequirement(Issue parent, SubtaskCreation creationProperties) {
+    private boolean hasRequiredValueOrHasNoRequirement(JiraIssueDto parent, SubtaskCreation creationProperties) {
         final Optional<CustomFieldCondition> customFieldCondition = creationProperties.getCustomFieldCondition();
         if (customFieldCondition.isPresent()) {
             final String currentValue = extractSingleValueCheckbox(customFieldCondition.get().getId(), parent);
@@ -87,20 +91,20 @@ public class SubtaskCreatorService {
         return true;
     }
     
-    private boolean skipCreationWhenTShirtSizeParentIsAbsent(Issue parent, SubtaskCreation creationProperties) {
-        IssueField parentTShirtSize = parent.getField(creationProperties.getTShirtSizeParentId());
+    private boolean skipCreationWhenTShirtSizeParentIsAbsent(JiraIssueDto parent, SubtaskCreation creationProperties) {
+        JiraIssueFieldDto parentTShirtSize = parent.getField(creationProperties.getTShirtSizeParentId());
         Boolean skipCreation = creationProperties.getSkipCreationWhenTShirtParentIsAbsent();
         return (parentTShirtSize == null || parentTShirtSize.getValue() == null) && skipCreation;
     }
 
-    private String subtaskOfType(Issue parent, Long typeId) {
-        for (Subtask sub : parent.getSubtasks())
+    private String subtaskOfType(JiraIssueDto parent, Long typeId) {
+        for (JiraSubtaskDto sub : parent.getSubtasks())
             if (sub.getIssueType().getId().equals(typeId))
                 return sub.getIssueKey();
         return null;
     }
 
-    private String create(Issue parent, SubtaskCreation creationProperties, Long typeId) {
+    private String create(JiraIssueDto parent, SubtaskCreation creationProperties, Long typeId) {
         String summaryPrefix = creationProperties.getSummaryPrefix();
         String tShirtSizeParentId = creationProperties.getTShirtSizeParentId();
         String tShirtSizeSubtaskId = creationProperties.getTShirtSizeSubtaskId();
@@ -110,7 +114,7 @@ public class SubtaskCreatorService {
         issueBuilder.setFieldValue("parent", ComplexIssueInputFieldValue.with("key", parent.getKey()));
         issueBuilder.setPriorityId(parent.getPriority().getId());
         issueBuilder.setSummary(summaryPrefix + parent.getSummary());
-        issueBuilder.setReporter(parent.getReporter());
+        issueBuilder.setReporter(toJiraStandardUser(parent.getReporter()));
         setTShirtSize(issueBuilder, parent, tShirtSizeParentId, tShirtSizeSubtaskId, tShirtSizeDefaultValue);
         setClassOfService(issueBuilder, parent);
         
@@ -121,13 +125,21 @@ public class SubtaskCreatorService {
         return jiraService.createIssueAsMaster(issueInput);
     }
 
-    private void setTShirtSize(IssueInputBuilder issueBuilder, Issue parent, String tShirtParentId, String tShirtSubtaskId, String defaultValue) {
+    private BasicUser toJiraStandardUser(JiraUserDto reporter) {
+        try {
+            return new BasicUser(new URI(reporter.getSelf()), reporter.getName(), reporter.getDisplayName());
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Reporter has malformed self URL", e);
+        }
+    }
+
+    private void setTShirtSize(IssueInputBuilder issueBuilder, JiraIssueDto parent, String tShirtParentId, String tShirtSubtaskId, String defaultValue) {
         String tShirtValue = getTShirtSizeValue(parent, tShirtParentId, defaultValue);
         issueBuilder.setFieldValue(tShirtSubtaskId, ComplexIssueInputFieldValue.with("value", tShirtValue));
     }
 
-    private String getTShirtSizeValue(Issue parent, String tShirtSizeParentId, String tShirtSizeDefaultValue) {
-        IssueField parentTShirtSize = parent.getField(tShirtSizeParentId);
+    private String getTShirtSizeValue(JiraIssueDto parent, String tShirtSizeParentId, String tShirtSizeDefaultValue) {
+        JiraIssueFieldDto parentTShirtSize = parent.getField(tShirtSizeParentId);
         if (parentTShirtSize == null || parentTShirtSize.getValue() == null)
             return tShirtSizeDefaultValue;
 
@@ -139,9 +151,9 @@ public class SubtaskCreatorService {
         }
     }
 
-    private void setClassOfService(IssueInputBuilder issueBuilder, Issue parent) {
+    private void setClassOfService(IssueInputBuilder issueBuilder, JiraIssueDto parent) {
         String classOfServiceId = jiraProperties.getCustomfield().getClassOfService().getId();
-        IssueField parentClassOfService = parent.getField(classOfServiceId);
+        JiraIssueFieldDto parentClassOfService = parent.getField(classOfServiceId);
         
         if (parentClassOfService == null || parentClassOfService.getValue() == null)
             return;

@@ -20,32 +20,26 @@
  */
 package objective.taskboard.jira;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.Validate;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.internal.json.SearchResultJsonParser;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 import objective.taskboard.jira.JiraService.ParametrosDePesquisaInvalidosException;
 import objective.taskboard.jira.JiraService.PermissaoNegadaException;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueDtoSearch;
 import objective.taskboard.jira.endpoint.JiraEndpointAsMaster;
 
 @Service
@@ -60,8 +54,6 @@ public class JiraSearchService {
     private static final Set<String> EXPAND = newHashSet("schema", "names", "changelog");
     private static final int MAX_RESULTS = 100;
 
-    private static final String PATH_REST_API_SEARCH = "/rest/api/latest/search";
-
     @Autowired
     private JiraProperties properties;
 
@@ -74,9 +66,9 @@ public class JiraSearchService {
         
 
         for (int i = 0; true; i++) {
-            SearchResult searchResult = searchRequest(jql, i, additionalFields);
+            JiraIssueDtoSearch searchResult = searchRequest(jql, i, additionalFields);
             
-            List<Issue> issuesSearchResult = newArrayList(searchResult.getIssues());
+            List<JiraIssueDto> issuesSearchResult = searchResult.getIssues();
 
             issuesSearchResult.stream().forEach(item->visitor.processIssue(item));
             
@@ -88,39 +80,23 @@ public class JiraSearchService {
         log.debug("⬣⬣⬣⬣⬣  searchIssues complete");
     }
 
-    private SearchResult searchRequest(String jql, int startFrom, String[] additionalFields) {
-        SearchResultJsonParser searchResultParser = new SearchResultJsonParser();
+    private JiraIssueDtoSearch searchRequest(String jql, int startFrom, String[] additionalFields) {
         Set<String> fields = getFields(additionalFields);
         try {
-            JSONObject searchRequest = new JSONObject();
-            searchRequest.put(JQL_ATTRIBUTE, jql)
-                         .put(EXPAND_ATTRIBUTE, EXPAND)
-                         .put(MAX_RESULTS_ATTRIBUTE, MAX_RESULTS)
-                         .put(START_AT_ATTRIBUTE, startFrom * MAX_RESULTS)
-                         .put(FIELDS_ATTRIBUTE, fields);
-
-            boolean retry = true;
-            String jsonResponse = null;
-            for(int attempts = 0; retry && attempts < 3; ++attempts) {
-                try {
-                    jsonResponse = jiraEndpointAsMaster.postWithRestTemplate(PATH_REST_API_SEARCH, APPLICATION_JSON, searchRequest);
-                    retry = false;
-                } catch (HttpServerErrorException ex) {
-                    if (ex.getStatusCode() == HttpStatus.GATEWAY_TIMEOUT) {
-                        Uninterruptibles.sleepUninterruptibly(5, TimeUnit.SECONDS);
-                    } else {
-                        throw ex;
-                    }
-                }
-            }
-
-            SearchResult searchResult = searchResultParser.parse(new JSONObject(jsonResponse));
-            log.debug("⬣⬣⬣⬣⬣  searchIssues... ongoing..." + (searchResult.getStartIndex() + searchResult.getMaxResults())+ "/" + searchResult.getTotal());
+            Map<String, Object> input = new LinkedHashMap<>();
+            input.put(JQL_ATTRIBUTE, jql);
+            input.put(EXPAND_ATTRIBUTE, EXPAND);
+            input.put(MAX_RESULTS_ATTRIBUTE, MAX_RESULTS);
+            input.put(START_AT_ATTRIBUTE, startFrom * MAX_RESULTS);
+            input.put(FIELDS_ATTRIBUTE, fields);
+            
+            JiraIssueDtoSearch searchResult = 
+                    jiraEndpointAsMaster
+                            .request(JiraIssueDtoSearch.Service.class)
+                            .search(input);
+            
+            log.debug("⬣⬣⬣⬣⬣  searchIssues... ongoing..." + (searchResult.getStartAt() + searchResult.getMaxResults())+ "/" + searchResult.getTotal());
             return searchResult;
-        }
-        catch (JSONException e) {
-            log.error(jql);
-            throw new IllegalStateException(e);        
         }
         catch (RestClientException|HttpClientErrorException e) {
             long statusCode = extractStatusCode(e);
@@ -149,6 +125,7 @@ public class JiraSearchService {
             "parent", "project", "status", "created", "updated", "issuelinks",
             "issuetype", "summary", "description", "name", "assignee", "reporter", 
             "priority", "labels", "components", "timetracking",
+            "worklog",
             properties.getCustomfield().getClassOfService().getId(),
             properties.getCustomfield().getCoAssignees().getId(),
             properties.getCustomfield().getBlocked().getId(),

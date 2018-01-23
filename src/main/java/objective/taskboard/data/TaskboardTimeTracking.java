@@ -2,7 +2,7 @@ package objective.taskboard.data;
 
 import java.io.Serializable;
 
-import com.atlassian.jira.rest.client.api.domain.TimeTracking;
+import objective.taskboard.jira.client.JiraTimeTrackingDto;
 
 public class TaskboardTimeTracking implements Serializable {
     private static final long serialVersionUID = 6559922928445540685L;
@@ -19,7 +19,7 @@ public class TaskboardTimeTracking implements Serializable {
         this.timeSpentMinutes = timeSpentMinutes;
     }
 
-    public static TaskboardTimeTracking fromJira(TimeTracking tt) {
+    public static TaskboardTimeTracking fromJira(JiraTimeTrackingDto tt) {
         if (tt == null)
             return null;
         return new TaskboardTimeTracking(tt.getOriginalEstimateMinutes(), tt.getTimeSpentMinutes());

@@ -1,9 +1,9 @@
 package objective.taskboard.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
+import objective.taskboard.jira.client.JiraIssueDto;
 
 public interface SearchIssueVisitor {
-    public void processIssue(Issue issue);
+    public void processIssue(JiraIssueDto issue);
 
     default void complete(){}
 }

@@ -3,7 +3,9 @@ package objective.taskboard.jira.data;
 import retrofit.http.GET;
 
 public class JiraTimezone {
-    public final String timeZone;
+    public String timeZone;
+    
+    public JiraTimezone(){}
     
     public JiraTimezone(String timeZone) {
         this.timeZone = timeZone;

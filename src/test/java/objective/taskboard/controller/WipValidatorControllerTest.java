@@ -51,11 +51,6 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.ResponseEntity;
 
-import com.atlassian.jira.rest.client.api.domain.BasicProject;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-
 import objective.taskboard.data.Team;
 import objective.taskboard.data.UserTeam;
 import objective.taskboard.domain.Filter;
@@ -65,6 +60,10 @@ import objective.taskboard.domain.WipConfiguration;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.CustomField;
 import objective.taskboard.jira.JiraProperties.CustomField.ClassOfServiceDetails;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraIssueTypeDto;
+import objective.taskboard.jira.client.JiraProjectDto;
 import objective.taskboard.jira.JiraProperties.Wip;
 import objective.taskboard.jira.JiraSearchService;
 import objective.taskboard.jira.JiraService;
@@ -112,9 +111,9 @@ public class WipValidatorControllerTest {
     @Mock
     private JiraService jiraService;
     @Mock
-    private Issue issue;
+    private JiraIssueDto issue;
     @Mock
-    private IssueField issueField;
+    private JiraIssueFieldDto issueField;
     @Mock
     private JiraProperties jiraProperties;
     @Mock
@@ -130,9 +129,9 @@ public class WipValidatorControllerTest {
     @Mock
     private WipConfigurationRepository wipConfigRepo;
     @Mock
-    private BasicProject project;
+    private JiraProjectDto project;
     @Mock
-    private IssueType issueType;
+    private JiraIssueTypeDto issueType;
     @Mock
     private UserTeam userTeam;
     @Mock

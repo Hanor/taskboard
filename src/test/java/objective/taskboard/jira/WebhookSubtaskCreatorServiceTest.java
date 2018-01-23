@@ -18,19 +18,18 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-
 import objective.taskboard.jira.JiraProperties.SubtaskCreation;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueTypeDto;
 import objective.taskboard.jira.data.WebHookBody;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebhookSubtaskCreatorServiceTest {
 
     @Mock
-    private Issue parent;
+    private JiraIssueDto parent;
     @Mock
-    private IssueType issueType;
+    private JiraIssueTypeDto issueType;
     @Mock
     private SubtaskCreatorService subtaskCreatorService;
     

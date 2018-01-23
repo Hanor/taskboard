@@ -53,6 +53,7 @@ import objective.taskboard.issue.IssuesUpdateEvent;
 import objective.taskboard.jira.JiraIssueService;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.ProjectService;
+import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.WebhookEvent;
 import objective.taskboard.task.IssueEventProcessScheduler;
 import objective.taskboard.task.JiraEventProcessor;
@@ -159,7 +160,7 @@ public class IssueBufferService {
     public Issue updateIssueBuffer(final String key) {
         StopWatch watch = new StopWatch();
         watch.start();
-        Optional<com.atlassian.jira.rest.client.api.domain.Issue> foundIssue =  jiraBean.getIssueByKey(key);
+        Optional<JiraIssueDto> foundIssue =  jiraBean.getIssueByKey(key);
         if (!foundIssue.isPresent()) 
             return cardsRepo.remove(key);
         
@@ -168,7 +169,7 @@ public class IssueBufferService {
         return updateIssueBufferFetchParentIfNeeded(foundIssue.get());
     }
 
-    public synchronized Issue updateIssueBufferFetchParentIfNeeded(final com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    public synchronized Issue updateIssueBufferFetchParentIfNeeded(final JiraIssueDto jiraIssue) {
         final Issue issue = issueConverter.convertSingleIssue(jiraIssue, parentProviderFetchesMissingParents);
         putIssue(issue);
 
@@ -177,7 +178,7 @@ public class IssueBufferService {
         return getIssueByKey(issue.getIssueKey());
     }
     
-    private synchronized Issue putJiraIssue(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    private synchronized Issue putJiraIssue(JiraIssueDto jiraIssue) {
         final Issue issue = issueConverter.convertSingleIssue(jiraIssue, parentProviderFetchesMissingParents);
         putIssue(issue);
 
@@ -196,7 +197,7 @@ public class IssueBufferService {
         issuesUpdatedByEvent.add(new IssueUpdate(issue, IssueUpdateType.UPDATED));
     }
 
-    public synchronized Issue updateByEvent(WebhookEvent event, final String issueKey, Optional<com.atlassian.jira.rest.client.api.domain.Issue> issue) {
+    public synchronized Issue updateByEvent(WebhookEvent event, final String issueKey, Optional<JiraIssueDto> issue) {
         if (event == WebhookEvent.ISSUE_DELETED || !issue.isPresent()) {
             issuesUpdatedByEvent.add(new IssueUpdate(cardsRepo.get(issueKey), IssueUpdateType.DELETED));
             return cardsRepo.remove(issueKey);

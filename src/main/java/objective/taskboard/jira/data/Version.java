@@ -1,5 +1,6 @@
 package objective.taskboard.jira.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import retrofit.http.Body;
 import retrofit.http.POST;
@@ -13,9 +14,8 @@ public class Version implements Serializable {
     public final String id;
     public final String name;
 
-    public Version(
-            @JsonProperty("id") String id
-            , @JsonProperty("name") String name) {
+    @JsonCreator
+    public Version(@JsonProperty("id") String id, @JsonProperty("name") String name) {
         this.id = id;
         this.name = name;
     }
@@ -27,8 +27,10 @@ public class Version implements Serializable {
 
     public static class Request {
 
-        public final String project;
-        public final String name;
+        public String project;
+        public String name;
+        
+        public Request(){}
 
         public Request(String project, String name) {
             this.project = project;

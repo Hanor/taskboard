@@ -7,12 +7,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-
 import objective.taskboard.domain.Filter;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraIssueService;
 import objective.taskboard.jira.WebhookSubtaskCreatorService;
+import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.WebHookBody;
 import objective.taskboard.jira.data.WebhookEvent;
 import objective.taskboard.repository.FilterCachedRepository;
@@ -84,15 +83,15 @@ public class IssueTypeEventProcessorFactory implements JiraEventProcessorFactory
 
         @Override
         public void processEvent() {
-            Optional<Issue> issue = fetchIssue();
+            Optional<JiraIssueDto> issue = fetchIssue();
             if (issue.isPresent()) {
-                com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = issue.get();
+                JiraIssueDto jiraIssue = issue.get();
                 webhookSubtaskCreatorService.createSubtaskOnTransition(jiraIssue, changelog);
             }
             issueBufferService.updateByEvent(webHook, issueKey, issue);
         }
 
-        private Optional<Issue> fetchIssue() {
+        private Optional<JiraIssueDto> fetchIssue() {
             if (webHook == WebhookEvent.ISSUE_DELETED)
                 return Optional.empty();
             return jiraIssueService.searchIssueByKey(issueKey);

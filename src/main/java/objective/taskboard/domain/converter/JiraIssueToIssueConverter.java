@@ -51,8 +51,6 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-
 import objective.taskboard.cycletime.CycleTime;
 import objective.taskboard.data.IssueScratch;
 import objective.taskboard.data.TaskboardTimeTracking;
@@ -63,6 +61,7 @@ import objective.taskboard.domain.ParentIssueLink;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.MetadataService;
 import objective.taskboard.jira.ProjectService;
+import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.repository.FilterCachedRepository;
 import objective.taskboard.repository.ParentIssueLinkRepository;
 
@@ -119,7 +118,7 @@ public class JiraIssueToIssueConverter {
                                .collect(toList());
     }
     
-    public objective.taskboard.data.Issue convertSingleIssue(Issue jiraIssue, ParentProvider provider) {
+    public objective.taskboard.data.Issue convertSingleIssue(JiraIssueDto jiraIssue, ParentProvider provider) {
         List<IssueCoAssignee> coAssignees = extractCoAssignees(jiraProperties, jiraIssue);
         
         String avatarCoAssignee1 = jiraIssue.getAssignee() != null ? jiraIssue.getAssignee().getAvatarUri("24x24").toString() : "";
@@ -193,28 +192,28 @@ public class JiraIssueToIssueConverter {
         return converted;
     }
 
-    private long getParentTypeId(Issue issue) {
+    private long getParentTypeId(JiraIssueDto issue) {
     	IssueParent realParent = extractRealParent(issue);
         if (realParent == null)
             return 0;
         return realParent.getTypeId();
     }
 
-    private String getParentTypeIconUri(Issue issue) {
+    private String getParentTypeIconUri(JiraIssueDto issue) {
     	IssueParent realParent = extractRealParent(issue);
         if (realParent == null)
             return "";
         return realParent.getTypeIconUrl();
     }
 
-    private String getComments(Issue issue) {
+    private String getComments(JiraIssueDto issue) {
     	List<String> comments = extractComments(issue);
         if (comments.isEmpty())
             return "";
         return comments.get(0);
     }
     
-    private Map<String, Serializable> getCustomFields(Issue issue) {
+    private Map<String, Serializable> getCustomFields(JiraIssueDto issue) {
         Map<String, Serializable> customFields = newHashMap();
         
         customFields.put(jiraProperties.getCustomfield().getBlocked().getId(), extractBlocked(jiraProperties, issue));

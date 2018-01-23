@@ -29,11 +29,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.codehaus.jettison.json.JSONException;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,8 +41,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
-import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.google.common.collect.Lists;
 
 import objective.taskboard.data.AspectItemFilter;
@@ -68,9 +64,6 @@ import objective.taskboard.linkgraph.LinkGraphProperties;
 @RestController
 @RequestMapping("/ws/issues")
 public class IssueController {
-
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IssueController.class);
-
     @Autowired
     private TaskboardDatabaseService taskService;
 
@@ -112,35 +105,6 @@ public class IssueController {
     @RequestMapping(path = "assign", method = RequestMethod.POST)
     public Issue assign(@RequestBody String issueKey) throws JSONException {
         return issueBufferService.assignToMe(issueKey);
-    }
-
-    @Deprecated
-    @RequestMapping(path = "create-issue", method = RequestMethod.POST)
-    public Issue createIssue(@RequestBody Issue issue) throws JSONException {
-        Optional<com.atlassian.jira.rest.client.api.domain.Issue> parent = jiraBean.getIssueByKey(issue.getParent());
-        if(!parent.isPresent())
-            throw new IllegalStateException("Parent issue not found: " + issue.getParent());
-        
-        IssueInputBuilder issueBuilder = new IssueInputBuilder(parent.get().getProject().getKey(), issue.getType());
-        issueBuilder.setPriorityId(issue.getPriority());
-        issueBuilder.setDueDate(new DateTime(issue.getDueDate().getTime()));
-        issueBuilder.setDescription(issue.getDescription());
-        issueBuilder.setSummary(issue.getSummary());
-        issueBuilder.setFieldValue("parent", ComplexIssueInputFieldValue.with("key", parent.get().getKey()));
-
-        List<String> tSizeIds = jiraProperties.getCustomfield().getTShirtSize().getIds();
-        for (String tSizeId : tSizeIds)
-            issueBuilder.setFieldValue(tSizeId, ComplexIssueInputFieldValue.with("id", issue.getCustomFields().get(tSizeId).toString()));
-
-        String classOfServiceId = jiraProperties.getCustomfield().getClassOfService().getId();
-        issueBuilder.setFieldValue(classOfServiceId, ComplexIssueInputFieldValue.with("id", issue.getCustomFields().get(classOfServiceId).toString()));
-        log.info("Creating issue: " + issue);
-        String issueKey = jiraBean.createIssue(issueBuilder.build());
-        log.info("Created issue " + issueKey);
-        Optional<com.atlassian.jira.rest.client.api.domain.Issue> issueByKey = jiraBean.getIssueByKey(issueKey);
-        if (issueByKey.isPresent())
-            return issueBufferService.updateIssueBufferFetchParentIfNeeded(issueByKey.get());
-        throw new IllegalStateException("Issue not found: " + issueKey);
     }
 
     @RequestMapping(path = "transition", method = RequestMethod.POST)

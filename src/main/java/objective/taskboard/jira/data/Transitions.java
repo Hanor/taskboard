@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
@@ -17,6 +19,7 @@ public class Transitions {
     public transient String expand;
     public List<Transition> transitions;
 
+    public Transitions(){}
     public Transitions(String expand, List<Transition> transitions) {
         this.expand = expand;
         this.transitions = transitions;
@@ -31,7 +34,9 @@ public class Transitions {
     }
 
     public static class DoTransitionRequestBody {
+        @JsonProperty
         private final Map<String, Object> transition = new HashMap<>();
+        @JsonProperty
         private final Map<String, Object> update = new HashMap<>();
 
         public DoTransitionRequestBody(Long transitionId) {

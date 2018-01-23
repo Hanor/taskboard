@@ -10,10 +10,12 @@ public class JiraUser {
 
     public static String S48_48 = "48x48";
 
-    public final String name;
-    public final String displayName;
-    public final String emailAddress;
-    public final Map<String, URI> avatarUrls;
+    public String name;
+    public String displayName;
+    public String emailAddress;
+    public Map<String, URI> avatarUrls;
+    
+    public JiraUser(){}
 
     public JiraUser(String name, String displayName, String emailAddress, Map<String, URI> avatarUrls) {
         this.name = name;

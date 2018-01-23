@@ -21,6 +21,7 @@ import objective.taskboard.domain.converter.IncompleteIssueException;
 import objective.taskboard.domain.converter.JiraIssueToIssueConverter;
 import objective.taskboard.domain.converter.ParentProvider;
 import objective.taskboard.jira.SearchIssueVisitor;
+import objective.taskboard.jira.client.JiraIssueDto;
 
 public class IssueBufferServiceSearchVisitor implements SearchIssueVisitor {
     private static final Logger log = LoggerFactory.getLogger(IssueBufferService.class);
@@ -42,7 +43,7 @@ public class IssueBufferServiceSearchVisitor implements SearchIssueVisitor {
     }
 
     @Override
-    public void processIssue(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    public void processIssue(JiraIssueDto jiraIssue) {
         String currentIssueKey = jiraIssue.getKey();
         try {
             if (!issueBufferService.updateIssue(issueConverter.convertSingleIssue(jiraIssue, provider)))

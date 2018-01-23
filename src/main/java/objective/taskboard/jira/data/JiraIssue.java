@@ -16,7 +16,9 @@ import static java.util.Collections.singletonMap;
 
 public class JiraIssue {
 
-    public final String key;
+    public String key;
+    
+    public JiraIssue(){}
 
     public JiraIssue(String key) {
         this.key = key;

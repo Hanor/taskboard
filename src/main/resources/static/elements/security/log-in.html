@@ -155,7 +155,7 @@
                 this.$.loginLoad.active = true;
             },
 
-            onEnter: function () {
+            onEnter: function (event) {
                 this.errorMsg = null;
                 this.requestLogin(event, this);
                 this.$.loginLoad.active = true;

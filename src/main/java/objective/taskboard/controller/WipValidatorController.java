@@ -46,9 +46,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-
 import objective.taskboard.data.Team;
 import objective.taskboard.domain.Filter;
 import objective.taskboard.domain.ProjectTeam;
@@ -57,6 +54,8 @@ import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraSearchService;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.MetadataCachedService;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
 import objective.taskboard.jira.data.Status;
 import objective.taskboard.repository.ProjectTeamRepository;
 import objective.taskboard.repository.TeamCachedRepository;
@@ -103,7 +102,7 @@ public class WipValidatorController {
         WipValidatorResponse response = new WipValidatorResponse();
 
         try {
-            Issue issue;
+            JiraIssueDto issue;
             try {
                 issue = jiraService.getIssueByKeyAsMaster(issueKey);
             } catch (Exception e) {
@@ -182,10 +181,10 @@ public class WipValidatorController {
         }
     }
 
-    private boolean isClassOfServiceExpedite(Issue issue) {
+    private boolean isClassOfServiceExpedite(JiraIssueDto issue) {
         try {
             String classOfServiceId = jiraProperties.getCustomfield().getClassOfService().getId();
-            IssueField fieldClassOfService = issue.getField(classOfServiceId);
+            JiraIssueFieldDto fieldClassOfService = issue.getField(classOfServiceId);
             if (fieldClassOfService == null || fieldClassOfService.getValue() == null)
                 return false;
             JSONObject json = (JSONObject) fieldClassOfService.getValue();
@@ -195,7 +194,7 @@ public class WipValidatorController {
         }
     }
 
-    private Optional<WipConfiguration> getWipConfig(String user, Issue issue, Long newStatusId) {
+    private Optional<WipConfiguration> getWipConfig(String user, JiraIssueDto issue, Long newStatusId) {
         String projectKey = issue.getProject().getKey();
         long issueTypeId = issue.getIssueType().getId();
         
@@ -240,7 +239,7 @@ public class WipValidatorController {
         return idsToIgnore.size() > 0 ? " and issuetype not in (" + StringUtils.join(idsToIgnore, ',') + ") " : "";
     }
 
-    private Boolean isIssueTypeToIgnore(Issue issue) {
+    private Boolean isIssueTypeToIgnore(JiraIssueDto issue) {
         if (jiraProperties.getWip() == null)
             return false;
         List<Long> idsToIgnore = jiraProperties.getWip().getIgnoreIssuetypesIds();

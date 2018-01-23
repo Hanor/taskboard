@@ -7,11 +7,12 @@ import retrofit.http.Path;
 
 public class JiraProject {
 
-    public final String id;
-    public final String key;
-    public final List<Version> versions;
-    public final String name;
+    public String id;
+    public String key;
+    public List<Version> versions;
+    public String name;
 
+    public JiraProject() {}
     public JiraProject(String id, String key, List<Version> versions, String name) {
         this.id = id;
         this.key = key;

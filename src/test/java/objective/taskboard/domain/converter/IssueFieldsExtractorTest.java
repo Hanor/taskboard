@@ -20,8 +20,6 @@
  */
 package objective.taskboard.domain.converter;
 
-import static com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction.INBOUND;
-import static com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction.OUTBOUND;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -49,15 +47,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.BasicProject;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueLink;
-import com.atlassian.jira.rest.client.api.domain.IssueLinkType;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.CustomField;
 import objective.taskboard.jira.JiraProperties.CustomField.Blocked;
@@ -65,6 +54,14 @@ import objective.taskboard.jira.JiraProperties.CustomField.ClassOfServiceDetails
 import objective.taskboard.jira.JiraProperties.CustomField.CustomFieldDetails;
 import objective.taskboard.jira.JiraProperties.CustomField.TShirtSize;
 import objective.taskboard.jira.JiraProperties.IssueType.IssueTypeDetails;
+import objective.taskboard.jira.client.JiraCommentDto;
+import objective.taskboard.jira.client.JiraComponentDto;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraIssueLinkTypeDto;
+import objective.taskboard.jira.client.JiraIssueTypeDto;
+import objective.taskboard.jira.client.JiraLinkDto;
+import objective.taskboard.jira.client.JiraProjectDto;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IssueFieldsExtractorTest {
@@ -96,7 +93,7 @@ public class IssueFieldsExtractorTest {
     private static final String ISSUE_KEY = "ISSUE-1";
 
     @Mock
-    private Issue issue;
+    private JiraIssueDto issue;
     @Mock
     private JiraProperties jiraProperties;
     @Mock
@@ -122,21 +119,21 @@ public class IssueFieldsExtractorTest {
     @Mock
     private IssueTypeDetails issueTypeDetails;
     @Mock
-    private IssueType issueType;
+    private JiraIssueTypeDto issueType;
     @Mock
-    private IssueField issueField;
+    private JiraIssueFieldDto issueField;
     @Mock
-    private IssueLink issueLink;
+    private JiraLinkDto issueLink;
     @Mock
-    private IssueLinkType issueLinkType;
+    private JiraIssueLinkTypeDto issueLinkType;
     @Mock
-    private Comment comment;
+    private JiraCommentDto comment;
     @Mock
     private Logger log;
     @Mock
-    private BasicComponent basicComponent;
+    private JiraComponentDto basicComponent;
     @Mock
-    private BasicProject basicProject;
+    private JiraProjectDto basicProject;
 
     private void mockIssueField(String fieldId, Object fieldValue) {
         when(issueField.getValue()).thenReturn(fieldValue);
@@ -217,7 +214,7 @@ public class IssueFieldsExtractorTest {
 
     @Test
     public void extractLinkedParentKeyValid() {
-        when(issueLinkType.getDirection()).thenReturn(OUTBOUND);
+        when(issueLinkType.getDirection()).thenReturn(JiraIssueLinkTypeDto.Direction.OUTBOUND);
         when(issueLinkType.getName()).thenReturn(LINK_TYPE_NAME_DEMAND);
         when(issueLinkType.getDescription()).thenReturn(LINK_TYPE_DESC_DEMAND);
         when(issueLink.getIssueLinkType()).thenReturn(issueLinkType);
@@ -230,7 +227,7 @@ public class IssueFieldsExtractorTest {
 
     @Test
     public void extractLinkedParentKeyNull() {
-        when(issueLinkType.getDirection()).thenReturn(OUTBOUND);
+        when(issueLinkType.getDirection()).thenReturn(JiraIssueLinkTypeDto.Direction.OUTBOUND);
         when(issueLinkType.getName()).thenReturn(LINK_TYPE_NAME_DEPENDENCY);
         when(issueLinkType.getDescription()).thenReturn(LINK_TYPE_DESC_DEPENDENCY);
         when(issueLink.getIssueLinkType()).thenReturn(issueLinkType);
@@ -242,7 +239,7 @@ public class IssueFieldsExtractorTest {
 
     @Test
     public void extractLinkedParentKeyNullWhenIsDemand() {
-        when(issueLinkType.getDirection()).thenReturn(OUTBOUND);
+        when(issueLinkType.getDirection()).thenReturn(JiraIssueLinkTypeDto.Direction.OUTBOUND);
         when(issueLinkType.getName()).thenReturn(LINK_TYPE_NAME_DEMAND);
         when(issueLinkType.getDescription()).thenReturn(LINK_TYPE_DESC_DEMAND);
         when(issueLink.getIssueLinkType()).thenReturn(issueLinkType);
@@ -455,7 +452,7 @@ public class IssueFieldsExtractorTest {
     @Test
     public void extractDependenciesIssuesValid() {
         when(issueLinkProperty.getDependencies()).thenReturn(asList(LINK_TYPE_NAME_DEPENDENCY));
-        when(issueLinkType.getDirection()).thenReturn(OUTBOUND);
+        when(issueLinkType.getDirection()).thenReturn(JiraIssueLinkTypeDto.Direction.OUTBOUND);
         when(issueLinkType.getName()).thenReturn(LINK_TYPE_NAME_DEPENDENCY);
         when(issueLinkType.getDescription()).thenReturn(LINK_TYPE_DESC_DEPENDENCY);
         when(issueLink.getIssueLinkType()).thenReturn(issueLinkType);
@@ -470,7 +467,7 @@ public class IssueFieldsExtractorTest {
     @Test
     public void extractDependenciesIssuesInvalidLink() {
         when(issueLinkProperty.getDependencies()).thenReturn(asList(LINK_TYPE_NAME_DEPENDENCY));
-        when(issueLinkType.getDirection()).thenReturn(INBOUND);
+        when(issueLinkType.getDirection()).thenReturn(JiraIssueLinkTypeDto.Direction.INBOUND);
         when(issueLinkType.getName()).thenReturn(LINK_TYPE_NAME_DEPENDENCY);
         when(issueLinkType.getDescription()).thenReturn(LINK_TYPE_DESC_DEPENDENCY);
         when(issueLink.getIssueLinkType()).thenReturn(issueLinkType);

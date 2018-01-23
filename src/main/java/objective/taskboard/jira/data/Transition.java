@@ -5,10 +5,12 @@ import java.util.Map;
 
 public class Transition {
 
-    public final Long id;
-    public final String name;
-    public final Status to;
-    public final Map<String, Field> fields;
+    public Long id;
+    public String name;
+    public Status to;
+    public Map<String, Field> fields;
+    
+    public Transition(){}
 
     public Transition(Long id, String name, Status to, Map<String, Field> fields) {
         this.id = id;

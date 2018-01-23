@@ -51,15 +51,6 @@ import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.atlassian.jira.rest.client.api.domain.BasicPriority;
-import com.atlassian.jira.rest.client.api.domain.BasicProject;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Status;
-import com.atlassian.jira.rest.client.api.domain.User;
-
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
 import objective.taskboard.domain.converter.IssueTeamService.InvalidTeamException;
@@ -69,6 +60,14 @@ import objective.taskboard.jira.JiraProperties.CustomField.Blocked;
 import objective.taskboard.jira.JiraProperties.CustomField.ClassOfServiceDetails;
 import objective.taskboard.jira.JiraProperties.CustomField.CustomFieldDetails;
 import objective.taskboard.jira.JiraProperties.CustomField.TShirtSize;
+import objective.taskboard.jira.client.JiraCommentDto;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraIssueTypeDto;
+import objective.taskboard.jira.client.JiraPriorityDto;
+import objective.taskboard.jira.client.JiraProjectDto;
+import objective.taskboard.jira.client.JiraStatusDto;
+import objective.taskboard.jira.client.JiraUserDto;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.repository.FilterCachedRepository;
 import objective.taskboard.repository.ParentIssueLinkRepository;
@@ -99,19 +98,19 @@ public class JiraIssueToIssueConverterTest {
     @Mock
     private ParentIssueLinkRepository parentIssueLinkRepository;
     @Mock
-    private Issue issue;
+    private JiraIssueDto issue;
     @Mock
-    private Issue parent;
+    private JiraIssueDto parent;
     @Mock
-    private BasicProject project;
+    private JiraProjectDto project;
     @Mock
-    private BasicPriority priority;
+    private JiraPriorityDto priority;
     @Mock
-    private IssueType issueType;
+    private JiraIssueTypeDto issueType;
     @Mock
-    private Status status;
+    private JiraStatusDto status;
     @Mock
-    private User assignee;
+    private JiraUserDto assignee;
     @Mock
     private JiraProperties jiraProperties;
     @Mock
@@ -141,15 +140,15 @@ public class JiraIssueToIssueConverterTest {
     @Mock
     private JiraService jiraService;
     @Mock
-    private IssueField classOfServiceField;
+    private JiraIssueFieldDto classOfServiceField;
     @Mock
-    private IssueField releaseField;
+    private JiraIssueFieldDto releaseField;
     @Mock
-    private IssueField parentField;
+    private JiraIssueFieldDto parentField;
     @Mock
     private IssuePriorityService priorityService;
     @Mock
-    private Comment comment;
+    private JiraCommentDto comment;
     @Mock
     private FilterCachedRepository filterRepository;
     @Mock
@@ -300,13 +299,13 @@ public class JiraIssueToIssueConverterTest {
     
     @Test
     public void whenIssuesWithMultipleNestedLevelsAreReturned_makeSureValuesDependingOnParentsAreCorrectlyConverted() throws JSONException {
-        Issue A = mock(Issue.class);
-        Issue B = mock(Issue.class);
-        Issue C = mock(Issue.class);
+        JiraIssueDto A = mock(JiraIssueDto.class);
+        JiraIssueDto B = mock(JiraIssueDto.class);
+        JiraIssueDto C = mock(JiraIssueDto.class);
         mockIssue(A,"KEY-1");
-        mockIssueField(A, mock(IssueField.class), PARENT_ID, format(JSON_PARENT, "PARENT-1", TYPE_ICON_URI));
+        mockIssueField(A, mock(JiraIssueFieldDto.class), PARENT_ID, format(JSON_PARENT, "PARENT-1", TYPE_ICON_URI));
         mockIssueField(A, classOfServiceField, CLASS_OF_SERVICE_ID, format(JSON_CLASS_OF_SERVICE, CLASS_OF_SERVICE_EXPEDITE));
-        mockIssueField(B, mock(IssueField.class), PARENT_ID, format(JSON_PARENT, "PARENT-2", TYPE_ICON_URI));
+        mockIssueField(B, mock(JiraIssueFieldDto.class), PARENT_ID, format(JSON_PARENT, "PARENT-2", TYPE_ICON_URI));
         mockIssue(B,"PARENT-1");
         mockIssue(C,"PARENT-2");
         
@@ -336,7 +335,7 @@ public class JiraIssueToIssueConverterTest {
         subject.convertSingleIssue(A, provider);
     }
     
-    private void mockIssue(Issue issue, String issueKey) {
+    private void mockIssue(JiraIssueDto issue, String issueKey) {
         when(issue.getKey()).thenReturn(issueKey);
         when(issue.getProject()).thenReturn(project);
         when(issue.getIssueType()).thenReturn(issueType);
@@ -345,7 +344,7 @@ public class JiraIssueToIssueConverterTest {
         when(issue.getPriority()).thenReturn(priority);
     }
 
-    private void mockIssueField(Issue issue, IssueField issueField, String fieldId, String json) throws JSONException {
+    private void mockIssueField(JiraIssueDto issue, JiraIssueFieldDto issueField, String fieldId, String json) throws JSONException {
         JSONObject fieldValue = new JSONObject(json);
         when(issueField.getValue()).thenReturn(fieldValue);
         when(issue.getField(fieldId)).thenReturn(issueField);

@@ -6,9 +6,12 @@ import retrofit.http.GET;
 
 public class Status {
 
-    public final Long id;
-    public final String name;
-    public final StatusCategory statusCategory;
+    public Long id;
+    public String name;
+    public StatusCategory statusCategory;
+    
+    public Status(){
+    }
 
     public Status(Long id, String name, StatusCategory statusCategory) {
         this.id = id;

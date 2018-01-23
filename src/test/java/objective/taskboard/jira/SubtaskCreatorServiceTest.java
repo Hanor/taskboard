@@ -49,17 +49,18 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Priority;
-import com.atlassian.jira.rest.client.api.domain.Project;
-import com.atlassian.jira.rest.client.api.domain.Subtask;
-import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 
 import objective.taskboard.jira.JiraProperties.SubtaskCreation.CustomFieldCondition;
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraIssueFieldDto;
+import objective.taskboard.jira.client.JiraIssueTypeDto;
+import objective.taskboard.jira.client.JiraPriorityDto;
+import objective.taskboard.jira.client.JiraProjectDto;
+import objective.taskboard.jira.client.JiraSubtaskDto;
+import objective.taskboard.jira.client.JiraUserDto;
 import objective.taskboard.jira.data.Transition;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -74,13 +75,13 @@ public class SubtaskCreatorServiceTest {
     private final String CUSTOM_FIELD_CONDITION_VALUE = "Yes";
 
     @Mock
-    private Issue parent;
+    private JiraIssueDto parent;
     @Mock
-    private Project parentProject;
+    private JiraProjectDto parentProject;
     @Mock
-    private Priority parentPriority;
+    private JiraPriorityDto parentPriority;
     @Mock
-    private User parentReporter;
+    private JiraUserDto parentReporter;
     @Mock
     private JiraService jiraService;
     @Mock
@@ -112,7 +113,7 @@ public class SubtaskCreatorServiceTest {
     
     @Test
     public void ifThereIsAlreadyASubtaskOfTheSameType_dontCreateSubtask() {
-        List<Subtask> subtasks = asList(subtask(222, "TASK-201"), subtask(ISSUE_TYPE, "TASK-202"), subtask(333, "TASK-203"));
+        List<JiraSubtaskDto> subtasks = asList(subtask(222, "TASK-201"), subtask(ISSUE_TYPE, "TASK-202"), subtask(333, "TASK-203"));
         when(parent.getSubtasks()).thenReturn(subtasks);
         
         service.create(parent, properties);
@@ -142,7 +143,7 @@ public class SubtaskCreatorServiceTest {
         properties.setCustomFieldCondition(makeCustomFieldCondition(CUSTOM_FIELD_CONDITION_ID, CUSTOM_FIELD_CONDITION_VALUE));
 
         JSONArray issueFieldValue = null;
-        when(parent.getField(CUSTOM_FIELD_CONDITION_ID)).thenReturn(new IssueField(null, null, null, issueFieldValue));
+        when(parent.getField(CUSTOM_FIELD_CONDITION_ID)).thenReturn(new JiraIssueFieldDto(issueFieldValue));
 
         service.create(parent, properties);
         verifyZeroInteractions(jiraService);
@@ -153,7 +154,7 @@ public class SubtaskCreatorServiceTest {
         properties.setCustomFieldCondition(makeCustomFieldCondition(CUSTOM_FIELD_CONDITION_ID, CUSTOM_FIELD_CONDITION_VALUE));
 
         JSONArray issueFieldValue = new JSONArray("[{value:Yes}]");
-        when(parent.getField(CUSTOM_FIELD_CONDITION_ID)).thenReturn(new IssueField(null, null, null, issueFieldValue));
+        when(parent.getField(CUSTOM_FIELD_CONDITION_ID)).thenReturn(new JiraIssueFieldDto(issueFieldValue));
 
         service.create(parent, properties);
         verify(jiraService, only()).createIssueAsMaster(any());
@@ -225,7 +226,7 @@ public class SubtaskCreatorServiceTest {
         properties.setTransitionId(Optional.of(57L));
         configureSubtaskTransitions(1L, 57L, 3L);
         
-        List<Subtask> subtasks = asList(subtask(ISSUE_TYPE, "TASK-101"));
+        List<JiraSubtaskDto> subtasks = asList(subtask(ISSUE_TYPE, "TASK-101"));
         when(parent.getSubtasks()).thenReturn(subtasks);
         
         service.create(parent, properties);
@@ -310,22 +311,23 @@ public class SubtaskCreatorServiceTest {
         when(parent.getProject()).thenReturn(parentProject);
         when(parent.getPriority()).thenReturn(parentPriority);
         when(parent.getReporter()).thenReturn(parentReporter);
-        when(parent.getField(TSHIRT_PARENT_ID)).thenReturn(new IssueField(null, null, null, new JSONObject("{value=L}")));
-        when(parent.getField(CLASSOFSERVICE_ID)).thenReturn(new IssueField(null, null, null, new JSONObject("{id=685321}")));
+        when(parent.getField(TSHIRT_PARENT_ID)).thenReturn(new JiraIssueFieldDto(new JSONObject("{value=L}")));
+        when(parent.getField(CLASSOFSERVICE_ID)).thenReturn(new JiraIssueFieldDto(new JSONObject("{id=685321}")));
         
+        when(parentReporter.getSelf()).thenReturn("http://foo/my.user");
         when(parentReporter.getName()).thenReturn("my.user");
         when(parentProject.getKey()).thenReturn("TASK");
         when(parentPriority.getId()).thenReturn(PRIORITY_ID);
         
-        List<Subtask> subtasks = asList(subtask(222, "TASK-201"), subtask(333, "TASK-202"));
+        List<JiraSubtaskDto> subtasks = asList(subtask(222, "TASK-201"), subtask(333, "TASK-202"));
         when(parent.getSubtasks()).thenReturn(subtasks);
     }
 
-    private Subtask subtask(long typeId, String key) {
-        IssueType type = mock(IssueType.class);
+    private JiraSubtaskDto subtask(long typeId, String key) {
+        JiraIssueTypeDto type = mock(JiraIssueTypeDto.class);
         when(type.getId()).thenReturn((long)typeId);
 
-        Subtask subtask = mock(Subtask.class);
+        JiraSubtaskDto subtask = mock(JiraSubtaskDto.class);
         when(subtask.getIssueType()).thenReturn(type);
         when(subtask.getIssueKey()).thenReturn(key);
         return subtask;

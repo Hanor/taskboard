@@ -38,10 +38,9 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-
 import objective.taskboard.data.TaskboardIssue;
 import objective.taskboard.issueBuffer.IssueBufferService;
+import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.repository.TaskboardIssueRepository;
 
 @Service
@@ -65,16 +64,16 @@ public class IssuePriorityService {
         log.debug("DONE Loading IssuePriorityService");
     }
     
-    public Long determinePriority(Issue e) {
-        TaskboardIssue priorityOrder = cache.get(e.getKey());
+    public Long determinePriority(JiraIssueDto jiraIssue) {
+        TaskboardIssue priorityOrder = cache.get(jiraIssue.getKey());
         if (priorityOrder == null)
-            return e.getCreationDate().getMillis();
+            return jiraIssue.getCreationDate().getMillis();
 
         return priorityOrder.getPriority();
     }
 
-    public Optional<Date> priorityUpdateDate(Issue e) {
-        TaskboardIssue priorityOrder = cache.get(e.getKey());
+    public Optional<Date> priorityUpdateDate(JiraIssueDto jiraIssue) {
+        TaskboardIssue priorityOrder = cache.get(jiraIssue.getKey());
         if (priorityOrder == null)
             return Optional.empty();
         return Optional.of(priorityOrder.getUpdated());

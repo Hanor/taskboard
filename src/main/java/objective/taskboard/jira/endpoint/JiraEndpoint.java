@@ -20,19 +20,19 @@
  */
 package objective.taskboard.jira.endpoint;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.gson.Gson;
-import com.squareup.okhttp.Credentials;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -42,16 +42,24 @@ import org.springframework.web.client.RestTemplate;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.util.concurrent.Promise;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.Uninterruptibles;
+import com.squareup.okhttp.Credentials;
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Response;
 
 import objective.taskboard.jira.JiraClientFactory;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraServiceException;
 import retrofit.RestAdapter;
 import retrofit.client.OkClient;
-import retrofit.converter.GsonConverter;
+import retrofit.converter.JacksonConverter;
 
 @Component
 public class JiraEndpoint {
+    
+    private static final Logger log = LoggerFactory.getLogger(JiraEndpoint.class);
 
     @Autowired 
     private JiraProperties jiraProperties;
@@ -90,9 +98,30 @@ public class JiraEndpoint {
         client.setReadTimeout(60, TimeUnit.SECONDS);
         client.setConnectTimeout(60, TimeUnit.SECONDS);
         client.interceptors().add(new AuthenticationInterceptor(username, password));
+        client.interceptors().add(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                com.squareup.okhttp.Request request = chain.request();
+                Response response = chain.proceed(request);
+                
+                int retryCount = 0;
+                while (response.code() == HttpStatus.GATEWAY_TIMEOUT.value() && retryCount < 3) {
+                    Uninterruptibles.sleepUninterruptibly(5, TimeUnit.SECONDS);
+                    response = chain.proceed(request);
+                    retryCount++;
+                }
+                if (!response.isSuccessful()) 
+                    log.error(request.urlString() + " request failed.");
+                
+                return response;
+            }
+        });
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
         RestAdapter retrofit = new RestAdapter.Builder()
                 .setEndpoint(jiraProperties.getUrl())
-                .setConverter(new GsonConverter(new Gson()))
+                .setConverter(new JacksonConverter(objectMapper))
                 .setClient(new OkClient(client))
                 .build();
 
