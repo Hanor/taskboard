@@ -36,7 +36,7 @@ import objective.taskboard.jira.JiraProperties.IssueType;
 import objective.taskboard.jira.JiraProperties.IssueType.IssueTypeDetails;
 import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.client.JiraIssueDtoSearch;
-import objective.taskboard.jira.client.JiraSearchResultJsonParser;
+import objective.taskboard.jira.client.JiraIssueDtoSearchParserSupport;
 import objective.taskboard.repository.FilterCachedRepository;
 import objective.taskboard.utils.IOUtilities;
 
@@ -114,7 +114,7 @@ public class IssueBufferServiceSearchVisitorTest {
 	public void whenProcessingIssueWithoutParent() throws JSONException {
         IssueBufferServiceSearchVisitor subject = new IssueBufferServiceSearchVisitor(issueConverter, issueBufferService);
 	    
-        JiraSearchResultJsonParser searchResultParser = new JiraSearchResultJsonParser();
+        JiraIssueDtoSearchParserSupport searchResultParser = new JiraIssueDtoSearchParserSupport();
         JiraIssueDtoSearch searchResult = searchResultParser.parse(result("TASKB-685"));
         ArrayList<JiraIssueDto> list = newArrayList(searchResult.getIssues());
         
@@ -128,7 +128,7 @@ public class IssueBufferServiceSearchVisitorTest {
     public void whenIssuesAreReturnedOutOfOrder() throws JSONException {
         IssueBufferServiceSearchVisitor subject = new IssueBufferServiceSearchVisitor(issueConverter, issueBufferService);
         
-        JiraSearchResultJsonParser searchResultParser = new JiraSearchResultJsonParser();
+        JiraIssueDtoSearchParserSupport searchResultParser = new JiraIssueDtoSearchParserSupport();
         JiraIssueDtoSearch searchResult = searchResultParser.parse(result("TASKB-686_TASKB-685"));
         ArrayList<JiraIssueDto> list = newArrayList(searchResult.getIssues());
 
@@ -151,7 +151,7 @@ public class IssueBufferServiceSearchVisitorTest {
         
         IssueBufferServiceSearchVisitor subject = new IssueBufferServiceSearchVisitor(issueConverter, issueBufferService);
         
-        JiraSearchResultJsonParser searchResultParser = new JiraSearchResultJsonParser();
+        JiraIssueDtoSearchParserSupport searchResultParser = new JiraIssueDtoSearchParserSupport();
         JiraIssueDtoSearch searchResult = searchResultParser.parse(result("TASKB-634_TASKB-630_TASKB-628"));
         ArrayList<JiraIssueDto> list = newArrayList(searchResult.getIssues());
 
@@ -176,7 +176,7 @@ public class IssueBufferServiceSearchVisitorTest {
 
         IssueBufferServiceSearchVisitor subject = new IssueBufferServiceSearchVisitor(issueConverter, issueBufferService);
         
-        JiraSearchResultJsonParser searchResultParser = new JiraSearchResultJsonParser();
+        JiraIssueDtoSearchParserSupport searchResultParser = new JiraIssueDtoSearchParserSupport();
         JiraIssueDtoSearch searchResult = searchResultParser.parse(result("TASKB-685_TASKB-686"));
         ArrayList<JiraIssueDto> list = newArrayList(searchResult.getIssues());
         
@@ -190,7 +190,7 @@ public class IssueBufferServiceSearchVisitorTest {
     public void whenProcessingIssueWithMissingParent_ShouldThrowIllegalStateException() throws JSONException {
         IssueBufferServiceSearchVisitor subject = new IssueBufferServiceSearchVisitor(issueConverter, issueBufferService);
 
-        JiraSearchResultJsonParser searchResultParser = new JiraSearchResultJsonParser();
+        JiraIssueDtoSearchParserSupport searchResultParser = new JiraIssueDtoSearchParserSupport();
         JiraIssueDtoSearch searchResult = searchResultParser.parse(result("TASKB-686"));
         ArrayList<JiraIssueDto> list = newArrayList(searchResult.getIssues());
 

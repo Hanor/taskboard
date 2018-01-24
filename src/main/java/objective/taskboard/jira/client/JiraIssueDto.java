@@ -120,6 +120,16 @@ public class JiraIssueDto {
     public List<JiraSubtaskDto> getSubtasks() {
         return fields.subtasks;
     }
+    
+    public JiraWorklogResultSetDto getWorklogs() {
+        if (fields.worklog == null)
+            return new JiraWorklogResultSetDto();
+        return fields.worklog;
+    }
+    
+    public void setWorklogs(JiraWorklogResultSetDto worklogsForIssue) {
+        this.fields.worklog = worklogsForIssue;
+    }
 
     public JiraIssueFieldDto getField(String field) {
         JSONObjectAdapter jsonObjectAdapter = fields.other.get(field);
@@ -158,6 +168,8 @@ public class JiraIssueDto {
         @JsonDeserialize(using=JodaDateTimeDeserializer.class)
         public DateTime created;
         public JiraUserDto assignee;
+        
+        public JiraWorklogResultSetDto worklog;
         
         private Map<String, JSONObjectAdapter> other = new HashMap<>();
 

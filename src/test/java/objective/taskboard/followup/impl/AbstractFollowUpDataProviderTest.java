@@ -426,7 +426,8 @@ public abstract class AbstractFollowUpDataProviderTest {
                     coAssignees,
                     null,//classOfService
                     releaseId,
-                    buildTransitions()
+                    buildTransitions(),
+                    new LinkedList<>()
                     );
             return new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, cycleTime, null, projectService, null, null);
         }

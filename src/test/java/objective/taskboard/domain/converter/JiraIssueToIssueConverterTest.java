@@ -68,6 +68,7 @@ import objective.taskboard.jira.client.JiraPriorityDto;
 import objective.taskboard.jira.client.JiraProjectDto;
 import objective.taskboard.jira.client.JiraStatusDto;
 import objective.taskboard.jira.client.JiraUserDto;
+import objective.taskboard.jira.client.JiraWorklogResultSetDto;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.repository.FilterCachedRepository;
 import objective.taskboard.repository.ParentIssueLinkRepository;
@@ -342,6 +343,7 @@ public class JiraIssueToIssueConverterTest {
         when(issue.getStatus()).thenReturn(status);
         when(issue.getCreationDate()).thenReturn(new DateTime(0));
         when(issue.getPriority()).thenReturn(priority);
+        when(issue.getWorklogs()).thenReturn(new JiraWorklogResultSetDto());
     }
 
     private void mockIssueField(JiraIssueDto issue, JiraIssueFieldDto issueField, String fieldId, String json) throws JSONException {

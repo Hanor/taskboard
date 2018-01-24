@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -36,6 +37,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 import objective.taskboard.data.Changelog;
 import objective.taskboard.data.CustomField;
+import objective.taskboard.data.Worklog;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.client.JiraCommentDto;
 import objective.taskboard.jira.client.JiraComponentDto;
@@ -43,6 +45,7 @@ import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.client.JiraIssueFieldDto;
 import objective.taskboard.jira.client.JiraIssueLinkTypeDto;
 import objective.taskboard.jira.client.JiraLinkDto;
+import objective.taskboard.jira.client.JiraWorklogResultSetDto;
 import objective.taskboard.utils.DateTimeUtils;
 
 public class IssueFieldsExtractor {
@@ -308,5 +311,13 @@ public class IssueFieldsExtractor {
 
     private static boolean isEmpty(List<JiraLinkDto> issueLinks) {
         return issueLinks == null || issueLinks.isEmpty();
+    }
+
+    public static List<Worklog> convertWorklog(JiraWorklogResultSetDto jiraWorklogs) {
+        List<Worklog> worklogs = jiraWorklogs.worklogs.stream()
+            .map(Worklog::from)
+            .collect(Collectors.toList());
+        
+        return worklogs;
     }
 }

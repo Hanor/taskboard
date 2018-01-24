@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JiraSearchResultJsonParser {
+public class JiraIssueDtoSearchParserSupport {
 
     public JiraIssueDtoSearch parse(String jsonObject) {
         ObjectMapper mapper = new ObjectMapper();

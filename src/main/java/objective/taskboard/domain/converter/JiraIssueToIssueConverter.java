@@ -22,6 +22,7 @@ package objective.taskboard.domain.converter;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
+import static objective.taskboard.domain.converter.IssueFieldsExtractor.convertWorklog;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractAdditionalEstimatedHours;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractBlocked;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractChangelog;
@@ -166,7 +167,8 @@ public class JiraIssueToIssueConverter {
                 coAssignees,
                 extractClassOfService(jiraProperties, jiraIssue),
                 extractReleaseId(jiraProperties, jiraIssue),
-                extractChangelog(jiraIssue));
+                extractChangelog(jiraIssue),
+                convertWorklog(jiraIssue.getWorklogs()));
         
         return createIssueFromScratch(converted, provider);
     }

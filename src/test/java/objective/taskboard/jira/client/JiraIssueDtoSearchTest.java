@@ -9,11 +9,11 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
 
-public class JiraSearchResultJsonParserTest {
+public class JiraIssueDtoSearchTest {
     @Test
 	public void happyDay() throws JSONException {
-        String searchSample = resourceAsString(JiraSearchResultJsonParserTest.class.getResourceAsStream("search_parseSubject.json"));
-	    JiraSearchResultJsonParser subject = new JiraSearchResultJsonParser();
+        String searchSample = resourceAsString(JiraIssueDtoSearchTest.class.getResourceAsStream("search_parseSubject.json"));
+	    JiraIssueDtoSearchParserSupport subject = new JiraIssueDtoSearchParserSupport();
 	    
 	    JiraIssueDtoSearch result = subject.parse(searchSample);
 	    
@@ -84,11 +84,10 @@ public class JiraSearchResultJsonParserTest {
         assertEquals("Standard", fieldValue.get("value"));
         
         assertEquals("Last Block Reason", resultIssue.getField("customfield_11452").getValue());
-	    
-	    /*
-        public List<JiraCommentDto> getComments() {
-        public List<JiraComponentDto> getComponents() {
-        public List<JiraSubtaskDto> getSubtasks() {
-	     */
+        
+        JiraWorklogResultSetDto worklogs = resultIssue.getWorklogs();
+        assertEquals(4, worklogs.worklogs.size());
+        
+        assertEquals("roberson.gomes", worklogs.worklogs.get(0).author.getName());                    
 	}
 }

@@ -59,7 +59,9 @@ public class IssueScratch implements Serializable {
     protected CustomField classOfService;
     @JsonProperty(access = Access.WRITE_ONLY)
     protected Map<String, Serializable> customFields; //NOSONAR
-
+    @JsonIgnore
+    protected List<Worklog> worklogs;
+    
     public IssueScratch() {
         super();
     }
@@ -98,7 +100,8 @@ public class IssueScratch implements Serializable {
             List<IssueCoAssignee> coAssignees, 
             CustomField classOfService, 
             String releaseId,
-            List<Changelog> changelog) {
+            List<Changelog> changelog,
+            List<Worklog> worklogs) {
         this.id = id;
         this.issueKey = issueKey;
         this.projectKey = projectKey;
@@ -136,7 +139,8 @@ public class IssueScratch implements Serializable {
         
         this.render = false;
         this.favorite = false;
-        this.hidden = false;        
+        this.hidden = false;
+        this.worklogs = worklogs;
     }
 
     public String getIssueKey() {

@@ -140,6 +140,7 @@ public class Issue extends IssueScratch implements Serializable {
         this.render = false;
         this.favorite = false;
         this.hidden = false;
+        this.worklogs = scratch.worklogs;
     }
 
     @JsonAnyGetter
@@ -696,6 +697,10 @@ public class Issue extends IssueScratch implements Serializable {
 
     public int getStateHash() {
         return issueStateHashCalculator.calculateHash(this);
+    }
+    
+    public List<Worklog> getWorklogs() {
+        return worklogs;
     }
 
     private Object readResolve() {

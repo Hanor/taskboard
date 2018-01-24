@@ -372,7 +372,169 @@
                     "timeSpent": "3d 3h 30m",
                     "timeSpentSeconds": 99000
                 },
-                "updated": "2017-06-02T14:20:49.000+0000"
+                "updated": "2017-06-02T14:20:49.000+0000",
+                "worklog": {
+                    "maxResults": 20,
+                    "startAt": 0,
+                    "total": 4,
+                    "worklogs": [
+                        {
+                            "author": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=roberson.gomes&avatarId=10649",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=roberson.gomes&avatarId=10649",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=roberson.gomes&avatarId=10649",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=roberson.gomes&avatarId=10649"
+                                },
+                                "displayName": "Roberson Gomes",
+                                "key": "roberson.gomes",
+                                "name": "roberson.gomes",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=roberson.gomes",
+                                "timeZone": "America/Sao_Paulo"
+                            },
+                            "comment": "",
+                            "created": "2018-01-18T05:15:16.000+0000",
+                            "id": "15257",
+                            "issueId": "13837",
+                            "self": "https://services-uat.liferay.com/rest/api/2/issue/13837/worklog/15257",
+                            "started": "2018-01-17T05:15:00.000+0000",
+                            "timeSpent": "5h",
+                            "timeSpentSeconds": 18000,
+                            "updateAuthor": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=roberson.gomes&avatarId=10649",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=roberson.gomes&avatarId=10649",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=roberson.gomes&avatarId=10649",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=roberson.gomes&avatarId=10649"
+                                },
+                                "displayName": "Roberson Gomes",
+                                "key": "roberson.gomes",
+                                "name": "roberson.gomes",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=roberson.gomes",
+                                "timeZone": "America/Sao_Paulo"
+                            },
+                            "updated": "2018-01-18T05:15:16.000+0000"
+                        },
+                        {
+                            "author": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=luiz.marins&avatarId=10625",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=luiz.marins&avatarId=10625",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=luiz.marins&avatarId=10625",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=luiz.marins&avatarId=10625"
+                                },
+                                "displayName": "Oudival Luiz Fraccaro Marins",
+                                "key": "luiz.marins",
+                                "name": "luiz.marins",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=luiz.marins",
+                                "timeZone": "America/Sao_Paulo"
+                            },
+                            "created": "2018-01-18T05:23:19.000+0000",
+                            "id": "15265",
+                            "issueId": "13837",
+                            "self": "https://services-uat.liferay.com/rest/api/2/issue/13837/worklog/15265",
+                            "started": "2018-01-17T05:00:00.000+0000",
+                            "timeSpent": "2h",
+                            "timeSpentSeconds": 7200,
+                            "updateAuthor": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=luiz.marins&avatarId=10625",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=luiz.marins&avatarId=10625",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=luiz.marins&avatarId=10625",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=luiz.marins&avatarId=10625"
+                                },
+                                "displayName": "Oudival Luiz Fraccaro Marins",
+                                "key": "luiz.marins",
+                                "name": "luiz.marins",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=luiz.marins",
+                                "timeZone": "America/Sao_Paulo"
+                            },
+                            "updated": "2018-01-18T05:23:19.000+0000"
+                        },
+                        {
+                            "author": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=travis.cory&avatarId=10641",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=travis.cory&avatarId=10641",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=travis.cory&avatarId=10641",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=travis.cory&avatarId=10641"
+                                },
+                                "displayName": "Travis Cory",
+                                "key": "travis.cory",
+                                "name": "travis.cory",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=travis.cory",
+                                "timeZone": "GMT"
+                            },
+                            "comment": "",
+                            "created": "2018-01-18T06:09:22.000+0000",
+                            "id": "15270",
+                            "issueId": "13837",
+                            "self": "https://services-uat.liferay.com/rest/api/2/issue/13837/worklog/15270",
+                            "started": "2018-01-18T06:09:00.000+0000",
+                            "timeSpent": "2h",
+                            "timeSpentSeconds": 7200,
+                            "updateAuthor": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=travis.cory&avatarId=10641",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=travis.cory&avatarId=10641",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=travis.cory&avatarId=10641",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=travis.cory&avatarId=10641"
+                                },
+                                "displayName": "Travis Cory",
+                                "key": "travis.cory",
+                                "name": "travis.cory",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=travis.cory",
+                                "timeZone": "GMT"
+                            },
+                            "updated": "2018-01-18T06:09:22.000+0000"
+                        },
+                        {
+                            "author": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=alexandre.betioli&avatarId=10638",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=alexandre.betioli&avatarId=10638",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=alexandre.betioli&avatarId=10638",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=alexandre.betioli&avatarId=10638"
+                                },
+                                "displayName": "Alexandre Parra Betioli",
+                                "key": "alexandre.betioli",
+                                "name": "alexandre.betioli",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=alexandre.betioli",
+                                "timeZone": "GMT"
+                            },
+                            "comment": "",
+                            "created": "2018-01-18T06:24:39.000+0000",
+                            "id": "15272",
+                            "issueId": "13837",
+                            "self": "https://services-uat.liferay.com/rest/api/2/issue/13837/worklog/15272",
+                            "started": "2018-01-17T06:24:00.000+0000",
+                            "timeSpent": "2h",
+                            "timeSpentSeconds": 7200,
+                            "updateAuthor": {
+                                "active": true,
+                                "avatarUrls": {
+                                    "16x16": "https://services-uat.liferay.com/secure/useravatar?size=xsmall&ownerId=alexandre.betioli&avatarId=10638",
+                                    "24x24": "https://services-uat.liferay.com/secure/useravatar?size=small&ownerId=alexandre.betioli&avatarId=10638",
+                                    "32x32": "https://services-uat.liferay.com/secure/useravatar?size=medium&ownerId=alexandre.betioli&avatarId=10638",
+                                    "48x48": "https://services-uat.liferay.com/secure/useravatar?ownerId=alexandre.betioli&avatarId=10638"
+                                },
+                                "displayName": "Alexandre Parra Betioli",
+                                "key": "alexandre.betioli",
+                                "name": "alexandre.betioli",
+                                "self": "https://services-uat.liferay.com/rest/api/2/user?username=alexandre.betioli",
+                                "timeZone": "GMT"
+                            },
+                            "updated": "2018-01-18T06:24:39.000+0000"
+                        }
+                    ]
+                }
             },
             "id": "226015",
             "key": "TASKB-685",

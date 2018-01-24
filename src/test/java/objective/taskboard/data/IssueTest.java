@@ -48,6 +48,7 @@ public class IssueTest {
                 new LinkedList<>(), 
                 new CustomField("classOfService", null),
                 "releaseId",
+                new LinkedList<>(),
                 new LinkedList<>()
                 );
 
