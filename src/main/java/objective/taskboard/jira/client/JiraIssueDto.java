@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -30,7 +31,7 @@ import retrofit.http.Path;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JiraIssueDto {
     public interface Service {
-        @GET("/rest/api/latest/issue/{issueKey}")
+        @GET("/rest/api/latest/issue/{issueKey}?expand=schema,names,changelog")
         JiraIssueDto get(@Path("issueKey") String issueKey);
     }
     
@@ -40,6 +41,9 @@ public class JiraIssueDto {
     
     @JsonProperty
     private JiraIssueDtoFields fields;
+    
+    @JsonProperty
+    private Map<String, String> names;
     
     public String getKey() {
         return key;
@@ -135,7 +139,15 @@ public class JiraIssueDto {
         JSONObjectAdapter jsonObjectAdapter = fields.other.get(field);
         if (jsonObjectAdapter == null)
             return null;
-        return new JiraIssueFieldDto(field, jsonObjectAdapter.object);
+        String name = getFieldName(field);
+        return new JiraIssueFieldDto(name, jsonObjectAdapter.object);
+    }
+
+    private String getFieldName(String field) {
+        if (names == null)
+            return "NAME NOT RESOLVED";
+        
+        return (String) ObjectUtils.defaultIfNull(names.get(field), "NAME NOT RESOLVED");
     }
     
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -235,5 +247,9 @@ public class JiraIssueDto {
             }
             return new JSONObjectAdapter();
         }
+    }
+
+    public void setFieldNames(Map<String, String> names) {
+        this.names = names;
     }
 }

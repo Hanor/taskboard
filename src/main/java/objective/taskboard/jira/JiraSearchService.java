@@ -89,6 +89,7 @@ public class JiraSearchService {
                         .search(input);
         
         searchResult.getIssues().stream().forEach(issue -> {
+            issue.setFieldNames(searchResult.getNames());
             JiraWorklogResultSetDto worklogs = issue.getWorklogs();
             if (worklogs.total > worklogs.maxResults) {
                 log.debug("⬣⬣⬣⬣⬣  issue " + issue.getKey() +" has more more worklogs. Total of: " + worklogs.total);

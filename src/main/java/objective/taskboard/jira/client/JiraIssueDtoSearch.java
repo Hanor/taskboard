@@ -19,6 +19,7 @@ public class JiraIssueDtoSearch {
     private int maxResults;
     private int startAt;
     private int total;
+    private Map<String, String> names;
 
     public List<JiraIssueDto> getIssues() {
         return issues;
@@ -34,5 +35,9 @@ public class JiraIssueDtoSearch {
 
     public int getTotal() {
         return total;
+    }
+    
+    public Map<String, String> getNames() {
+        return names;
     }
 }
