@@ -2,6 +2,7 @@ package objective.taskboard.jira.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,7 +99,7 @@ public class JiraIssueDto {
     }
 
     public List<JiraCommentDto> getComments() {
-        return fields.comment;
+        return Collections.emptyList();
     }
 
     public List<JiraLinkDto> getIssueLinks() {
@@ -157,7 +158,6 @@ public class JiraIssueDto {
         public List<JiraComponentDto> components = new ArrayList<>();
         public Set<String> labels = new HashSet<>();
         public List<JiraLinkDto> issuelinks = new ArrayList<>();
-        public List<JiraCommentDto> comment = new ArrayList<>();
         public JiraPriorityDto priority;
         public String description;
         public List<JiraSubtaskDto> subtasks;
