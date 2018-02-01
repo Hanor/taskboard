@@ -95,7 +95,7 @@ public class FollowUpGenerator {
                 worklogRow.addColumn(worklog.author);
                 worklogRow.addColumn(issueKey);
                 worklogRow.addColumn(DateTimeUtils.get(worklog.started, timezone));
-                worklogRow.addColumn(worklog.timeSpentSeconds/3600);
+                worklogRow.addColumn(worklog.timeSpentSeconds/3600.0);
                 worklogRow.save();
             });
         });
