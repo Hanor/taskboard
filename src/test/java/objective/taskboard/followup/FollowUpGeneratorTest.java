@@ -434,7 +434,7 @@ public class FollowUpGeneratorTest {
                 "Sheet \"Worklogs\" Row \"2\" AddColumn \"A2\": john.doe\n" + 
                 "Sheet \"Worklogs\" Row \"2\" AddColumn \"B2\": I-3\n" + 
                 "Sheet \"Worklogs\" Row \"2\" AddColumn \"C2\": 2018-12-12T02:00Z\n" + 
-                "Sheet \"Worklogs\" Row \"2\" AddColumn \"D2\": 5\n" + 
+                "Sheet \"Worklogs\" Row \"2\" AddColumn \"D2\": 5.0\n" + 
                 "Sheet \"Worklogs\" Row \"2\" Save\n" + 
                 "Sheet \"Worklogs\" Save\n";
         assertEquals(expected, loggerString);
