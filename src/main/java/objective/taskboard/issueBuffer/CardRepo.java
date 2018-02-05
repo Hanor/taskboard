@@ -68,6 +68,10 @@ public class CardRepo  {
         if (lastRemoteUpdatedDate.before(value.getRemoteIssueUpdatedDate()))
             lastRemoteUpdatedDate = value.getRemoteIssueUpdatedDate();
 
+        Issue old = cardByKey.put(key, value);
+        if(old != null)
+            old.unlinkParent();
+
         if (!StringUtils.isEmpty(value.getParent())) {
             value.setParentCard(cardByKey.get(value.getParent()));
             unsavedCards.add(value.getParent());
@@ -80,7 +84,6 @@ public class CardRepo  {
                 unsavedCards.add(subtask.getIssueKey());
             });
 
-        cardByKey.put(key, value);
         unsavedCards.add(key);
         addProject(value.getProjectKey());
     }
@@ -106,7 +109,10 @@ public class CardRepo  {
 
     public synchronized Issue remove(String key) {
         unsavedCards.add(key);
-        return cardByKey.remove(key);
+        Issue old = cardByKey.remove(key);
+        if(old != null)
+            old.unlinkParent();
+        return old;
     }
 
     public int size() {

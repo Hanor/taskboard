@@ -233,6 +233,12 @@ public class Issue extends IssueScratch implements Serializable {
         this.subtasks.add(issue);
     }
 
+    public void unlinkParent() {
+        if(parentCard != null)
+            parentCard.subtasks.remove(this);
+        parentCard = null;
+    }
+
     @JsonIgnore
     public Optional<Issue> getParentCard() {
         return Optional.ofNullable(parentCard);

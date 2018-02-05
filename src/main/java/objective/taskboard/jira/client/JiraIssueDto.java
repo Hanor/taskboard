@@ -55,6 +55,8 @@ public class JiraIssueDto {
     }
     
     public List<ChangelogGroupDto> getChangelog() {
+        if (changelog == null)
+            return null;
         return changelog.getHistories();
     }    
 
@@ -123,6 +125,8 @@ public class JiraIssueDto {
     }
 
     public List<JiraSubtaskDto> getSubtasks() {
+        if (fields.subtasks == null)
+            return Collections.emptyList();
         return fields.subtasks;
     }
     
