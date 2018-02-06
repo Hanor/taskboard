@@ -167,11 +167,11 @@ public class ProjectController {
 
     @RequestMapping(method = RequestMethod.POST, consumes="application/json")
     public void create(@RequestBody ProjectCreationData data) {
+        if (projectRepository.exists(data.projectKey))
+            return;
         Boolean hasTeamsOnData = data.teams != null && !data.teams.isEmpty();
         if (hasTeamsOnData)
             validateTeamsAndWipConfigurations(data.teams);
-        if (projectRepository.exists(data.projectKey))
-            return;
         createProjectFilterConfiguration(data.projectKey);
         if (!hasTeamsOnData)
             return;
