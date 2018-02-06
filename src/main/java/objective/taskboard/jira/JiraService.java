@@ -190,7 +190,13 @@ public class JiraService {
 
     public JiraIssueDto getIssueByKeyAsMaster(String key) {
         log.debug("⬣⬣⬣⬣⬣  getIssueByKeyAsMaster");
-        return jiraEndpointAsMaster.request(JiraIssueDto.Service.class).get(key);
+        try {
+            return jiraEndpointAsMaster.request(JiraIssueDto.Service.class).get(key);
+        } catch(retrofit.RetrofitError e) {
+            if (e.getResponse().getStatus() == 404)
+                return null;
+            throw e;
+        }
     }
 
     public String createIssueAsMaster(IssueInput issueInput) {

@@ -1,15 +1,17 @@
 package objective.taskboard.jira.data;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import objective.taskboard.jira.client.JiraIssueDto;
+import objective.taskboard.jira.client.JiraUserDto;
 
 public class WebHookBody {
     public Long timestamp;
     public WebhookEvent webhookEvent;
-    public Map<String, Object> user = new HashMap<>();
-    public Map<String, Object> issue = new HashMap<>();
+    public JiraUserDto user;
+    public JiraIssueDto issue;
     public Version version;
     public Changelog changelog = new Changelog();
     public static class Changelog {

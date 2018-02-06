@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Map;
 import java.util.Optional;
 
 import org.junit.After;
@@ -23,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import objective.taskboard.domain.converter.JiraIssueToIssueConverter;
 import objective.taskboard.domain.converter.JiraIssueToIssueConverterMockFactory;
 import objective.taskboard.jira.JiraIssueService;
-import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.WebHookBody;
 import objective.taskboard.testUtils.OptionalAutowiredDependenciesInitializer;
 
@@ -58,7 +56,7 @@ public class IssueBufferServiceTest {
     private IssueBufferService issueBufferService;
 
     @After
-    public void removeAllIssues() {
+    public void resetIssueBuffer() {
         issueBufferService.reset();
     }
 
@@ -70,23 +68,23 @@ public class IssueBufferServiceTest {
         WebHookBody payload4 = payload("update-TASKB-2-converttosubtaskof-TASKB-1.json");
 
         // create parent
-        issueBufferService.updateByEvent(payload1.webhookEvent, "TASKB-1", asJiraIssue(payload1.issue));
+        issueBufferService.updateByEvent(payload1.webhookEvent, "TASKB-1", Optional.of(payload1.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(1);
 
         // create child
-        issueBufferService.updateByEvent(payload2.webhookEvent, "TASKB-2", asJiraIssue(payload2.issue));
+        issueBufferService.updateByEvent(payload2.webhookEvent, "TASKB-2", Optional.of(payload2.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(2);
         assertThat(issueBufferService.getIssueByKey("TASKB-1").getSubtasks()).hasSize(1);
         assertThat(issueBufferService.getIssueByKey("TASKB-2").getParent()).isEqualTo("TASKB-1");
 
         // convert child to task
-        issueBufferService.updateByEvent(payload3.webhookEvent, "TASKB-2", asJiraIssue(payload3.issue));
+        issueBufferService.updateByEvent(payload3.webhookEvent, "TASKB-2", Optional.of(payload3.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(2);
         assertThat(issueBufferService.getIssueByKey("TASKB-1").getSubtasks()).isEmpty();
         assertThat(issueBufferService.getIssueByKey("TASKB-2").getParent()).isNullOrEmpty();
 
         // undo convert
-        issueBufferService.updateByEvent(payload4.webhookEvent, "TASKB-2", asJiraIssue(payload4.issue));
+        issueBufferService.updateByEvent(payload4.webhookEvent, "TASKB-2", Optional.of(payload4.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(2);
         assertThat(issueBufferService.getIssueByKey("TASKB-1").getSubtasks()).hasSize(1);
         assertThat(issueBufferService.getIssueByKey("TASKB-2").getParent()).isEqualTo("TASKB-1");
@@ -99,11 +97,11 @@ public class IssueBufferServiceTest {
         WebHookBody payload3 = payload("delete-TASKB-2.json");
 
         // create parent
-        issueBufferService.updateByEvent(payload1.webhookEvent, "TASKB-1", asJiraIssue(payload1.issue));
+        issueBufferService.updateByEvent(payload1.webhookEvent, "TASKB-1", Optional.of(payload1.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(1);
 
         // create child
-        issueBufferService.updateByEvent(payload2.webhookEvent, "TASKB-2", asJiraIssue(payload2.issue));
+        issueBufferService.updateByEvent(payload2.webhookEvent, "TASKB-2", Optional.of(payload2.issue));
         assertThat(issueBufferService.getAllIssues()).hasSize(2);
         assertThat(issueBufferService.getIssueByKey("TASKB-1").getSubtasks()).hasSize(1);
         assertThat(issueBufferService.getIssueByKey("TASKB-2").getParent()).isEqualTo("TASKB-1");
@@ -113,10 +111,6 @@ public class IssueBufferServiceTest {
         assertThat(issueBufferService.getAllIssues()).hasSize(1);
         assertThat(issueBufferService.getIssueByKey("TASKB-1").getSubtasks()).isEmpty();
         assertThat(issueBufferService.getIssueByKey("TASKB-2")).isNull();
-    }
-
-    public static Optional<JiraIssueDto> asJiraIssue(Map<String, Object> jsonObject) throws IOException {
-        return Optional.of(objectMapper.readValue(objectMapper.writeValueAsString(jsonObject), JiraIssueDto.class));
     }
 
     public static WebHookBody payload(String file) throws IOException {

@@ -211,10 +211,6 @@ public class IssueBufferService {
         projectsUpdatedByEvent.add(projectKey);
     }
 
-    public synchronized void notifyIssueUpdate(final String issueKey) {
-        notifyIssueUpdate(cardsRepo.get(issueKey));
-    }
-
     public synchronized void notifyIssueUpdate(final Issue issue) {
         issuesUpdatedByEvent.add(new IssueUpdate(issue, IssueUpdateType.UPDATED));
     }
