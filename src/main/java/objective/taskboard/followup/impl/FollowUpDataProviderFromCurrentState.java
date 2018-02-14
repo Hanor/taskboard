@@ -82,7 +82,7 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
     }
 
     @Override
-    public FollowUpDataSnapshot getJiraData(FollowupCluster cluster, String[] includeProjects, ZoneId timezone) {
+    public synchronized FollowUpDataSnapshot getJiraData(FollowupCluster cluster, String[] includeProjects, ZoneId timezone) {
         FromJiraRowCalculator rowCalculator = new FromJiraRowCalculator(cluster);
         LocalDate date = LocalDate.now();
         List<String> i = Arrays.asList(includeProjects);
