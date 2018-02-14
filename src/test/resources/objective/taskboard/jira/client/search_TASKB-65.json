@@ -1,0 +1,324 @@
+{
+  "expand": "names,schema",
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 1,
+  "issues": [
+    {
+      "expand": "operations,versionedRepresentations,editmeta,changelog,transitions,renderedFields",
+      "id": "249174",
+      "self": "http://10.44.1.137:8080/rest/api/latest/issue/249174",
+      "key": "TASKB-65",
+      "fields": {
+        "customfield_11041": null,
+        "customfield_11042": null,
+        "customfield_11560": null,
+        "customfield_10350": null,
+        "customfield_11043": null,
+        "customfield_11044": null,
+        "customfield_11562": null,
+        "customfield_11441": null,
+        "fixVersions": [],
+        "customfield_11045": null,
+        "customfield_11561": null,
+        "customfield_11440": null,
+        "customfield_11564": null,
+        "customfield_11443": null,
+        "resolution": null,
+        "customfield_11563": null,
+        "customfield_11442": {
+          "self": "http://10.44.1.137:8080/rest/api/2/customFieldOption/12580",
+          "value": "R$",
+          "id": "12580"
+        },
+        "customfield_11566": null,
+        "customfield_11445": null,
+        "customfield_11444": null,
+        "customfield_11565": null,
+        "customfield_11557": null,
+        "customfield_11556": null,
+        "customfield_11559": null,
+        "customfield_11558": null,
+        "lastViewed": null,
+        "customfield_10062": null,
+        "customfield_11551": null,
+        "customfield_11550": null,
+        "priority": {
+          "self": "http://10.44.1.137:8080/rest/api/2/priority/9",
+          "iconUrl": "http://10.44.1.137:8080/images/icons/priorities/minor.svg",
+          "name": "Média",
+          "id": "9"
+        },
+        "customfield_11553": null,
+        "customfield_10101": null,
+        "customfield_11552": null,
+        "customfield_10740": {
+          "self": "http://10.44.1.137:8080/rest/api/2/customFieldOption/11181",
+          "value": "Standard",
+          "id": "11181"
+        },
+        "customfield_11555": null,
+        "labels": [],
+        "customfield_11554": null,
+        "customfield_11546": null,
+        "customfield_11545": null,
+        "customfield_11548": null,
+        "customfield_11547": null,
+        "aggregatetimeoriginalestimate": 3600,
+        "timeestimate": 3600,
+        "versions": [],
+        "customfield_11549": null,
+        "issuelinks": [],
+        "assignee": {
+          "self": "http://10.44.1.137:8080/rest/api/2/user?username=lousa",
+          "name": "lousa",
+          "key": "lousa",
+          "avatarUrls": {
+            "48x48": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=48",
+            "24x24": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=24",
+            "16x16": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=16",
+            "32x32": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=32"
+          },
+          "displayName": "Lousa Virtual",
+          "active": true,
+          "timeZone": "America/Sao_Paulo"
+        },
+        "status": {
+          "self": "http://10.44.1.137:8080/rest/api/2/status/10017",
+          "description": "",
+          "iconUrl": "http://10.44.1.137:8080/images/icons/statuses/inprogress.png",
+          "name": "Desenvolvimento",
+          "id": "10017",
+          "statusCategory": {
+            "self": "http://10.44.1.137:8080/rest/api/2/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        },
+        "components": [],
+        "customfield_10170": null,
+        "customfield_10450": null,
+        "customfield_11540": null,
+        "customfield_10330": null,
+        "customfield_11542": null,
+        "customfield_11541": null,
+        "customfield_11544": null,
+        "customfield_11543": null,
+        "customfield_10841": null,
+        "aggregatetimeestimate": 3600,
+        "creator": {
+          "self": "http://10.44.1.137:8080/rest/api/2/user?username=lousa",
+          "name": "lousa",
+          "key": "lousa",
+          "avatarUrls": {
+            "48x48": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=48",
+            "24x24": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=24",
+            "16x16": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=16",
+            "32x32": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=32"
+          },
+          "displayName": "Lousa Virtual",
+          "active": true,
+          "timeZone": "America/Sao_Paulo"
+        },
+        "subtasks": [
+          {
+            "id": "249175",
+            "key": "TASKB-66",
+            "self": "http://10.44.1.137:8080/rest/api/2/issue/249175",
+            "fields": {
+              "summary": "Test",
+              "status": {
+                "self": "http://10.44.1.137:8080/rest/api/2/status/1",
+                "description": "The issue is open and ready for the assignee to start work on it.",
+                "iconUrl": "http://10.44.1.137:8080/images/icons/statuses/open.png",
+                "name": "Aberto",
+                "id": "1",
+                "statusCategory": {
+                  "self": "http://10.44.1.137:8080/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "http://10.44.1.137:8080/rest/api/2/priority/9",
+                "iconUrl": "http://10.44.1.137:8080/images/icons/priorities/minor.svg",
+                "name": "Média",
+                "id": "9"
+              },
+              "issuetype": {
+                "self": "http://10.44.1.137:8080/rest/api/2/issuetype/12",
+                "id": "12",
+                "description": "Sub-atividades padrão Jira",
+                "iconUrl": "http://10.44.1.137:8080/secure/viewavatar?size=xsmall&avatarId=11958&avatarType=issuetype",
+                "name": "Sub-atividade",
+                "subtask": true,
+                "avatarId": 11958
+              }
+            }
+          },
+          {
+            "id": "249176",
+            "key": "TASKB-67",
+            "self": "http://10.44.1.137:8080/rest/api/2/issue/249176",
+            "fields": {
+              "summary": "Test",
+              "status": {
+                "self": "http://10.44.1.137:8080/rest/api/2/status/1",
+                "description": "The issue is open and ready for the assignee to start work on it.",
+                "iconUrl": "http://10.44.1.137:8080/images/icons/statuses/open.png",
+                "name": "Aberto",
+                "id": "1",
+                "statusCategory": {
+                  "self": "http://10.44.1.137:8080/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "http://10.44.1.137:8080/rest/api/2/priority/9",
+                "iconUrl": "http://10.44.1.137:8080/images/icons/priorities/minor.svg",
+                "name": "Média",
+                "id": "9"
+              },
+              "issuetype": {
+                "self": "http://10.44.1.137:8080/rest/api/2/issuetype/12",
+                "id": "12",
+                "description": "Sub-atividades padrão Jira",
+                "iconUrl": "http://10.44.1.137:8080/secure/viewavatar?size=xsmall&avatarId=11958&avatarType=issuetype",
+                "name": "Sub-atividade",
+                "subtask": true,
+                "avatarId": 11958
+              }
+            }
+          }
+        ],
+        "reporter": {
+          "self": "http://10.44.1.137:8080/rest/api/2/user?username=lousa",
+          "name": "lousa",
+          "key": "lousa",
+          "avatarUrls": {
+            "48x48": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=48",
+            "24x24": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=24",
+            "16x16": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=16",
+            "32x32": "http://www.gravatar.com/avatar/a17a154522ed4cbaa37e0315a1eacd38?d=mm&s=32"
+          },
+          "displayName": "Lousa Virtual",
+          "active": true,
+          "timeZone": "America/Sao_Paulo"
+        },
+        "aggregateprogress": {
+          "progress": 0,
+          "total": 3600,
+          "percent": 0
+        },
+        "customfield_10200": null,
+        "customfield_10201": null,
+        "customfield_10202": null,
+        "progress": {
+          "progress": 0,
+          "total": 3600,
+          "percent": 0
+        },
+        "votes": {
+          "self": "http://10.44.1.137:8080/rest/api/2/issue/TASKB-65/votes",
+          "votes": 0,
+          "hasVoted": false
+        },
+        "issuetype": {
+          "self": "http://10.44.1.137:8080/rest/api/2/issuetype/11",
+          "id": "11",
+          "description": "Atividades gerais",
+          "iconUrl": "http://10.44.1.137:8080/secure/viewavatar?size=xsmall&avatarId=10368&avatarType=issuetype",
+          "name": "Atividade",
+          "subtask": false,
+          "avatarId": 10368
+        },
+        "timespent": null,
+        "customfield_10272": null,
+        "customfield_10273": null,
+        "customfield_11241": null,
+        "project": {
+          "self": "http://10.44.1.137:8080/rest/api/2/project/11410",
+          "id": "11410",
+          "key": "TASKB",
+          "name": "Taskboard",
+          "avatarUrls": {
+            "48x48": "http://10.44.1.137:8080/secure/projectavatar?avatarId=11653",
+            "24x24": "http://10.44.1.137:8080/secure/projectavatar?size=small&avatarId=11653",
+            "16x16": "http://10.44.1.137:8080/secure/projectavatar?size=xsmall&avatarId=11653",
+            "32x32": "http://10.44.1.137:8080/secure/projectavatar?size=medium&avatarId=11653"
+          }
+        },
+        "customfield_11242": null,
+        "customfield_11243": null,
+        "customfield_11244": null,
+        "aggregatetimespent": null,
+        "customfield_11245": null,
+        "customfield_11246": null,
+        "customfield_11247": null,
+        "customfield_10940": null,
+        "customfield_10302": null,
+        "customfield_10303": null,
+        "resolutiondate": null,
+        "workratio": 0,
+        "watches": {
+          "self": "http://10.44.1.137:8080/rest/api/2/issue/TASKB-65/watchers",
+          "watchCount": 1,
+          "isWatching": true
+        },
+        "created": "2017-11-13T12:11:32.000+0000",
+        "customfield_10260": null,
+        "customfield_10540": null,
+        "customfield_10301": null,
+        "customfield_10412": null,
+        "updated": "2017-11-13T12:12:02.000+0000",
+        "customfield_10092": null,
+        "customfield_10093": null,
+        "customfield_10370": null,
+        "timeoriginalestimate": 3600,
+        "customfield_11340": null,
+        "description": null,
+        "customfield_11581": null,
+        "customfield_11341": null,
+        "customfield_10650": "0|i140fv:",
+        "customfield_10013": null,
+        "customfield_11579": null,
+        "customfield_10644": "9223372036854775807",
+        "customfield_11578": null,
+        "customfield_10645": null,
+        "customfield_10647": null,
+        "summary": "Test",
+        "customfield_11571": null,
+        "customfield_11450": null,
+        "customfield_11570": null,
+        "customfield_11452": null,
+        "customfield_11573": null,
+        "customfield_11451": null,
+        "customfield_11572": null,
+        "customfield_11575": null,
+        "customfield_11454": null,
+        "customfield_10640": null,
+        "customfield_11453": null,
+        "customfield_11574": null,
+        "customfield_10641": null,
+        "customfield_11577": null,
+        "customfield_11576": null,
+        "customfield_11568": null,
+        "customfield_11447": null,
+        "customfield_11567": null,
+        "customfield_11446": null,
+        "environment": null,
+        "customfield_11449": null,
+        "customfield_11569": null,
+        "customfield_11448": null,
+        "duedate": null
+      }
+    }
+  ]
+}

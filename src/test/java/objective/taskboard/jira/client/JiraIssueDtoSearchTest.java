@@ -2,12 +2,15 @@ package objective.taskboard.jira.client;
 
 import static objective.taskboard.utils.IOUtilities.resourceAsString;
 import static org.apache.tomcat.util.buf.StringUtils.join;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
+
+import java.util.List;
 
 public class JiraIssueDtoSearchTest {
     @Test
@@ -87,5 +90,22 @@ public class JiraIssueDtoSearchTest {
         assertEquals("Standard", fieldValue.get("value"));
 
         assertEquals("Last Block Reason", resultIssue.getField("customfield_11452").getValue());
+    }
+
+    @Test
+    public void searchWithSubtasks() {
+        String searchWithSubtask = resourceAsString(
+                JiraIssueDtoSearchTest.class.getResourceAsStream("search_TASKB-65.json"));
+        JiraSearchTestSupport subject = new JiraSearchTestSupport();
+
+        JiraIssueDtoSearch result = subject.parse(searchWithSubtask);
+
+        List<JiraSubtaskDto> subtasks = result.getIssues().get(0).getSubtasks();
+        assertThat(subtasks).isNotEmpty();
+        assertThat(subtasks).allSatisfy(subtask -> {
+            assertThat(subtask.getIssueKey()).isNotNull();
+            assertThat(subtask.getIssueType()).isNotNull();
+            assertThat(subtask.getIssueType().getId()).isNotNull();
+        });
     }
 }
