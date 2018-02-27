@@ -8,18 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import objective.taskboard.domain.TaskboardEntity;
 
-public class JpaRepositoryMock<T extends TaskboardEntity> implements JpaRepository<T, Long> {
+public class JpaRepositoryMock<T extends TaskboardEntity> extends AbstractJpaRepositoryMock<T, Long> {
     
     private final Map<Long, T> data = new LinkedHashMap<>();
     private Long currentId = 0L;
@@ -113,45 +107,5 @@ public class JpaRepositoryMock<T extends TaskboardEntity> implements JpaReposito
 
     @Override
     public void flush() {
-    }
-
-    @Override
-    public Page<T> findAll(Pageable pageable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> S findOne(Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> long count(Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> boolean exists(Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<T> findAll(Sort sort) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> List<S> findAll(Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends T> List<S> findAll(Example<S> example, Sort sort) {
-        throw new UnsupportedOperationException();
     }
 }
