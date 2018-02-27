@@ -28,6 +28,7 @@
         <widget-wrap title="Progress Chart" is-ready="{{isReady}}" error-message="{{errorMessage}}" options="{{options}}" chart="{{chart}}">
             <div id="progress-chart" class="tb-chart"></div>
         </widget-wrap>
+        <iron-signals on-iron-signal-cfd-created="linkCfdBrush" />
         <wrap-modal id="modal" title="Progress Chart Settings">
             <div class="modal-content">
                 <form class="progress-chart-modal" style="width: 250px">
@@ -174,7 +175,6 @@
                         )
                         .elasticY(false)
                         .yAxisLabel("Progress %")
-                        //.xAxisLabel("Timeline")
                         .legend(dcUtils
                                 .getDefaultLegend()
                                 .x(80).y(20)
@@ -185,14 +185,9 @@
                         .colors(
                             self._getChartColors()
                         );
-
-                    chart.xAxis()
-                        .tickValues(
-                            dcUtils.getDateTicks(startDate, endDate, 14)
-                        )
-                        .tickFormat(function (v) {
-                            return dcUtils.dateFormat(v);
-                        });
+                    
+                    setupChartDateTicks(chart, startDate, endDate, 14);
+                    
                     chart.margins({top: 20, right: 30, bottom: 60, left: 50});
 
                     dcUtils.rotateDateFormattedXAxis(chart);
@@ -205,6 +200,10 @@
                         projection = dcUtils.colors.DONE_PROJECTION,
                         expected = dcUtils.colors.EXPECTED;
                     return dcUtils.getChartColorsFromArray([actual, expected, projection]);
+                },
+
+                linkCfdBrush: function(event, data) {
+                    data.cfdChartInstance.addRangedChart(this.chart);
                 },
 
                 reset: function() {

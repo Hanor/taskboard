@@ -30,6 +30,7 @@
             <div id="scope-progress" class="tb-chart"></div>
 
         </widget-wrap>
+        <iron-signals on-iron-signal-cfd-created="linkCfdBrush" />
         <wrap-modal id="modal" title="Scope Progress Settings">
             <div class="modal-content">
                 <form class="progress-chart-modal" style="width: 250px">
@@ -135,6 +136,10 @@
 
                         self.set('isReady', true);
                     });
+                },
+
+                linkCfdBrush: function(event, data) {
+                    data.cfdChartInstance.addRangedChart(this.chart);
                 },
 
                 reset: function() {
@@ -244,16 +249,11 @@
 
                     // axis
                     chart
-                        //.xAxisLabel("Timeline")
                         .yAxisLabel("Effort (hours)")
-                        .elasticY(true)       // y axis will adjust to the data
-                        .xAxis()
-                            .tickValues(
-                                dcUtils.getDateTicks(startDate, endDate, 14)
-                            )
-                            .tickFormat(function (v) {
-                                return dcUtils.dateFormat(v);
-                            });
+                        .elasticY(false)
+                        .yAxisPadding('10%')
+                        
+                    setupChartDateTicks(chart, startDate, endDate, 14);
 
                     // mouse interaction
                     chart

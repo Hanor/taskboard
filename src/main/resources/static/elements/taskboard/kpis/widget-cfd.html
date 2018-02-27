@@ -27,7 +27,7 @@
 
         <widget-wrap title="CFD" is-ready="{{isReady}}" tags="{{tags}}" options="{{options}}" chart="{{chart}}" error-message="{{errorMessage}}">
 
-            <div id="cfd" class="tb-chart"></div>
+            <div id="cfd" title="Double click to enter selection mode" class="tb-chart"></div>
 
             <wrap-modal title="Filters" class="filters-modal">
                 <h3 class="tb-label">Issue Types</h3>
@@ -116,6 +116,13 @@
                             icon: 'taskboard-icons:settings'
                             , title: 'Settings'
                             , tap: this._openSettingsModal.bind(this)
+                            , cssClasses: ''
+                        },
+                        {
+                            icon:'taskboard-icons:dashboard-view-mode'
+                            , title: 'Toggle View/Selection mode'
+                            , tap: this.toggleSelectionViewMode.bind(this)
+                            , cssClasses: ''
                         }
                     ]);
                 },
@@ -289,17 +296,101 @@
                         .brushOn(false)       // don't select with drag-n-drop
                         .mouseZoomable(false)  // zoom with mouse wheel
                         .elasticY(true)       // y axis will adjust to the data
-                        .xAxis()
-                            .tickValues(
-                                dcUtils.getDateTicks(startDate, endDate, 14)
-                            )
-                            .tickFormat(function(v) {
-                                return dcUtils.dateFormat(v);
-                            });
+
+                    setupChartDateTicks(chart, startDate, endDate, 14);
 
                     dcUtils.rotateDateFormattedXAxis(chart);
 
+                    chart.chartlist = [];
+                    chart.addRangedChart = function(c){
+                        chart.chartlist.push(c)
+                    }
+
+                    var brushOnDelegate = chart.brushOn;
+                    var self = this;
+                    chart.brushOn = function(state) {
+                        if (arguments.length > 0) {
+                            self.setupViewMode(state);
+                            return brushOnDelegate(state);
+                        }
+
+                        return brushOnDelegate();
+                    }
+
+                    chart.on('filtered', this.setupSelector.bind(this));
+                    
+                    $("#cfd").dblclick(this.toggleSelectionViewMode.bind(this));
+
                     this.set('chart', chart);
+                    this.fire("iron-signal", {name:"cfd-created", data:{
+                        cfdChartInstance: chart
+                    }})
+                },
+                
+                toggleSelectionViewMode: function() {
+                    this.chart.brushOn(!this.chart.brushOn());
+                    this.chart.render();
+                    this.setupSelector(this.chart)
+                },
+                
+                setupViewMode: function(state) {
+                    if (state) {
+                        $("#cfd").prop("title", "Double click to go back to view mode")
+                        this.set('options.2.cssClasses', 'widget__button_highlighted');
+                    }
+                    else { 
+                        $("#cfd").prop("title", "Double click to enter selection mode")
+                        this.set('options.2.cssClasses', '');
+                    }
+                },
+                
+                setupSelector: function(rangeChart) {
+                    if (!rangeChart.filter() || !rangeChart.brushOn())
+                        this.resetSelection(rangeChart)
+                    else
+                        this.applySelection(rangeChart);
+                },
+
+                applySelection: function(rangeChart) {
+                    this.chart.chartlist.forEach(function(focusChart) {
+                        if (!rangesEqual(rangeChart.filter(), focusChart.filter())) {
+                            dc.events.trigger(function () {
+                                focusChart.focus(rangeChart.filter());
+
+                                var od = focusChart.xOriginalDomain();
+                                // recalculate tick count so we have a better resolution of dates when focused
+                                var tickCount = focusChart.visibleTickCount * ((od[od.length-1] - od[0])/ 
+                                         (rangeChart.filter()[1]-rangeChart.filter()[0]));
+                                tickCount = Math.round(tickCount);
+
+                                if (focusChart.tickCount && focusChart.tickCount != tickCount) {
+                                    focusChart
+                                        .xAxis()
+                                        .tickValues(dcUtils.getDateTicks(od[0], od[od.length-1], tickCount));
+                                    focusChart.render();
+                                }
+                                focusChart.tickCount = tickCount;
+                            });
+                        }
+                    });
+                },
+
+                resetSelection: function(rangeChart) {
+                    var chart = this.chart;
+                    dc.events.trigger(function () {
+                        chart.chartlist.forEach(function(focusChart) {
+                            var od = focusChart.xOriginalDomain();
+                            focusChart.x().domain(od);
+                            focusChart.focus([od[0], od[od.length-1]])
+                            focusChart
+                                .xAxis()
+                                .tickValues(
+                                    dcUtils.getDateTicks(od[0], od[od.length-1], 14)
+                                );
+                            focusChart.tickCount = 14;
+                            focusChart.render();
+                        });
+                    });
                 },
 
                 createIssueListFilter: function() {

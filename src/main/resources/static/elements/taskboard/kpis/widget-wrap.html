@@ -114,6 +114,8 @@
                 display: block;
 
                 transition: color .4s ease;
+                margin-top: auto;
+                margin-bottom: auto;
             }
 
             .widget__reset:hover {
@@ -260,6 +262,8 @@
 
                 _onTapReset: function() {
                     this.chart.filterAll();
+                    if (this.chart.brushOn)
+                    	this.chart.brushOn(false);
                     dc.renderAll();
                     dc.redrawAll();
                 },

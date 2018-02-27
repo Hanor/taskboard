@@ -84,3 +84,31 @@ if (!Array.prototype.findIndex) {
         return -1;
     };
 }
+
+function rangesEqual(range1, range2) {
+    if (!range1 && !range2) {
+        return true;
+    }
+    else if (!range1 || !range2) {
+        return false;
+    }
+    else if (range1.length === 0 && range2.length === 0) {
+        return true;
+    }
+    else if (range1[0].valueOf() === range2[0].valueOf() &&
+        range1[1].valueOf() === range2[1].valueOf()) {
+        return true;
+    }
+    return false;
+}
+
+function setupChartDateTicks(chart, startDate, endDate, tickCount) {
+    chart.xAxis()
+        .tickValues(
+            dcUtils.getDateTicks(startDate, endDate, tickCount)
+        )
+        .tickFormat(function (v) {
+            return dcUtils.dateFormat(v);
+        });
+    chart.visibleTickCount = tickCount;
+}
