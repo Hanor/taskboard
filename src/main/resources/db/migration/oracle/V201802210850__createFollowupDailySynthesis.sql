@@ -1,3 +1,5 @@
+ALTER TABLE project_filter_configuration ADD constraint project_fc_pk  PRIMARY KEY(id);
+
 CREATE TABLE FOLLOWUP_DAILY_SYNTHESIS (
   id                   NUMBER       NOT NULL,
   followup_date        DATE         NOT NULL, 
