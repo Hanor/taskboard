@@ -20,9 +20,6 @@
  */
 package objective.taskboard.jira;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,16 +38,9 @@ public class JiraIssueService {
     @Autowired
     private JiraIssueJqlBuilderService jqlService;
 
-    public void searchIssuesByKeys(final List<String> keys, SearchIssueVisitor visitor) {
-        if (keys.isEmpty()) 
-            return;
-        
-        searchIssues(visitor, "key IN (" + String.join(",", keys) + ")", "subtasks");
-    }
-
     public Optional<JiraIssueDto> searchIssueByKey(final String key) {
         final AtomicReference<JiraIssueDto> foundIssue = new AtomicReference<JiraIssueDto>();
-        searchIssuesByKeys(asList(key), issue -> foundIssue.set(issue));
+        searchIssues(issue -> foundIssue.set(issue), "key IN (" + key + ")", "subtasks");
         
         return Optional.ofNullable(foundIssue.get());
     }
@@ -60,7 +50,7 @@ public class JiraIssueService {
     }
 
     private void searchIssues(SearchIssueVisitor visitor, String additionalJqlCondition, String... additionalFields) {
-        String jql = jqlService.buildQueryForIssuesWithouTimeConstraint();
+        String jql = jqlService.projectsSqlWithoutTimeConstraint();
         if (additionalJqlCondition != null) 
             jql = "(" + additionalJqlCondition + ") AND " + jql;
         
