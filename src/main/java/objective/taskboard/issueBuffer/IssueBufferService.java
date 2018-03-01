@@ -212,11 +212,14 @@ public class IssueBufferService {
         issuesUpdatedByEvent.add(new IssueUpdate(issue, IssueUpdateType.UPDATED));
     }
 
-    public synchronized Issue updateByEvent(WebhookEvent event, final String issueKey, Optional<JiraIssueDto> issue) {
-        if (event == WebhookEvent.ISSUE_DELETED || !issue.isPresent()) {
+    public synchronized void updateByEvent(WebhookEvent event, final String issueKey, Optional<JiraIssueDto> issue) {
+        if (event == WebhookEvent.ISSUE_DELETED) {
             issuesUpdatedByEvent.add(new IssueUpdate(cardsRepo.get(issueKey), IssueUpdateType.DELETED));
-            return cardsRepo.remove(issueKey);
+            cardsRepo.remove(issueKey);
+            return;
         }
+        if (!issue.isPresent())
+            return;
 
         Issue updated = putJiraIssue(issue.get());
 
@@ -227,8 +230,6 @@ public class IssueBufferService {
         issuesUpdatedByEvent.add(new IssueUpdate(updated, updateType));
 
         scheduleNotificationSubtasksUpdate(updated);
-
-        return updated;
     }
 
     public synchronized void startBatchUpdate() {
