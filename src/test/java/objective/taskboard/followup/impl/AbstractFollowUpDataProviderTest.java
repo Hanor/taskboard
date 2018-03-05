@@ -120,6 +120,12 @@ public abstract class AbstractFollowUpDataProviderTest {
     protected static final long statusDoing     = 15L;
     protected static final long statusCancelled = 16L;
     protected static final long statusDone      = 17L;
+    protected static final long statusAlphaTesting      = 18L;
+    protected static final long statusFeatureReviewing  = 19L;
+    protected static final long statusQAing             = 20L;
+    protected static final long statusToAlphaTest       = 21L;
+    protected static final long statusToFeatureReview   = 22L;
+    protected static final long statusToQA              = 23L;
 
     private static final String BLOCKED_ID = "1";
     private static final String LAST_BLOCK_REASON_ID = "2";
@@ -156,6 +162,13 @@ public abstract class AbstractFollowUpDataProviderTest {
         statusMap.put(statusDoing,      new Status(statusDoing,      "Doing", CATEGORY_UNDEFINED));
         statusMap.put(statusCancelled,  new Status(statusCancelled,  "Cancelled", CATEGORY_UNDEFINED));
         statusMap.put(statusDone,       new Status(statusDone,       "Done",  CATEGORY_UNDEFINED));
+        statusMap.put(statusAlphaTesting,      new Status(statusAlphaTesting,      "Alpha Testing",      CATEGORY_UNDEFINED));
+        statusMap.put(statusFeatureReviewing,  new Status(statusFeatureReviewing,  "Feature Reviewing",  CATEGORY_UNDEFINED));
+        statusMap.put(statusQAing,             new Status(statusQAing,             "QAing",              CATEGORY_UNDEFINED));
+        statusMap.put(statusToAlphaTest,       new Status(statusToAlphaTest,       "To Alpha Test",      CATEGORY_UNDEFINED));
+        statusMap.put(statusToFeatureReview,   new Status(statusToFeatureReview,   "To Feature Review",  CATEGORY_UNDEFINED));
+        statusMap.put(statusToQA,              new Status(statusToQA,              "To QA",              CATEGORY_UNDEFINED));
+
         doReturn(statusMap).when(metadataService).getStatusesMetadata();
 
         Map<Long, IssueType> issueTypeMap = new LinkedHashMap<>();

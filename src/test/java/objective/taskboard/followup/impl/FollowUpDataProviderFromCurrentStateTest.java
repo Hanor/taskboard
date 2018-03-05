@@ -278,6 +278,31 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
     }
     
     @Test
+    public void foo() {
+        configureBallparkMappings(
+                taskIssueType + ":",
+                "  - issueType: BALLPARK - Dev",
+                "    tshirtCustomFieldId: Dev_Tshirt",
+                "    lastApplicableStatusId: " + statusDoing,
+                "    jiraIssueTypes:",
+                "      - " + devIssueType);
+        
+        configureCluster(
+                new FollowUpClusterItem(projectConfiguration, "BALLPARK - Dev",   "na", "M",  5.0, 0.0),
+                new FollowUpClusterItem(projectConfiguration, "Dev",              "na", "M",  6.0, 0.0));
+
+        issues(task().id(3).key("PROJ-3").issueStatus(statusToDo).tshirt("Dev_Tshirt", "M"));
+        
+        assertFromJiraRows(r -> asList(r.taskNum, r.subtaskNum, r.subtaskType), 
+                "PROJ-3 | PROJ-0  | BALLPARK - Dev");
+        
+        issues(task().id(3).key("PROJ-3").issueStatus(statusDoing).tshirt("Dev_Tshirt", "M"));
+
+        assertFromJiraRows(r -> asList(r.taskNum, r.subtaskNum, r.subtaskType), 
+                "PROJ-3 | PROJ-0  | BALLPARK - Dev");
+    }
+    
+    @Test
     public void subtaskWithDemandAndSubtask_shouldCreateOnlyOneSubTaskAndNoBallparks() {
         configureBallparkMappings(
                 taskIssueType + " : \n" +

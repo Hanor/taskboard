@@ -867,6 +867,8 @@ public class JiraProperties {
 
         @NotNull
         private Integer valueStreamOrder;
+        
+        private Integer lastApplicableStatusId;
 
         public String getIssueType() {
             return this.issueType;
@@ -899,29 +901,13 @@ public class JiraProperties {
         public void setValueStreamOrder(final Integer valueStreamOrder) {
             this.valueStreamOrder = valueStreamOrder;
         }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            BallparkMapping that = (BallparkMapping) o;
-
-            if (issueType != null ? !issueType.equals(that.issueType) : that.issueType != null) return false;
-            if (jiraIssueTypes != null ? !jiraIssueTypes.equals(that.jiraIssueTypes) : that.jiraIssueTypes != null)
-                return false;
-            if (tshirtCustomFieldId != null ? !tshirtCustomFieldId.equals(that.tshirtCustomFieldId) : that.tshirtCustomFieldId != null)
-                return false;
-            return valueStreamOrder != null ? valueStreamOrder.equals(that.valueStreamOrder) : that.valueStreamOrder == null;
+        
+        public Optional<Integer> getLastApplicableStatusId() {
+            return Optional.ofNullable(lastApplicableStatusId);
         }
-
-        @Override
-        public int hashCode() {
-            int result = issueType != null ? issueType.hashCode() : 0;
-            result = 31 * result + (jiraIssueTypes != null ? jiraIssueTypes.hashCode() : 0);
-            result = 31 * result + (tshirtCustomFieldId != null ? tshirtCustomFieldId.hashCode() : 0);
-            result = 31 * result + (valueStreamOrder != null ? valueStreamOrder.hashCode() : 0);
-            return result;
+        
+        public void setLastApplicableStatusId(Integer lastApplicableStatusId) {
+            this.lastApplicableStatusId = lastApplicableStatusId;
         }
 
         @Override
@@ -930,7 +916,8 @@ public class JiraProperties {
                     "issueType='" + issueType + '\'' +
                     ", jiraIssueTypes=" + jiraIssueTypes +
                     ", tshirtCustomFieldId='" + tshirtCustomFieldId + '\'' +
-                    ", valueStreamOrder=" + valueStreamOrder +
+                    ", valueStreamOrder=" + valueStreamOrder + 
+                    ", lastApplicableStatusId=" + lastApplicableStatusId +
                     '}';
         }
     }
