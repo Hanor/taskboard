@@ -34,7 +34,6 @@ import org.junit.Test;
 
 import objective.taskboard.data.Worklog;
 import objective.taskboard.followup.FromJiraDataRow;
-import objective.taskboard.followup.cluster.FollowUpClusterItem;
 
 public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDataProviderTest {
 
@@ -54,7 +53,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 1\n" +
             " demandDescription             : M | 00001 - Smry 1\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -140,7 +139,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 1\n" +
             " demandDescription             : M | 00001 - Smry 1\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -209,74 +208,6 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         );
     }
 
-    @Test
-    public void subtasksEffortEstimateShouldNotBeLessThanFeatureEstimate() {
-        configureBallparkMappings(
-                taskIssueType + ":",
-                "  - issueType: BALLPARK - Dev",
-                "    tshirtCustomFieldId: Dev_Tshirt",
-                "    jiraIssueTypes:",
-                "      - " + devIssueType,
-                "  - issueType: BALLPARK - Alpha",
-                "    tshirtCustomFieldId: Alpha_Tshirt",
-                "    jiraIssueTypes:",
-                "      - " + alphaIssueType
-                );
-        
-        configureCluster(
-                new FollowUpClusterItem(projectConfiguration, "BALLPARK - Dev",   "na", "M",  5.0, 0.0),
-                new FollowUpClusterItem(projectConfiguration, "BALLPARK - Alpha", "na", "XS", 1.0, 0.0),
-                new FollowUpClusterItem(projectConfiguration, "Dev",              "na", "S",  2.0, 0.0)
-        );
-
-        issues( 
-                task().id(3).key("PROJ-3")
-                    .tshirt("Dev_Tshirt",   "M")
-                    .tshirt("Alpha_Tshirt", "XS"),
-                subtask().id(4).key("PROJ-20").parent("PROJ-3").issueType(devIssueType).tshirtSize("S")
-        );
-
-        //effort dev ballpark: 3, effort dev subtasks: 2, total: 5
-        assertFromJiraRows(r -> asList(r.taskNum, r.subtaskNum, r.subtaskType, r.taskBallpark),
-                "PROJ-3 | PROJ-0  | BALLPARK - Dev   | 3.0",
-                "PROJ-3 | PROJ-0  | BALLPARK - Alpha | 1.0",
-                "PROJ-3 | PROJ-20 | Dev              | 0.0"
-        );
-        
-        issues( 
-                task().id(3).key("PROJ-3")
-                    .tshirt("Dev_Tshirt",   "M")
-                    .tshirt("Alpha_Tshirt", "XS"),
-                subtask().id(4).key("PROJ-20").parent("PROJ-3").issueType(devIssueType).tshirtSize("S"),
-                subtask().id(5).key("PROJ-21").parent("PROJ-3").issueType(devIssueType).tshirtSize("S")
-        );
-        
-        //effort dev ballpark: 1, effort dev subtasks: 4, total: 5
-        assertFromJiraRows(r -> asList(r.taskNum, r.subtaskNum, r.subtaskType, r.taskBallpark),
-                "PROJ-3 | PROJ-0  | BALLPARK - Dev   | 1.0",
-                "PROJ-3 | PROJ-0  | BALLPARK - Alpha | 1.0",
-                "PROJ-3 | PROJ-20 | Dev              | 0.0",
-                "PROJ-3 | PROJ-21 | Dev              | 0.0"
-        );
-        
-        issues( 
-                task().id(3).key("PROJ-3")
-                    .tshirt("Dev_Tshirt",   "M")
-                    .tshirt("Alpha_Tshirt", "XS"),
-                subtask().id(4).key("PROJ-20").parent("PROJ-3").issueType(devIssueType).tshirtSize("S"),
-                subtask().id(5).key("PROJ-21").parent("PROJ-3").issueType(devIssueType).tshirtSize("S"),
-                subtask().id(6).key("PROJ-22").parent("PROJ-3").issueType(devIssueType).tshirtSize("S")
-        );
-        
-        //effort dev ballpark: 0, effort dev subtasks: 6, total: 6
-        assertFromJiraRows(r -> asList(r.taskNum, r.subtaskNum, r.subtaskType, r.taskBallpark),
-                "PROJ-3 | PROJ-0  | BALLPARK - Alpha | 1.0",
-                "PROJ-3 | PROJ-20 | Dev              | 0.0",
-                "PROJ-3 | PROJ-21 | Dev              | 0.0",
-                "PROJ-3 | PROJ-22 | Dev              | 0.0"
-        );
-    }
-    
     @Test
     public void subtaskWithDemandAndSubtask_shouldCreateOnlyOneSubTaskAndNoBallparks() {
         configureBallparkMappings(
@@ -465,7 +396,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
                 );
         issues( 
                 demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
-                task().id(3).key("PROJ-3").summary("Smry 3").parent("PROJ-2").priorityOrder(1l)
+                task().id(3).key("PROJ-3").summary("Smry 3").originalEstimateInHours(2).parent("PROJ-2").priorityOrder(1l)
                     .tshirt("Dev_Tshirt",      "S")
                     .tshirt("FrontDev_Tshirt", "S"),
                 subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l)
@@ -762,7 +693,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").timeSpentInHours(1)
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2).timeSpentInHours(1)
                     .tshirt("Dev_Tshirt", "L")
                     .tshirt("Alpha_TestTshirt", "S")
                     .priorityOrder(1l),
@@ -844,7 +775,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                       : 0.0\n" +
             " wrongWorklog                  : 1.0\n" +
             " demandBallpark                : 1.0\n" +
-            " taskBallpark                  : 0.0\n" +
+            " taskBallpark                  : 2.0\n" +
             " queryType                     : FEATURE BALLPARK" +
 
             "\n\n"+
@@ -946,7 +877,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L")
                     .tshirt("Alpha_TestTshirt", "S")
                     .priorityOrder(1l),
@@ -1140,7 +1071,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 2\n" +
             " demandDescription             : 00002 - Smry 2\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -1164,7 +1095,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : release 66\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -1224,7 +1155,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L").release("release 66"),
 
             subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL")
@@ -1240,7 +1171,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 2\n" +
             " demandDescription             : 00002 - Smry 2\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -1264,7 +1195,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : release 66\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -1286,7 +1217,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " subtaskDescription            : XL | 00004 - Smry 4\n" +
             " subtaskFullDescription        : To Do > Dev | XL | 00004 - Smry 4\n" +
             " subtaskStatusPriority         : 5\n" +
-            " subtaskPriorityOrder          : 0\n" +
+            " subtaskPriorityOrder          : null\n" +
             " subtaskStartDateStepMillis    : 0\n" +
             " subtaskAssignee               : null\n" +
             " subtaskDueDate                : null\n" +
@@ -1307,6 +1238,105 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskBallpark                  : 0.0\n" +
             " queryType                     : SUBTASK PLAN"
             );
+    }
+
+    @Test
+    public void featureWithSubtaskWithoutTShirt_ShouldUseParentEstimativeInTaskBallpark() {
+        configureBallparkMappings(
+                taskIssueType + " : \n" +
+                "  - issueType : BALLPARK - Development\n" +
+                "    tshirtCustomFieldId: Dev_Tshirt\n" +
+                "    jiraIssueTypes:\n" +
+                "      - " + devIssueType + "\n"
+                );
+
+        tshirtSizeInfo.setIds(asList("Dev_Tshirt","Alpha_TestTshirt","Review_Tshirt"));
+
+        issues( 
+            demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1),
+
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
+                    .tshirt("Dev_Tshirt", "L").release("release 66"),
+
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType)
+        );
+
+        assertFollowupsForIssuesEquals(
+                " planningType                  : Plan\n" +
+                " project                       : A Project\n" +
+                " demandType                    : Demand\n" +
+                " demandStatus                  : To Do\n" +
+                " demandId                      : 2\n" +
+                " demandNum                     : PROJ-2\n" +
+                " demandSummary                 : Smry 2\n" +
+                " demandDescription             : 00002 - Smry 2\n" +
+                " demandStatusPriority          : 5\n" +
+                " demandPriorityOrder           : null\n" +
+                " demandStartDateStepMillis     : 0\n" +
+                " demandAssignee                : null\n" +
+                " demandDueDate                 : null\n" +
+                " demandCreated                 : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+                " demandLabels                  : \n" +
+                " demandComponents              : \n" +
+                " demandReporter                : null\n" +
+                " demandCoAssignees             : \n" +
+                " demandClassOfService          : Standard\n" +
+                " demandUpdatedDate             : null\n" +
+                " demandCycletime               : 1.0\n" +
+                " demandIsBlocked               : false\n" +
+                " demandLastBlockReason         : null\n" +
+                " taskType                      : Task\n" +
+                " taskStatus                    : To Do\n" +
+                " taskId                        : 3\n" +
+                " taskNum                       : PROJ-3\n" +
+                " taskSummary                   : Smry 3\n" +
+                " taskDescription               : 00003 - Smry 3\n" +
+                " taskFullDescription           : Task | 00003 - Smry 3\n" +
+                " taskAdditionalEstimatedHours  : null\n" +
+                " taskRelease                   : release 66\n" +
+                " taskStatusPriority            : 9\n" +
+                " taskPriorityOrder             : null\n" +
+                " taskStartDateStepMillis       : 0\n" +
+                " taskAssignee                  : null\n" +
+                " taskDueDate                   : null\n" +
+                " taskCreated                   : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+                " taskLabels                    : \n" +
+                " taskComponents                : \n" +
+                " taskReporter                  : null\n" +
+                " taskCoAssignees               : \n" +
+                " taskClassOfService            : Standard\n" +
+                " taskUpdatedDate               : null\n" +
+                " taskCycletime                 : 1.0\n" +
+                " taskIsBlocked                 : false\n" +
+                " taskLastBlockReason           : null\n" +
+                " subtaskType                   : Dev\n" +
+                " subtaskStatus                 : To Do\n" +
+                " subtaskId                     : 4\n" +
+                " subtaskNum                    : PROJ-4\n" +
+                " subtaskSummary                : Smry 4\n" +
+                " subtaskDescription            : 00004 - Smry 4\n" +
+                " subtaskFullDescription        : To Do > Dev | 00004 - Smry 4\n" +
+                " subtaskStatusPriority         : 5\n" +
+                " subtaskPriorityOrder          : null\n" +
+                " subtaskStartDateStepMillis    : 0\n" +
+                " subtaskAssignee               : null\n" +
+                " subtaskDueDate                : null\n" +
+                " subtaskCreated                : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+                " subtaskLabels                 : \n" +
+                " subtaskComponents             : \n" +
+                " subtaskReporter               : null\n" +
+                " subtaskCoAssignees            : \n" +
+                " subtaskClassOfService         : Standard\n" +
+                " subtaskUpdatedDate            : null\n" +
+                " subtaskCycletime              : 1.0\n" +
+                " subtaskIsBlocked              : false\n" +
+                " subtaskLastBlockReason        : null\n" +
+                " tshirtSize                    : \n" +
+                " worklog                       : 5.0\n" +
+                " wrongWorklog                  : 0.0\n" +
+                " demandBallpark                : 1.0\n" +
+                " taskBallpark                  : 2.0\n" +
+                " queryType                     : SUBTASK PLAN");
     }
 
     @Test
@@ -1357,7 +1387,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : No release set\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -1379,7 +1409,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " subtaskDescription            : XL | 00004 - Smry 4\n" +
             " subtaskFullDescription        : To Do > Dev | XL | 00004 - Smry 4\n" +
             " subtaskStatusPriority         : 5\n" +
-            " subtaskPriorityOrder          : 0\n" +
+            " subtaskPriorityOrder          : null\n" +
             " subtaskStartDateStepMillis    : 0\n" +
             " subtaskAssignee               : null\n" +
             " subtaskDueDate                : null\n" +
@@ -1441,7 +1471,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L").priorityOrder(1l),
 
             subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL")
@@ -1522,7 +1552,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " worklog                       : 0.0\n" +
             " wrongWorklog                  : 0.0\n" +
             " demandBallpark                : 1.0\n" +
-            " taskBallpark                  : 0.0\n" +
+            " taskBallpark                  : 2.0\n" +
             " queryType                     : FEATURE BALLPARK"+
 
             "\n\n"+
@@ -1647,7 +1677,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 2\n" +
             " demandDescription             : 00002 - Smry 2\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -1671,7 +1701,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : release 88\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -1744,7 +1774,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 2\n" +
             " demandDescription             : 00002 - Smry 2\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -1768,7 +1798,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : release 66\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -1828,7 +1858,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).release("Demand Release #1").priorityOrder(1l),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L")
                     .tshirt("Alpha_TestTshirt", "S")
                     .priorityOrder(1l)
@@ -2013,7 +2043,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         issues( 
             demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).release("Demand Release #1"),
 
-            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L")
                     .tshirt("Alpha_TestTshirt", "S"),
 
@@ -2030,7 +2060,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 2\n" +
             " demandDescription             : 00002 - Smry 2\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -2054,7 +2084,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : Demand Release #1\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -2076,7 +2106,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " subtaskDescription            : XL | 00004 - Smry 4\n" +
             " subtaskFullDescription        : To Do > Dev | XL | 00004 - Smry 4\n" +
             " subtaskStatusPriority         : 5\n" +
-            " subtaskPriorityOrder          : 0\n" +
+            " subtaskPriorityOrder          : null\n" +
             " subtaskStartDateStepMillis    : 0\n" +
             " subtaskAssignee               : null\n" +
             " subtaskDueDate                : null\n" +
@@ -2561,7 +2591,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " taskAdditionalEstimatedHours  : null\n" +
             " taskRelease                   : No release set\n" +
             " taskStatusPriority            : 9\n" +
-            " taskPriorityOrder             : 0\n" +
+            " taskPriorityOrder             : null\n" +
             " taskStartDateStepMillis       : 0\n" +
             " taskAssignee                  : null\n" +
             " taskDueDate                   : null\n" +
@@ -2622,7 +2652,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             " demandSummary                 : Smry 1\n" +
             " demandDescription             : M | 00001 - Smry 1\n" +
             " demandStatusPriority          : 5\n" +
-            " demandPriorityOrder           : 0\n" +
+            " demandPriorityOrder           : null\n" +
             " demandStartDateStepMillis     : 0\n" +
             " demandAssignee                : null\n" +
             " demandDueDate                 : null\n" +
@@ -2692,6 +2722,296 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
     }
 
     @Test
+    public void ifSubtaskHasOriginalEstimate_taskBallparkHasToShowThatValue() {
+        configureBallparkMappings(
+                taskIssueType + " : \n" +
+                "  - issueType : BALLPARK - Development\n" +
+                "    tshirtCustomFieldId: Dev_Tshirt\n" +
+                "    jiraIssueTypes:\n" +
+                "      - " + devIssueType + "\n" +
+
+                "  - issueType : BALLPARK - Alpha\n" +
+                "    tshirtCustomFieldId: Alpha_TestTshirt\n" +
+                "    jiraIssueTypes:\n" +
+                "      - " + alphaIssueType + "\n"
+                );
+
+        tshirtSizeInfo.setIds(asList("Dev_Tshirt","Alpha_TestTshirt","Review_Tshirt"));
+
+        issues( 
+            demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
+
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
+                    .tshirt("Dev_Tshirt", "L")
+                    .tshirt("Alpha_TestTshirt", "S")
+                    .priorityOrder(1l),
+
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).priorityOrder(1l).originalEstimateInHours(7),
+            subtask().id(5).key("PROJ-5").summary("Smry 5").timeSpentInHours(15).parent("PROJ-3").issueType(alphaIssueType).tshirtSize("L").priorityOrder(1l)
+        );
+
+        assertFollowupsForIssuesEquals(
+            " planningType                  : Plan\n" +
+            " project                       : A Project\n" +
+            " demandType                    : Demand\n" +
+            " demandStatus                  : To Do\n" +
+            " demandId                      : 2\n" +
+            " demandNum                     : PROJ-2\n" +
+            " demandSummary                 : Smry 2\n" +
+            " demandDescription             : 00002 - Smry 2\n" +
+            " demandStatusPriority          : 5\n" +
+            " demandPriorityOrder           : 1\n" +
+            " demandStartDateStepMillis     : 0\n" +
+            " demandAssignee                : null\n" +
+            " demandDueDate                 : null\n" +
+            " demandCreated                 : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " demandLabels                  : \n" +
+            " demandComponents              : \n" +
+            " demandReporter                : null\n" +
+            " demandCoAssignees             : \n" +
+            " demandClassOfService          : Standard\n" +
+            " demandUpdatedDate             : null\n" +
+            " demandCycletime               : 1.0\n" +
+            " demandIsBlocked               : false\n" +
+            " demandLastBlockReason         : null\n" +
+            " taskType                      : Task\n" +
+            " taskStatus                    : To Do\n" +
+            " taskId                        : 3\n" +
+            " taskNum                       : PROJ-3\n" +
+            " taskSummary                   : Smry 3\n" +
+            " taskDescription               : 00003 - Smry 3\n" +
+            " taskFullDescription           : Task | 00003 - Smry 3\n" +
+            " taskAdditionalEstimatedHours  : null\n" +
+            " taskRelease                   : No release set\n" +
+            " taskStatusPriority            : 9\n" +
+            " taskPriorityOrder             : 1\n" +
+            " taskStartDateStepMillis       : 0\n" +
+            " taskAssignee                  : null\n" +
+            " taskDueDate                   : null\n" +
+            " taskCreated                   : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " taskLabels                    : \n" +
+            " taskComponents                : \n" +
+            " taskReporter                  : null\n" +
+            " taskCoAssignees               : \n" +
+            " taskClassOfService            : Standard\n" +
+            " taskUpdatedDate               : null\n" +
+            " taskCycletime                 : 1.0\n" +
+            " taskIsBlocked                 : false\n" +
+            " taskLastBlockReason           : null\n" +
+            " subtaskType                   : Dev\n" +
+            " subtaskStatus                 : To Do\n" +
+            " subtaskId                     : 4\n" +
+            " subtaskNum                    : PROJ-4\n" +
+            " subtaskSummary                : Smry 4\n" +
+            " subtaskDescription            : 00004 - Smry 4\n" +
+            " subtaskFullDescription        : To Do > Dev | 00004 - Smry 4\n" +
+            " subtaskStatusPriority         : 5\n" +
+            " subtaskPriorityOrder          : 1\n" +
+            " subtaskStartDateStepMillis    : 0\n" +
+            " subtaskAssignee               : null\n" +
+            " subtaskDueDate                : null\n" +
+            " subtaskCreated                : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " subtaskLabels                 : \n" +
+            " subtaskComponents             : \n" +
+            " subtaskReporter               : null\n" +
+            " subtaskCoAssignees            : \n" +
+            " subtaskClassOfService         : Standard\n" +
+            " subtaskUpdatedDate            : null\n" +
+            " subtaskCycletime              : 1.0\n" +
+            " subtaskIsBlocked              : false\n" +
+            " subtaskLastBlockReason        : null\n" +
+            " tshirtSize                    : \n" +
+            " worklog                       : 5.0\n" +
+            " wrongWorklog                  : 0.0\n" +
+            " demandBallpark                : 1.0\n" +
+            " taskBallpark                  : 7.0\n" +
+            " queryType                     : SUBTASK PLAN" +
+
+            "\n\n"+
+
+            " planningType                  : Plan\n" +
+            " project                       : A Project\n" +
+            " demandType                    : Demand\n" +
+            " demandStatus                  : To Do\n" +
+            " demandId                      : 2\n" +
+            " demandNum                     : PROJ-2\n" +
+            " demandSummary                 : Smry 2\n" +
+            " demandDescription             : 00002 - Smry 2\n" +
+            " demandStatusPriority          : 5\n" +
+            " demandPriorityOrder           : 1\n" +
+            " demandStartDateStepMillis     : 0\n" +
+            " demandAssignee                : null\n" +
+            " demandDueDate                 : null\n" +
+            " demandCreated                 : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " demandLabels                  : \n" +
+            " demandComponents              : \n" +
+            " demandReporter                : null\n" +
+            " demandCoAssignees             : \n" +
+            " demandClassOfService          : Standard\n" +
+            " demandUpdatedDate             : null\n" +
+            " demandCycletime               : 1.0\n" +
+            " demandIsBlocked               : false\n" +
+            " demandLastBlockReason         : null\n" +
+            " taskType                      : Task\n" +
+            " taskStatus                    : To Do\n" +
+            " taskId                        : 3\n" +
+            " taskNum                       : PROJ-3\n" +
+            " taskSummary                   : Smry 3\n" +
+            " taskDescription               : 00003 - Smry 3\n" +
+            " taskFullDescription           : Task | 00003 - Smry 3\n" +
+            " taskAdditionalEstimatedHours  : null\n" +
+            " taskRelease                   : No release set\n" +
+            " taskStatusPriority            : 9\n" +
+            " taskPriorityOrder             : 1\n" +
+            " taskStartDateStepMillis       : 0\n" +
+            " taskAssignee                  : null\n" +
+            " taskDueDate                   : null\n" +
+            " taskCreated                   : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " taskLabels                    : \n" +
+            " taskComponents                : \n" +
+            " taskReporter                  : null\n" +
+            " taskCoAssignees               : \n" +
+            " taskClassOfService            : Standard\n" +
+            " taskUpdatedDate               : null\n" +
+            " taskCycletime                 : 1.0\n" +
+            " taskIsBlocked                 : false\n" +
+            " taskLastBlockReason           : null\n" +
+            " subtaskType                   : Alpha\n" +
+            " subtaskStatus                 : To Do\n" +
+            " subtaskId                     : 5\n" +
+            " subtaskNum                    : PROJ-5\n" +
+            " subtaskSummary                : Smry 5\n" +
+            " subtaskDescription            : L | 00005 - Smry 5\n" +
+            " subtaskFullDescription        : To Do > Alpha | L | 00005 - Smry 5\n" +
+            " subtaskStatusPriority         : 5\n" +
+            " subtaskPriorityOrder          : 1\n" +
+            " subtaskStartDateStepMillis    : 0\n" +
+            " subtaskAssignee               : null\n" +
+            " subtaskDueDate                : null\n" +
+            " subtaskCreated                : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " subtaskLabels                 : \n" +
+            " subtaskComponents             : \n" +
+            " subtaskReporter               : null\n" +
+            " subtaskCoAssignees            : \n" +
+            " subtaskClassOfService         : Standard\n" +
+            " subtaskUpdatedDate            : null\n" +
+            " subtaskCycletime              : 1.0\n" +
+            " subtaskIsBlocked              : false\n" +
+            " subtaskLastBlockReason        : null\n" +
+            " tshirtSize                    : L\n" +
+            " worklog                       : 15.0\n" +
+            " wrongWorklog                  : 0.0\n" +
+            " demandBallpark                : 1.0\n" +
+            " taskBallpark                  : 0.0\n" +
+            " queryType                     : SUBTASK PLAN");
+    }
+
+    @Test
+    public void ifSubtaskHasOriginalEstimateAndTshirt_shouldNotFillTaskballPark() {
+        configureBallparkMappings(
+                taskIssueType + " : \n" +
+                "  - issueType : BALLPARK - Development\n" +
+                "    tshirtCustomFieldId: Dev_Tshirt\n" +
+                "    jiraIssueTypes:\n" +
+                "      - " + devIssueType + "\n" +
+
+                "  - issueType : BALLPARK - Alpha\n" +
+                "    tshirtCustomFieldId: Alpha_TestTshirt\n" +
+                "    jiraIssueTypes:\n" +
+                "      - " + alphaIssueType + "\n"
+                );
+
+        tshirtSizeInfo.setIds(asList("Dev_Tshirt","Alpha_TestTshirt","Review_Tshirt"));
+
+        issues( 
+            demand().id(2).key("PROJ-2").summary("Smry 2").originalEstimateInHours(1).priorityOrder(1l),
+
+            task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3").originalEstimateInHours(2)
+                    .tshirt("Dev_Tshirt", "L")
+                    .priorityOrder(1l),
+
+            subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l).originalEstimateInHours(7)
+        );
+
+        assertFollowupsForIssuesEquals(
+            " planningType                  : Plan\n" +
+            " project                       : A Project\n" +
+            " demandType                    : Demand\n" +
+            " demandStatus                  : To Do\n" +
+            " demandId                      : 2\n" +
+            " demandNum                     : PROJ-2\n" +
+            " demandSummary                 : Smry 2\n" +
+            " demandDescription             : 00002 - Smry 2\n" +
+            " demandStatusPriority          : 5\n" +
+            " demandPriorityOrder           : 1\n" +
+            " demandStartDateStepMillis     : 0\n" +
+            " demandAssignee                : null\n" +
+            " demandDueDate                 : null\n" +
+            " demandCreated                 : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " demandLabels                  : \n" +
+            " demandComponents              : \n" +
+            " demandReporter                : null\n" +
+            " demandCoAssignees             : \n" +
+            " demandClassOfService          : Standard\n" +
+            " demandUpdatedDate             : null\n" +
+            " demandCycletime               : 1.0\n" +
+            " demandIsBlocked               : false\n" +
+            " demandLastBlockReason         : null\n" +
+            " taskType                      : Task\n" +
+            " taskStatus                    : To Do\n" +
+            " taskId                        : 3\n" +
+            " taskNum                       : PROJ-3\n" +
+            " taskSummary                   : Smry 3\n" +
+            " taskDescription               : 00003 - Smry 3\n" +
+            " taskFullDescription           : Task | 00003 - Smry 3\n" +
+            " taskAdditionalEstimatedHours  : null\n" +
+            " taskRelease                   : No release set\n" +
+            " taskStatusPriority            : 9\n" +
+            " taskPriorityOrder             : 1\n" +
+            " taskStartDateStepMillis       : 0\n" +
+            " taskAssignee                  : null\n" +
+            " taskDueDate                   : null\n" +
+            " taskCreated                   : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " taskLabels                    : \n" +
+            " taskComponents                : \n" +
+            " taskReporter                  : null\n" +
+            " taskCoAssignees               : \n" +
+            " taskClassOfService            : Standard\n" +
+            " taskUpdatedDate               : null\n" +
+            " taskCycletime                 : 1.0\n" +
+            " taskIsBlocked                 : false\n" +
+            " taskLastBlockReason           : null\n" +
+            " subtaskType                   : Dev\n" +
+            " subtaskStatus                 : To Do\n" +
+            " subtaskId                     : 4\n" +
+            " subtaskNum                    : PROJ-4\n" +
+            " subtaskSummary                : Smry 4\n" +
+            " subtaskDescription            : XL | 00004 - Smry 4\n" +
+            " subtaskFullDescription        : To Do > Dev | XL | 00004 - Smry 4\n" +
+            " subtaskStatusPriority         : 5\n" +
+            " subtaskPriorityOrder          : 1\n" +
+            " subtaskStartDateStepMillis    : 0\n" +
+            " subtaskAssignee               : null\n" +
+            " subtaskDueDate                : null\n" +
+            " subtaskCreated                : 1969-12-31T21:00-03:00[America/Sao_Paulo]\n" +
+            " subtaskLabels                 : \n" +
+            " subtaskComponents             : \n" +
+            " subtaskReporter               : null\n" +
+            " subtaskCoAssignees            : \n" +
+            " subtaskClassOfService         : Standard\n" +
+            " subtaskUpdatedDate            : null\n" +
+            " subtaskCycletime              : 1.0\n" +
+            " subtaskIsBlocked              : false\n" +
+            " subtaskLastBlockReason        : null\n" +
+            " tshirtSize                    : XL\n" +
+            " worklog                       : 5.0\n" +
+            " wrongWorklog                  : 0.0\n" +
+            " demandBallpark                : 1.0\n" +
+            " taskBallpark                  : 0.0\n" +
+            " queryType                     : SUBTASK PLAN");
+    }
+
+    @Test
     public void whenAllFieldsHaveValues_emptyAndNullAreNotAllowed() {
         configureBallparkMappings(
                 taskIssueType + " : \n" +
@@ -2718,7 +3038,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             task()  .id(3).key("PROJ-3").parent("PROJ-2").summary("Smry 3")
                     .assignee("task.assignee").coAssignees("task.coassignee.1", "task.coassignee.2").reporter("task.reporter")
                     .labels("task-label-1","task-label-2").components("task-component-1","task-component-2")
-                    .created("2016-10-26").priorityUpdatedDate("2018-11-27").dueDate("2020-12-28").originalEstimateInHours(0)
+                    .created("2016-10-26").priorityUpdatedDate("2018-11-27").dueDate("2020-12-28").originalEstimateInHours(2)
                     .tshirt("Dev_Tshirt", "L").priorityOrder(1l)
                     .startDateStepMillis(1513101243000L).additionalEstimatedHours(80D).lastBlockReason("Task Last BLock Reason"),
 
@@ -2949,4 +3269,5 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             expectedFollowupList,
             fromJiraRowstoString(actual, "\n\n"));
     }
+
 }

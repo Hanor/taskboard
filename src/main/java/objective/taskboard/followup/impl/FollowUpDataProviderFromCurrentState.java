@@ -51,8 +51,6 @@ import objective.taskboard.followup.FollowupData;
 import objective.taskboard.followup.FollowupDataProvider;
 import objective.taskboard.followup.FromJiraDataRow;
 import objective.taskboard.followup.FromJiraDataSet;
-import objective.taskboard.followup.FromJiraRowCalculator;
-import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 import objective.taskboard.followup.SyntheticTransitionsDataSet;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
@@ -83,29 +81,18 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
 
     @Override
     public FollowUpDataSnapshot getJiraData(String[] includeProjects, ZoneId timezone) {
-        CurrentStateSnapshot currentStateSnapshot = new CurrentStateSnapshot(includeProjects, timezone);
-        return currentStateSnapshot.getJiraData();
+        CurrentStateSnapshot currentStateSnapshot = new CurrentStateSnapshot();
+        return currentStateSnapshot.getJiraData(includeProjects, timezone);
     }
 
     private class CurrentStateSnapshot {
 
-        private final String[] includeProjects;
-        private final ZoneId timezone;
-        private final FollowupCluster cluster;
-        private final FromJiraRowCalculator fromJiraRowCalculator;
-        
         private Map<String, Issue> demandsByKey;
         private Map<String, Issue> featuresByKey;
         private Map<String, FromJiraDataRow> followUpBallparks;
 
-        private CurrentStateSnapshot(String[] includeProjects, ZoneId timezone) {
-            this.includeProjects = includeProjects;
-            this.timezone = timezone;
-            this.cluster = clusterProvider.getForProject(includeProjects[0]);
-            this.fromJiraRowCalculator = new FromJiraRowCalculator(cluster); 
-        }
-
-        public FollowUpDataSnapshot getJiraData() {
+        public FollowUpDataSnapshot getJiraData(String[] includeProjects, ZoneId timezone) {
+            FollowupCluster cluster = clusterProvider.getForProject(includeProjects[0]);
             LocalDate date = LocalDate.now();
             List<String> i = Arrays.asList(includeProjects);
 
@@ -191,12 +178,12 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
                 List<BallparkMapping> mappingList = getBallparksOrCry(feature);
 
                 for (BallparkMapping mapping : mappingList) {
-                    followUpBallparks.put(featureBallparkKey(feature, mapping), createBallparkFeature(demand, feature, mapping, timezone));
+                    String issueKeyAndTShirtSize = feature.getIssueKey()+mapping.getTshirtCustomFieldId();
+                    followUpBallparks.put( issueKeyAndTShirtSize, createBallparkFeature(demand, feature, mapping, timezone));
                 }
             }
             return features;
         }
-
 
         private List<FromJiraDataRow> makeSubtasks(LinkedList<Issue> issues, ZoneId timezone) {
 
@@ -212,41 +199,21 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
                 if (demand != null)
                     followUpBallparks.remove(demand.getIssueKey());
 
-                FromJiraDataRow subtaskRow = createSubTaskFollowup(demand, feature, issue, timezone);
-                subtasksFollowups.add(subtaskRow);
+                subtasksFollowups.add(createSubTaskFollowup(demand, feature, issue, timezone));
 
                 if (jiraProperties.getFollowup().getSubtaskStatusThatDontPreventBallparkGeneration().contains(issue.getStatus()))
                     continue;
 
+                String featureTshirtForThisSubTask = "";
                 List<BallparkMapping> mappingList = getBallparksOrCry(feature);
                 for (BallparkMapping mapping : mappingList) {
                     if (mapping.getJiraIssueTypes().contains(issue.getType())) {
-                        ensureMinimalFeatureEstimation(feature, mapping, subtaskRow);
+                        featureTshirtForThisSubTask = mapping.getTshirtCustomFieldId();
+                        followUpBallparks.remove(feature.getIssueKey()+featureTshirtForThisSubTask);
                     }
                 }
             }
             return subtasksFollowups;
-        }
-
-        /**
-         * Ensure that the total estimation of a subtask type in a given feature never be less than the 
-         * sizing originally estimated in this feature.<br>
-         * 
-         * E.g., a feature with "Dev" estimated as M. When a subtask of type "Dev" and size P is created 
-         * the total estimation of this feature remains M. 
-         */
-        private void ensureMinimalFeatureEstimation(Issue feature, BallparkMapping mapping, FromJiraDataRow subtaskRow) {
-            String featureBallparkKey = featureBallparkKey(feature, mapping);
-            FromJiraDataRow featureBallpark = followUpBallparks.get(featureBallparkKey);
-            
-            if (featureBallpark == null)
-                return;
-            
-            FromJiraRowCalculation subtaskRowCalculation = fromJiraRowCalculator.calculate(subtaskRow);
-            featureBallpark.taskBallpark -= subtaskRowCalculation.getEffortEstimate();
-            
-            if (featureBallpark.taskBallpark <= 0)
-                followUpBallparks.remove(featureBallparkKey);
         }
 
         private List<BallparkMapping> getBallparksOrCry(Issue issue) {
@@ -331,6 +298,7 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
             }
 
             followUpData.taskRelease = coalesce(getRelease(task), getRelease(demand) ,"No release set");
+            followUpData.taskBallpark = originalEstimateInHour(task);
 
             followUpData.subtaskType = ballparkMapping.getIssueType();
             followUpData.subtaskStatus = getBallparkStatus();
@@ -339,10 +307,6 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
             followUpData.subtaskSummary = ballparkMapping.getIssueType();
             followUpData.subtaskDescription = issueDescription(0, task.getSummary());
             followUpData.subtaskFullDescription = issueFullDescription(ballparkMapping.getIssueType(), "", 0, task.getSummary());
-
-            followUpData.taskBallpark = cluster.getClusterFor(followUpData.subtaskType, followUpData.tshirtSize)
-                    .map(ci -> ci.getEffort())
-                    .orElse(originalEstimateInHour(task));
 
             return followUpData;
         }
@@ -369,7 +333,13 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
             }
 
             followUpData.taskRelease = coalesce(getRelease(subtask), getRelease(task), getRelease(demand), "No release set");
-            followUpData.taskBallpark = 0.0;
+
+            if (StringUtils.isEmpty(followUpData.tshirtSize)) {
+                followUpData.taskBallpark = originalEstimateInHour(subtask);
+                if (followUpData.taskBallpark == 0)
+                    followUpData.taskBallpark = originalEstimateInHour(task);
+            }
+
             followUpData.subtaskId = subtask.getId();
             followUpData.subtaskType = subtask.getIssueTypeName();
             followUpData.subtaskStatus = subtask.getStatusName();
@@ -494,7 +464,4 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
         }
     }
 
-    private static String featureBallparkKey(Issue feature, BallparkMapping mapping) {
-        return feature.getIssueKey() + mapping.getTshirtCustomFieldId();
-    }
 }

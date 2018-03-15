@@ -1,20 +1,16 @@
 package objective.taskboard.followup.impl;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.joining;
 import static objective.taskboard.utils.DateTimeUtils.parseDate;
 import static objective.taskboard.utils.DateTimeUtils.parseDateTime;
 import static objective.taskboard.utils.DateTimeUtils.parseStringToDate;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,12 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -47,14 +39,10 @@ import objective.taskboard.data.Issue;
 import objective.taskboard.data.IssueScratch;
 import objective.taskboard.data.TaskboardTimeTracking;
 import objective.taskboard.data.Worklog;
-import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.domain.converter.IssueCoAssignee;
 import objective.taskboard.domain.converter.IssueTeamService;
 import objective.taskboard.followup.EmptyFollowupCluster;
-import objective.taskboard.followup.FollowupCluster;
 import objective.taskboard.followup.FollowupClusterProvider;
-import objective.taskboard.followup.FromJiraDataRow;
-import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.BallparkMapping;
@@ -103,10 +91,10 @@ public abstract class AbstractFollowUpDataProviderTest {
     private ProjectFilterConfigurationCachedRepository projectRepository;
 
     protected CustomField propertiesCustomField;
+
     protected TShirtSize tshirtSizeInfo;
 
     protected JiraProperties.Followup followup = new JiraProperties.Followup();
-    protected ProjectFilterConfiguration projectConfiguration = new ProjectFilterConfiguration();
 
     @InjectMocks
     FollowUpDataProviderFromCurrentState subject;
@@ -153,7 +141,6 @@ public abstract class AbstractFollowUpDataProviderTest {
     @Before
     public void before() throws InterruptedException, ExecutionException {
         when(clusterProvider.getForProject(any())).thenReturn(new EmptyFollowupCluster());
-
         Map<Long, Status> statusMap = new LinkedHashMap<>();
         statusMap.put(statusOpen,       new Status(statusOpen,       "Open",  CATEGORY_UNDEFINED));
         statusMap.put(statusToDo,       new Status(statusToDo,       "To Do", CATEGORY_UNDEFINED));
@@ -216,37 +203,23 @@ public abstract class AbstractFollowUpDataProviderTest {
         when(jiraProperties.getStatusesDeferredIds()).thenReturn(asList(10102L));
 
         when(cycleTime.getCycleTime(any(), any(), anyLong())).thenReturn(1D);
-
-        projectConfiguration.setProjectKey("PROJ");
-
-        when(projectRepository.getProjectByKey(any())).thenReturn(Optional.of(projectConfiguration));
     }
 
     public String[] defaultProjects() {
         return new String[]{"PROJ"};
     }
 
-    public void configureBallparkMappings(String... string) {
+    public void configureBallparkMappings(String string) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Map<Long, List<BallparkMapping>> ballparkMappings;
         try {
-            ballparkMappings = mapper.readValue(StringUtils.join(string, "\n"), new TypeReference<Map<Long, List<BallparkMapping>>>(){});
+            ballparkMappings = mapper.readValue(string,new TypeReference<Map<Long, List<BallparkMapping>>>(){});
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
         followup.setBallparkMappings(ballparkMappings);
     }
 
-    protected void configureCluster(FollowUpClusterItem... items) {
-        FollowupCluster cluster = mock(FollowupCluster.class);
-        when(cluster.getClusterFor(any(), any())).thenReturn(Optional.empty());
-        
-        when(clusterProvider.getForProject(any())).thenReturn(cluster);
-
-        for (FollowUpClusterItem item : items)
-            when(cluster.getClusterFor(item.getSubtaskTypeName(), item.getSizing())).thenReturn(Optional.of(item));            
-    }
-    
     public class IssueBuilder {
         private long issueType;
         private Long id;
@@ -262,7 +235,7 @@ public abstract class AbstractFollowUpDataProviderTest {
         private Date priorityUpdatedDate;
         private String parent;
         private Map<String, Serializable> customFields = new LinkedHashMap<>();
-        private Long priorityOrder = 0L;
+        private Long priorityOrder;
         private List<Pair<String, ZonedDateTime>> transitions = new LinkedList<>();
         private Long created = 0L;
         private Date dueDate;
@@ -519,19 +492,5 @@ public abstract class AbstractFollowUpDataProviderTest {
             return project;
         return "PROJ";
     }
-    
-    protected void assertFromJiraRows(Function<FromJiraDataRow, List<Object>> fieldsExtractor, String... expectedRows) {
-        List<FromJiraDataRow> actualRows = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().fromJiraDs.rows;
-        
-        String actualString = actualRows.stream()
-                .map(fieldsExtractor)
-                .map(fields -> fields.stream().map(f -> f == null ? "<null>" : f.toString().trim()).collect(joining(" | ")))
-                .collect(joining("\n"));
-        
-        String expectedString = Stream.of(expectedRows)
-                .map(r -> Stream.of(r.split("\\|")).map(f -> f.trim()).collect(joining(" | ")))
-                .collect(joining("\n"));
-        
-        assertEquals(expectedString, actualString);
-    }
+
 }
