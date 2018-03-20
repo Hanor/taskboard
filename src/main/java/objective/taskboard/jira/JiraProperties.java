@@ -226,6 +226,9 @@ public class JiraProperties {
         @NotNull
         @Valid
         private CustomFieldDetails coAssignees;
+        @NotNull
+        @Valid
+        private CustomFieldDetails assignedTeams;
 
         private CustomFieldDetails release = new CustomFieldDetails("");
 
@@ -514,6 +517,10 @@ public class JiraProperties {
         public CustomFieldDetails getRelease() {
             return this.release;
         }
+        
+        public CustomFieldDetails getAssignedTeams() {
+            return assignedTeams;
+        }
 
         public CustomFieldDetails getAdditionalEstimatedHours() {
             return this.additionalEstimatedHours;
@@ -542,9 +549,14 @@ public class JiraProperties {
         public void setRelease(final CustomFieldDetails release) {
             this.release = release;
         }
+        
 
         public void setAdditionalEstimatedHours(final CustomFieldDetails additionalEstimatedHours) {
             this.additionalEstimatedHours = additionalEstimatedHours;
+        }
+        
+        public void setAssignedTeams(CustomFieldDetails assignedTeams) {
+            this.assignedTeams = assignedTeams;
         }
 
         @Override

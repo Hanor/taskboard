@@ -183,7 +183,7 @@
                         }
                     }
                     else
-                        that.errorMsg = "An internal error occurred"
+                        that.errorMsg = "An internal error occurred (code "+jqXHR.status+")"
 
                     that.$.loginLoad.active = false;
                 });

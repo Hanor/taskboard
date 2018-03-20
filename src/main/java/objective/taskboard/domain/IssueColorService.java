@@ -23,9 +23,13 @@ package objective.taskboard.domain;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import objective.taskboard.config.CacheConfiguration;
+import objective.taskboard.database.TaskboardDatabaseService;
 import objective.taskboard.jira.JiraProperties;
 
 @Service
@@ -33,6 +37,9 @@ public class IssueColorService {
 
     @Autowired
     private JiraProperties jiraProperties;
+    
+    @Autowired
+    private TaskboardDatabaseService taskboardDatabaseService;
     
     public String getColor(Long classOfServiceId) {
         Map<Long, String> colors = jiraProperties.getCustomfield().getClassOfService().getColors();
@@ -42,5 +49,11 @@ public class IssueColorService {
             return color;
 
         return "#DDF9D9";
+    }
+
+    @Cacheable(CacheConfiguration.COLOR_BY_ISSUETYPE_AND_STATUS)
+    public String getStatusColor(Long issueType, Long status) {
+        Map<Pair<Long, Long>, String> colorByIssueTypeAndStatus = taskboardDatabaseService.getColorByIssueTypeAndStatus();
+        return colorByIssueTypeAndStatus.get(Pair.of(issueType, status));
     }
 }

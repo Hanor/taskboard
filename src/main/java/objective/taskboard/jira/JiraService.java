@@ -23,10 +23,11 @@ package objective.taskboard.jira;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -48,11 +49,11 @@ import com.google.common.collect.ImmutableList;
 
 import objective.taskboard.auth.CredentialsHolder;
 import objective.taskboard.config.CacheConfiguration;
-import objective.taskboard.data.Issue;
 import objective.taskboard.data.User;
 import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.JiraIssue;
 import objective.taskboard.jira.data.JiraUser;
+import objective.taskboard.jira.data.JiraUser.JiraUserAutocomple;
 import objective.taskboard.jira.data.Transition;
 import objective.taskboard.jira.data.Transitions;
 import objective.taskboard.jira.data.Transitions.DoTransitionRequestBody;
@@ -70,7 +71,6 @@ public class JiraService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private static final String MSG_UNAUTHORIZED = "Incorrect user or password";
     private static final String MSG_FORBIDDEN = "The jira account is requesting a captcha challenge. Try logging in jira";
-    private static final String CUSTOMER_ROLE_NAME = "Customer";
 
     @Autowired
     private JiraProperties properties;
@@ -143,10 +143,21 @@ public class JiraService {
         }
     }
 
-    public boolean assignToMe(Issue issue) {
-        return new AssignIssueToUserAction(issue, CredentialsHolder.username()).call();
+    /**
+     * Will find a user in jira, by name/midlename/surname/userid
+     * @param namePart
+     * @return
+     */
+    public List<JiraUserAutocomple> findUsers(String namePart) {
+        log.debug("⬣⬣⬣⬣⬣  getUsersThatNameStartsWith");
+        Iterable<JiraUserAutocomple> response = jiraEndpointAsUser.request(JiraUser.Service.class).findUsers(namePart);
+        return ImmutableList.copyOf(response);
     }
 
+    public boolean assignToUsers(String issueKey, List<User> assigneeList) {
+        return new AssignIssueToUserAction(issueKey, assigneeList).call();
+    }
+    
     public String getResolutions(String transitionName) {
         log.debug("⬣⬣⬣⬣⬣  getResolutions");
         Resolution resolutionTransition = null;
@@ -185,7 +196,6 @@ public class JiraService {
                 return Optional.empty();
             throw e;
         }
-        
     }
 
     public JiraIssueDto getIssueByKeyAsMaster(String key) {
@@ -213,6 +223,13 @@ public class JiraService {
         setBlocked(issueKey, false, "");
     }
 
+    public void setTeams(String issueKey, List<Long> teamsIds) {
+        log.debug("⬣⬣⬣⬣⬣  setTeams");
+        String assignedTeamCfId = properties.getCustomfield().getAssignedTeams().getId();
+        
+        new SetFieldAction(issueKey, assignedTeamCfId, StringUtils.join(teamsIds,",")).call();
+    }
+
     private void setBlocked(String issueKey, boolean blocked, String lastBlockReason) {
         log.debug("⬣⬣⬣⬣⬣  setBlocked");
         String yesOptionId = properties.getCustomfield().getBlocked().getYesOptionId().toString();
@@ -225,7 +242,11 @@ public class JiraService {
     private void updateIssue(String issueKey, IssueInputBuilder changes) {
         try {
             jiraEndpointAsUser.executeRequest(client -> client.getIssueClient().updateIssue(issueKey, changes.build()));
-        } catch (Exception ex) {
+        }
+        catch (FrontEndMessageException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw new RuntimeException("Could not update issue.", ex);
         }
@@ -238,12 +259,7 @@ public class JiraService {
 
     protected User getUser(JiraUser jiraUser) {
         try {
-            List<UserDetail.Role> allUserRoles = getUserRoles(jiraUser.name);
-            boolean isCustomer = allUserRoles.isEmpty() ||
-                    allUserRoles.stream()
-                            .anyMatch(role -> CUSTOMER_ROLE_NAME.equals(role.name));
-
-            return new User(jiraUser.displayName, jiraUser.name, jiraUser.emailAddress, jiraUser.getAvatarUri48(), isCustomer);
+            return new User(jiraUser.displayName, jiraUser.name, jiraUser.emailAddress);
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             return null;
@@ -283,54 +299,89 @@ public class JiraService {
      */
     private class AssignIssueToUserAction implements Callable<Boolean> {
 
-        private final objective.taskboard.data.Issue issue;
-        private final String assignee;
+        private final String issueKey;
+        private Queue<User> assignees;
 
-        public AssignIssueToUserAction(objective.taskboard.data.Issue issue, String username) {
-            this.issue = issue;
-            assignee = username;
+        public AssignIssueToUserAction(String issueKey, List<User> assignees) {
+            this.issueKey = issueKey;
+            this.assignees = new LinkedList<User>(assignees);
         }
 
         @Override
         public Boolean call() {
-            if (alreadyAssignedToUser())
-                return false;
-
             JiraIssue.Input request = buildRequest();
             send(request);
 
             return true;
         }
 
-        private boolean alreadyAssignedToUser() {
-            return assignee.equals(issue.getAssignee());
-        }
-
         private JiraIssue.Input buildRequest() {
-            // add last assignee as co-assignee
-            final Set<String> coAssignees = issue.getCoAssignees()
-                    .stream()
-                    .map(co -> co.getName())
-                    .collect(Collectors.toSet());
-            coAssignees.add(issue.getAssignee());
-            coAssignees.remove(assignee);
-
             // build request
             String assigneeField = "assignee";
+            Optional<User> firstAssignee = Optional.ofNullable(assignees.poll());
+            String assignee = firstAssignee.map(u->u.name).orElse(null);
+            List<String> coAssigneesNames = assignees.stream().map(a -> a.name).collect(Collectors.toList());
+
+            // build request
             String coAssigneeField = properties.getCustomfield().getCoAssignees().getId();
+            
             return JiraIssue.Input.builder()
                     .field(assigneeField).byName(assignee)
-                    .field(coAssigneeField).byNames(coAssignees)
+                    .field(coAssigneeField).byNames(coAssigneesNames)
                     .build();
         }
 
         private void send(JiraIssue.Input request) {
             JiraIssue.Service issueService = jiraEndpointAsUser.request(JiraIssue.Service.class);
             try {
-                Response result = issueService.update(issue.getIssueKey(), request);
+                Response result = issueService.update(issueKey, request);
                 if (HttpStatus.valueOf(result.getStatus()) != HttpStatus.NO_CONTENT)
                     throw new FrontEndMessageException("Unexpected return code during AssignIssueToUserAction: " + result.getStatus());
             } catch (RetrofitError ex) {
+                throw new FrontEndMessageException(ex);
+            }
+        }
+    }
+    
+    
+    /**
+     * Tries to set a given field value.
+     * Throws {@link FrontEndMessageException} if action failed
+     */
+    private class SetFieldAction implements Callable<Boolean> {
+
+        private final String issueKey;
+        private String field;
+        private String value;
+
+        public SetFieldAction(String issueKey, String field, String value) {
+            this.issueKey = issueKey;
+            this.field = field;
+            this.value = value;
+        }
+
+        @Override
+        public Boolean call() {
+            JiraIssue.Input request = buildRequest();
+            send(request);
+            return true;
+        }
+
+        private JiraIssue.Input buildRequest() {
+            return JiraIssue.Input.builder()
+                    .field(field).value(value)
+                    .build();
+        }
+
+        private void send(JiraIssue.Input request) {
+            JiraIssue.Service issueService = jiraEndpointAsUser.request(JiraIssue.Service.class);
+            try {
+                Response result = issueService.update(issueKey, request);
+                if (HttpStatus.valueOf(result.getStatus()) != HttpStatus.NO_CONTENT)
+                    throw new FrontEndMessageException("Unexpected return code during SetFieldAction: " + result.getStatus());
+            } catch (RetrofitError ex) {
+                if (HttpStatus.valueOf(ex.getResponse().getStatus()) == HttpStatus.NOT_FOUND)
+                    throw new FrontEndMessageException("Issue "+issueKey+" can't be update because it wasn't found in Jira");
                 throw new FrontEndMessageException(ex);
             }
         }

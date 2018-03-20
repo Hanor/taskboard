@@ -36,8 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,17 +44,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import objective.taskboard.data.Issue;
 import objective.taskboard.data.Team;
 import objective.taskboard.domain.Filter;
-import objective.taskboard.domain.ProjectTeam;
 import objective.taskboard.domain.WipConfiguration;
+import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraSearchService;
-import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.MetadataCachedService;
-import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.Status;
-import objective.taskboard.repository.ProjectTeamRepository;
 import objective.taskboard.repository.TeamCachedRepository;
 import objective.taskboard.repository.UserTeamCachedRepository;
 import objective.taskboard.repository.WipConfigurationRepository;
@@ -79,19 +75,16 @@ public class WipValidatorController {
     private TeamCachedRepository teamRepo;
 
     @Autowired
-    private ProjectTeamRepository projectTeamRepo;
-
-    @Autowired
     private JiraSearchService jiraSearchService;
-
-    @Autowired
-    private JiraService jiraService;
 
     @Autowired
     private JiraProperties jiraProperties;
     
     @Autowired
     private MetadataCachedService metadataService;
+    
+    @Autowired
+    private IssueBufferService cardService;
 
     @RequestMapping
     public ResponseEntity<WipValidatorResponse> validate(
@@ -101,15 +94,7 @@ public class WipValidatorController {
         WipValidatorResponse response = new WipValidatorResponse();
 
         try {
-            JiraIssueDto issue;
-            try {
-                issue = jiraService.getIssueByKeyAsMaster(issueKey);
-            } catch (Exception e) {
-                log.error("Failed to fetch issue key to validate", e);
-                response.message = "Issue " + issueKey + " not found (" + (e.getMessage() == null ? e.toString() : e.getMessage()) + ")";
-                return new ResponseEntity<WipValidatorResponse>(response, PRECONDITION_FAILED);
-            }
-
+            Issue issue = cardService.getIssueByKey(issueKey);
             if (issue == null) {
                 response.message = "Issue " + issueKey + " not found";
                 return new ResponseEntity<WipValidatorResponse>(response, PRECONDITION_FAILED);
@@ -131,7 +116,7 @@ public class WipValidatorController {
             }
 
             if (isIssueTypeToIgnore(issue)) {
-                response.message = "Issue Type " + issue.getIssueType().getName() + " is ignored on WIP count.";
+                response.message = "Issue Type " + issue.getIssueTypeName() + " is ignored on WIP count.";
                 return new ResponseEntity<WipValidatorResponse>(response, OK);
             }
             
@@ -155,10 +140,7 @@ public class WipValidatorController {
                     .map(u -> u.getUserName())
                     .collect(toList());
 
-            Team team = teamRepo.findByName(wipConfig.getTeam());
-            List<String> teamProjects = projectTeamRepo.findByIdTeamId(team.getId()).stream()
-                    .map(p -> p.getProjectKey())
-                    .collect(toList());
+            Set<String> teamProjects = cardService.getIssueByKey(issueKey).getTeams().stream().map(t->t.name).collect(Collectors.toSet());;
 
             String query = getWipCountQuery(wipConfig.getStep().getFilters(), teamUsers, teamProjects);
 
@@ -181,26 +163,16 @@ public class WipValidatorController {
         }
     }
 
-    private boolean isClassOfServiceExpedite(JiraIssueDto issue) {
-        try {
-            String classOfServiceId = jiraProperties.getCustomfield().getClassOfService().getId();
-            JSONObject json = issue.getField(classOfServiceId);
-            if (json == null)
-                return false;
-            return json.getString("value").equals(CLASS_OF_SERVICE_EXPEDITE);
-        } catch (JSONException e) {
-            log.error("Failure trying to check expedite class of service", e);
-            return false;
-        }
+    private boolean isClassOfServiceExpedite(Issue issue) {
+        return issue.getClassOfServiceValue().equals(CLASS_OF_SERVICE_EXPEDITE);
     }
 
-    private Optional<WipConfiguration> getWipConfig(String user, JiraIssueDto issue, Long newStatusId) {
-        String projectKey = issue.getProject().getKey();
-        long issueTypeId = issue.getIssueType().getId();
+    private Optional<WipConfiguration> getWipConfig(String user, Issue issue, Long newStatusId) {
+        long issueTypeId = issue.getType();
+
+        Issue issueByKey = cardService.getIssueByKey(issue.getIssueKey());
         
-        Set<Long> teamsIdsThatContributeToProject = projectTeamRepo.findByIdProjectKey(projectKey).stream()
-                .map(ProjectTeam::getTeamId)
-                .collect(Collectors.toSet());
+        List<Long> teamsIdsThatContributeToProject = issueByKey.getTeams().stream().map(t->t.id).collect(Collectors.toList());
         
         List<String> userTeamsNames = userTeamRepo.findByUserName(user).stream()
                 .map(userTeam -> teamRepo.findByName(userTeam.getTeam()))
@@ -219,7 +191,7 @@ public class WipValidatorController {
         return smallestWip;
     }
 
-    private String getWipCountQuery(Collection<Filter> stepFilters, List<String> teamUsers, List<String> teamProjects) {
+    private String getWipCountQuery(Collection<Filter> stepFilters, List<String> teamUsers, Set<String> teamProjects) {
         String stepQuery = stepFilters.stream()
                 .map(f -> "(issuetype=" + f.getIssueTypeId() + " AND status=" + f.getStatusId() + ")")
                 .collect(joining(" OR ", "(", ")"));
@@ -239,11 +211,11 @@ public class WipValidatorController {
         return idsToIgnore.size() > 0 ? " and issuetype not in (" + StringUtils.join(idsToIgnore, ',') + ") " : "";
     }
 
-    private Boolean isIssueTypeToIgnore(JiraIssueDto issue) {
+    private Boolean isIssueTypeToIgnore(Issue issue) {
         if (jiraProperties.getWip() == null)
             return false;
         List<Long> idsToIgnore = jiraProperties.getWip().getIgnoreIssuetypesIds();
-        return idsToIgnore.contains(issue.getIssueType().getId()) ? true : false;
+        return idsToIgnore.contains(issue.getType());
     }
 
 }

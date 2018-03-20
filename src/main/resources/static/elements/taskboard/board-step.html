@@ -324,7 +324,7 @@
                 },
 
                 doFiltersAllow: function(issue) {
-                    return !this.team || issue.teams.indexOf(this.team) !== -1;
+                    return !this.team || issue.teamNames.indexOf(this.team) !== -1;
                 },
 
                 doPreferencesAllow: function(issue) {

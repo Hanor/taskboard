@@ -1,29 +1,11 @@
 package objective.taskboard.controller;
 
-/*-
- * [LICENSE]
- * Taskboard
- * - - -
- * Copyright (C) 2015 - 2016 Objective Solutions
- * - - -
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * [/LICENSE]
- */
-
-import static objective.taskboard.domain.converter.JiraIssueToIssueConverter.INVALID_TEAM;
-
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -36,12 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.cycletime.CycleTimeProperties;
 import objective.taskboard.cycletime.HolidayService;
+import objective.taskboard.data.Team;
 import objective.taskboard.data.User;
 import objective.taskboard.google.GoogleApiConfig;
 import objective.taskboard.jira.FieldMetadataService;
 import objective.taskboard.jira.JiraProperties;
+import objective.taskboard.jira.JiraProperties.StatusPriorityOrder;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.client.JiraFieldDataDto;
+import objective.taskboard.repository.TeamCachedRepository;
 
 @Controller
 public class HomeController {
@@ -67,6 +52,9 @@ public class HomeController {
     @Autowired
     private FieldMetadataService fieldMetadataService;
 
+    @Autowired
+    private TeamCachedRepository teamRepo;
+
     @RequestMapping("/")
     public String home(Model model) {
         User user = jiraService.getLoggedUser();
@@ -79,10 +67,31 @@ public class HomeController {
         model.addAttribute("cycleTimeStartBusinessHours", serialize(cycleTimePropeties.getStartBusinessHours()));
         model.addAttribute("cycleTimeEndBusinessHours", serialize(cycleTimePropeties.getEndBusinessHours()));
         model.addAttribute("holidays", serialize(holidayService.getHolidays()));
-        model.addAttribute("invalidTeam", INVALID_TEAM);
         model.addAttribute("googleClientId", googleApiConfig.getClientId());
         model.addAttribute("permissions", serialize(authorizer.getProjectsPermission()));
         model.addAttribute("fieldNames", getFieldNames());
+        
+        Map<String, List<String>> statusOrderByIssueType = new LinkedHashMap<>();
+        
+        StatusPriorityOrder statusPriorityOrder = jiraPropeties.getStatusPriorityOrder();
+        ArrayList<String> demands = new ArrayList<>(Arrays.asList(statusPriorityOrder.getDemandsInOrder()));
+        Collections.reverse(demands);
+        statusOrderByIssueType.put(""+jiraPropeties.getIssuetype().getDemand().getId(), demands);
+        
+        ArrayList<String> tasks = new ArrayList<>(Arrays.asList(statusPriorityOrder.getTasksInOrder()));
+        Collections.reverse(tasks);
+        jiraPropeties.getIssuetype().getFeatures().stream().forEach(feature -> {
+            statusOrderByIssueType.put(""+feature.getId(), tasks);
+        });
+        
+        ArrayList<String> subtasks = new ArrayList<>(Arrays.asList(statusPriorityOrder.getSubtasksInOrder()));
+        Collections.reverse(subtasks);
+        statusOrderByIssueType.put("subtasks", subtasks);
+        model.addAttribute("statusOrderByIssueType", serialize(statusOrderByIssueType));
+
+        List<Team> teams= teamRepo.getCache();
+        model.addAttribute("teams", serialize(teams.stream().map(t->new TeamControllerData(t)).collect(Collectors.toList())));
+
         return "index";
     }
 

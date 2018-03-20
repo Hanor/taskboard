@@ -23,6 +23,7 @@ package objective.taskboard.domain.converter;
 import static java.util.stream.Collectors.toList;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.convertWorklog;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractAdditionalEstimatedHours;
+import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractAssignedTeamsIds;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractBlocked;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractChangelog;
 import static objective.taskboard.domain.converter.IssueFieldsExtractor.extractClassOfService;
@@ -48,8 +49,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import objective.taskboard.cycletime.CycleTime;
+import objective.taskboard.data.Issue;
 import objective.taskboard.data.IssueScratch;
 import objective.taskboard.data.TaskboardTimeTracking;
+import objective.taskboard.data.User;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
 import objective.taskboard.domain.IssueStateHashCalculator;
@@ -63,8 +66,6 @@ import objective.taskboard.repository.ParentIssueLinkRepository;
 
 @Service
 public class JiraIssueToIssueConverter {
-    public static final String INVALID_TEAM = "NO PROJECT TEAM";
-
     @Autowired
     private ParentIssueLinkRepository parentIssueLinkRepository;
 
@@ -114,7 +115,16 @@ public class JiraIssueToIssueConverter {
                                .collect(toList());
     }
     
-    public objective.taskboard.data.Issue convertSingleIssue(JiraIssueDto jiraIssue, ParentProvider provider) {
+
+    public Issue convertSingleIssue(JiraIssueDto jiraIssue, ParentProvider provider) {
+        List<IssueCoAssignee> coAssignees = extractCoAssignees(jiraProperties, jiraIssue);
+        
+        String assignedUid;
+        if (jiraIssue.getAssignee() == null)
+            assignedUid = "";
+        else
+            assignedUid = jiraIssue.getAssignee().getName();       
+
         IssueScratch converted = new IssueScratch(
                 jiraIssue.getId(),
                 jiraIssue.getKey(),
@@ -126,7 +136,8 @@ public class JiraIssueToIssueConverter {
                 startDateStepService.get(jiraIssue),
                 extractParentKey(jiraProperties, jiraIssue, parentIssueLinks),
                 extractDependenciesIssues(jiraProperties, jiraIssue),
-                jiraIssue.getAssignee() != null ? jiraIssue.getAssignee().getName() : "",
+                coAssignees.stream().filter(c -> !c.getName().equals(assignedUid)).map(x -> User.from(x)).collect(toList()),
+                User.from(jiraIssue.getAssignee()),
                 jiraIssue.getPriority() != null ? jiraIssue.getPriority().getId() : 0l,
                 jiraIssue.getDueDate() != null ? jiraIssue.getDueDate().toDate() : null,
                 jiraIssue.getCreationDate().getMillis(),
@@ -141,30 +152,30 @@ public class JiraIssueToIssueConverter {
                 extractAdditionalEstimatedHours(jiraProperties, jiraIssue),
                 TaskboardTimeTracking.fromJira(jiraIssue.getTimeTracking()),
                 jiraIssue.getReporter() == null ? null : jiraIssue.getReporter().getName(),
-                extractCoAssignees(jiraProperties, jiraIssue),
                 extractClassOfService(jiraProperties, jiraIssue),
                 extractReleaseId(jiraProperties, jiraIssue),
                 extractChangelog(jiraIssue),
-                convertWorklog(jiraIssue.getWorklogs()));
+                convertWorklog(jiraIssue.getWorklogs()),
+                extractAssignedTeamsIds(jiraProperties, jiraIssue));
         
         return createIssueFromScratch(converted, provider);
     }
 
-    public objective.taskboard.data.Issue createIssueFromScratch(IssueScratch scratch, ParentProvider provider) {
-        objective.taskboard.data.Issue converted = new objective.taskboard.data.Issue(scratch, 
+    public Issue createIssueFromScratch(IssueScratch scratch, ParentProvider provider) {
+        Issue converted = new Issue(scratch, 
                 jiraProperties, 
-                metadataService, 
-                issueTeamService, 
+                getMetadataService(), 
+                getIssueTeamService(), 
                 filterRepository,
                 cycleTime,
                 cardVisibilityEvalService,
                 projectService,
                 issueStateHashCalculator,
-                issueColorService,
+                getIssueColorService(),
                 priorityService);
         
     	if (!isEmpty(converted.getParent())) {
-    	    Optional<objective.taskboard.data.Issue> parentCard = provider.get(converted.getParent());
+    	    Optional<Issue> parentCard = provider.get(converted.getParent());
     	    if (!parentCard.isPresent())
     	        throw new IncompleteIssueException(scratch, converted.getParent());
         }
@@ -172,10 +183,22 @@ public class JiraIssueToIssueConverter {
         return converted;
     }
 
+    public MetadataService getMetadataService() {
+        return metadataService;
+    }
+
+    public IssueTeamService getIssueTeamService() {
+        return issueTeamService;
+    }
+
     private String getComments(JiraIssueDto issue) {
     	List<String> comments = extractComments(issue);
         if (comments.isEmpty())
             return "";
         return comments.get(0);
+    }
+
+    public IssueColorService getIssueColorService() {
+        return issueColorService;
     }
 }

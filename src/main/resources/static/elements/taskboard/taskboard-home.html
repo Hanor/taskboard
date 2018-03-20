@@ -359,6 +359,15 @@
                 to {transform:rotate(360deg);}
             }
         </style>
+        <style is="custom-property">
+            tb-button {
+                --button-style: {
+                    text-transform: none;
+                    color: #eeff41;
+                    background: transparent;
+                }
+            }
+        </style>
 
         <iron-ajax id="ajaxState"
                auto
@@ -402,7 +411,9 @@
                     <paper-toast duration="0" id="toastError" on-iron-overlay-closed="_onToastErrorClosed">
                         <iron-icon icon="icons:error"></iron-icon>
                         <span>{{errorMessage}}</span>
-                        <paper-button on-tap="_closeToastError" class="yellow-button">Close</paper-button>
+                        <template is="dom-repeat" is="dom-repeat" items="{{errorActions}}" as="action">
+                            <tb-button data-action-name$="{{action.name}}" button="[[action.button]]" class="yellow-button"></tb-button>
+                        </template>
                     </paper-toast>
                     <paper-toast duration="5000" id="toastIssueUpdated" class="issue-updated" horizontal-align='right' vertical-align='bottom'
                                  on-iron-overlay-closed="_onIssueUpdatedClosed">
@@ -428,7 +439,7 @@
                     <paper-material class="menu-header u-clearfix">
                         <div class="title">Taskboard<iron-icon class$="issue-state issue-state-{{cacheState}}" icon="{{stateIcon}}" title$="{{stateTooltip}}"></iron-icon></div>
                         <div class="search">
-                            <board-search></board-search>
+                            <board-search query="{{searchQuery}}"></board-search>
                         </div>
                         <div class="visibility">
                             <config-visibility></config-visibility>
@@ -473,7 +484,7 @@
                                                class="about-button" on-tap="openAbout"></paper-icon-button>
                         </div>
                     </paper-material>
-                    <board-table id="table" conf={{conf}} aspects-filter="{{aspectsFilter}}"></board-table>
+                    <board-table id="table" conf={{conf}} aspects-filter="{{aspectsFilter}}" on-tap="_closeToastError" ></board-table>
                 </div>
                 <paper-header-panel drawer>
                     <tb-configurations conf={{conf}} aspects-filter="{{aspectsFilter}}"></tb-configurations>
@@ -543,6 +554,10 @@
                     _showSizingImportButton: {
                         type: Boolean,
                         value: false
+                    },
+                    searchQuery: {
+                        type: String,
+                        value: ""
                     }
                 },
 
@@ -651,7 +666,16 @@
                 },
 
                 showErrorMessage: function(event) {
-                    this.set('errorMessage', event.detail);
+                    this.set('errorMessage', event.detail.message);
+                    var errorButtons = event.detail.actions;
+                    if (!errorButtons)
+                        errorButtons = [];
+                    errorButtons.push({name:"Close", callback: this._closeToastError})
+                    errorButtons.forEach(function(action) {
+                        action.button = ButtonBuilder(action.name).onClick(function(){action.callback(toastError)}).build();
+                    })
+                    this.set('errorActions', errorButtons);
+                    
                     if (this.issueErrorMessages.length === 0 && !this.infoMessage) {
                         if(!_.isEmpty(this.errorMessage))
                             toastError.open();
@@ -738,6 +762,7 @@
                     if (data.dontSaveQuery)
                         return;
                     this.currentQueryData = data;
+                    this.searchQuery = data.query;
                 },
 
                 projectsUpdated: function(event, data) {

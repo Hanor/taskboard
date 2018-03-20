@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -45,10 +46,10 @@ import objective.taskboard.data.Changelog;
 import objective.taskboard.data.Issue;
 import objective.taskboard.data.IssueScratch;
 import objective.taskboard.data.TaskboardTimeTracking;
+import objective.taskboard.data.User;
 import objective.taskboard.data.Worklog;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.domain.converter.IssueCoAssignee;
 import objective.taskboard.domain.converter.IssueTeamService;
 import objective.taskboard.followup.EmptyFollowupCluster;
 import objective.taskboard.followup.FollowupCluster;
@@ -257,7 +258,7 @@ public abstract class AbstractFollowUpDataProviderTest {
         private String key;
         private String summary;
         private String assignee;
-        private List<IssueCoAssignee> coAssignees;
+        private List<User> coAssignees;
         private Long status = statusToDo;
         private long startDateStepMillis;
         private Integer originalEstimateMinutes;
@@ -360,9 +361,9 @@ public abstract class AbstractFollowUpDataProviderTest {
 
         public IssueBuilder coAssignees(String... coAssigneesNames) {
             if (coAssigneesNames != null && coAssigneesNames.length > 0) {
-                List<IssueCoAssignee> coAssignees = new ArrayList<>();
+                List<User> coAssignees = new ArrayList<>();
                 for (int i = 0 ; i < coAssigneesNames.length; i++)
-                    coAssignees.add(new IssueCoAssignee(coAssigneesNames[i], "avatarUrl-" + coAssigneesNames[i]));
+                    coAssignees.add(new User(coAssigneesNames[i]));
                 this.coAssignees = coAssignees;
             }
             return this;
@@ -448,8 +449,9 @@ public abstract class AbstractFollowUpDataProviderTest {
                     status,
                     startDateStepMillis, //startDateStepMillis
                     parent,
-                    new ArrayList<>(),//dependencies
-                    assignee,
+                    new ArrayList<String>(),//dependencies
+                    coAssignees, //subResponsaveis
+                    new User(assignee),
                     0L, //priority
                     dueDate,
                     created,
@@ -464,11 +466,11 @@ public abstract class AbstractFollowUpDataProviderTest {
                     additionalEstimatedHours,
                     timeTracking,
                     reporter,
-                    coAssignees,
                     null,//classOfService
                     releaseId,
                     buildTransitions(),
-                    worklogs
+                    worklogs,
+                    Arrays.asList()
                     );
 
             Issue issue = new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, cycleTime, null, projectService, null, null, issuePriorityService);

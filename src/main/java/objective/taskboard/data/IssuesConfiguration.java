@@ -40,6 +40,10 @@ public class IssuesConfiguration implements Serializable {
     public boolean matches(Issue issue) {
         return issue.getType() == getIssueType() && issue.getStatus() == getStatus();
     }
+    
+    public boolean matches(Long issueType, long status) {
+        return issueType == getIssueType() && status == getStatus();
+    }
 
     public long getIssueType() {
         return this.issueType;

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import objective.taskboard.domain.converter.IssueCoAssignee;
 
 public class IssueScratch implements Serializable {
     private static final long serialVersionUID = -8643342601909365442L;
@@ -22,7 +21,8 @@ public class IssueScratch implements Serializable {
     protected long startDateStepMillis;
     protected String parent;
     protected List<String> dependencies; //NOSONAR
-    protected String assignee;
+    protected User assignee;
+    protected List<User> coAssignees;
     protected long priority;
     protected Date dueDate;
     protected Date remoteIssueUpdatedDate;
@@ -43,30 +43,31 @@ public class IssueScratch implements Serializable {
     @JsonIgnore
     protected String reporter;
     @JsonIgnore
-    protected List<IssueCoAssignee> coAssignees = new LinkedList<>();//NOSONAR
-    @JsonIgnore
     protected CustomField classOfService;
     @JsonIgnore
     protected List<Worklog> worklogs; //NOSONAR
+    @JsonIgnore
+    protected List<Long> assignedTeamsIds = new LinkedList<>();//NOSONAR
     
     public IssueScratch() {
         super();
     }
 
     public IssueScratch(
-            Long id,
-            String issueKey,
-            String projectKey,
-            String project,
-            long issueType,
-            String summary,
-            long status,
-            long startDateStepMillis,
-            String parent,
-            List<String> dependencies,
-            String assignee,
-            long priority,
-            Date dueDate,
+            Long id, 
+            String issueKey, 
+            String projectKey, 
+            String project, 
+            long issueType, 
+            String summary, 
+            long status, 
+            long startDateStepMillis, 
+            String parent, 
+            List<String> dependencies, 
+            List<User> subResponsaveis, 
+            User assignee, 
+            long priority, 
+            Date dueDate, 
             long created,
             Date remoteIssueUpdatedDate,
             String description,
@@ -79,11 +80,11 @@ public class IssueScratch implements Serializable {
             CustomField additionalEstimatedHours,
             TaskboardTimeTracking timeTracking,
             String reporter, 
-            List<IssueCoAssignee> coAssignees,
             CustomField classOfService, 
             String releaseId,
             List<Changelog> changelog,
-            List<Worklog> worklogs) {
+            List<Worklog> worklogs,
+            List<Long> assignedTeamsIds) {
         this.id = id;
         this.issueKey = issueKey;
         this.projectKey = projectKey;
@@ -94,6 +95,7 @@ public class IssueScratch implements Serializable {
         this.startDateStepMillis = startDateStepMillis;
         this.parent = parent;
         this.dependencies = dependencies;
+        this.coAssignees = subResponsaveis == null? new LinkedList<>(): subResponsaveis;
         this.assignee = assignee;
         this.priority = priority;
         this.dueDate = dueDate;
@@ -109,10 +111,12 @@ public class IssueScratch implements Serializable {
         this.additionalEstimatedHours = additionalEstimatedHours;
         this.timeTracking = timeTracking;
         this.reporter = reporter;
-        this.coAssignees = coAssignees;
         this.classOfService = classOfService;
         this.releaseId = releaseId;
         this.changelog = changelog;
+
+        this.assignedTeamsIds.addAll(assignedTeamsIds);
+        
         this.worklogs = worklogs;
     }
 

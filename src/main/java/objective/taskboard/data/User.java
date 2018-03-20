@@ -21,23 +21,64 @@
 package objective.taskboard.data;
 
 import java.io.Serializable;
-import java.net.URI;
+
+import org.apache.commons.lang.ObjectUtils;
+
+import objective.taskboard.domain.converter.IssueCoAssignee;
+import objective.taskboard.jira.client.JiraUserDto;
 
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public final String user;
-    public final String name;
-    public final String mail;
-    public final URI avatar;
-    public final boolean isCustomer;
+    public String name;
+    public String user;
+    public String mail;
+    private boolean assigned = true;
+    
+    public User(){
+        this(null,null,null);
+    }
 
-    public User(final String user, final String name, final String mail, final URI avatar, final boolean isCustomer) {
+    public User(final String name) {
+        this(null, name, null);
+    }
+
+    public User(final String user, final String name, final String mail) {
         this.user = user;
         this.name = name;
         this.mail = mail;
-        this.avatar = avatar;
-        this.isCustomer = isCustomer;
+        if (name == null) {
+            assigned = false;
+            this.name = null;
+        }
+    }
+
+    public boolean isAssigned() {
+        return assigned;
+    }
+
+    public static User from(JiraUserDto assignee) {
+        if (assignee == null)
+            return new User();
+        return new User(assignee.getDisplayName(), assignee.getName(), assignee.getEmailAddress());
+    }
+
+    public static User from(IssueCoAssignee x) {
+        return new User(x.getName(), x.getName(), null);
+    }
+    
+    @Override
+    public int hashCode() {
+        if (name == null)
+            return 0;
+        return name.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof User))
+            return false;
+        return ObjectUtils.equals(((User)obj).name, name);
     }
 }

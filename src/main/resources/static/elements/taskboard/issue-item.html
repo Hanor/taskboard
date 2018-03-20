@@ -338,15 +338,13 @@
 
                         <div class="key" on-tap="openJira" data-issue-key$="{{item.issueKey}}" title="Open in jira">{{item.issueKey}}</div>
                     </div>
-                    <div class="icons">
+                    <div class="icons assignees">
                         <img id="issueTypeIcon" class="icon-small icon-issuetype"
                              title$="- {{item.issueKey}}&#010;- {{getIssueTypeName(item.type)}}&#010;- {{getStatusName(item.status)}}"
                              src$="{{getIssueTypeImage(item)}}"/>
-                        <template is="dom-if" if="{{item.assignee}}">
-                            <img id="assignee1" class="icon-small" src$="{{getAvatarURL(item.assignee)}}"/>
-                        </template>
-                        <template is="dom-if" if="{{getCoAssigneeNotEqualsAssignee(item)}}">
-                            <img id="assignee2" class="icon-small" src$="{{getAvatarURLCoAssignee(item)}}"/>
+
+                        <template is="dom-repeat" items="{{getAtMost2Assignees(item)}}" as="assignee" index-as="index">
+                            <img id$="assignee{{index}}" class="icon-small" src$="{{getAvatarURL(assignee.name)}}" title$="{{assignee.name}}"/>
                         </template>
                     </div>
                 </div>
@@ -557,24 +555,19 @@
                     return !isUpdating && hasError;
                 },
 
+                getAtMost2Assignees: function(item) {
+                    var assignees = [];
+                    for (var i=0; i < 2 && i < item.assignees.length; i++) {
+                        assignees.push(item.assignees[i])
+                    }
+                    return assignees;
+                },
+
                 getAvatarURL: function(username) {
                     if (!username)
                         return "";
                     return "ws/avatar?username=" + username;
                 },
-
-                getAvatarURLCoAssignee: function(issue) {
-                    var coAssignee = this.getCoAssigneeNotEqualsAssignee(issue);
-                    return this.getAvatarURL(coAssignee);
-                },
-
-                getCoAssigneeNotEqualsAssignee: function(issue) {
-                    if (!issue.subResponsaveis)
-                        return "";
-                    var coAssignees = issue.subResponsaveis.split(',');
-                    return coAssignees.find(function(coAssignee) { return coAssignee != issue.assignee; });
-                }
-
             });
 
             function calcViewportHeight($el) {

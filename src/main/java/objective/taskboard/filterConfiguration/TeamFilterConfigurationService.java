@@ -91,7 +91,7 @@ public class TeamFilterConfigurationService {
         Set<Long> teamsIdsProject = projectFilterConfiguration.getProjects()
             .stream()
             .filter(pf -> Objects.equals(pf.getProjectKey(), projectKey))
-            .flatMap(pf -> pf.getTeamsIds().stream())
+            .map(pf -> pf.getDefaultTeam())
             .collect(toSet());
 
         return getConfiguredTeamsByUser(user).stream()
@@ -100,7 +100,7 @@ public class TeamFilterConfigurationService {
                 .collect(toList());
     }
 
-    private List<Team> getConfiguredTeamsByUser(String user) {
+    public List<Team> getConfiguredTeamsByUser(String user) {
         return userTeamRepository.findByUserName(user)
                 .stream()
                 .map(ut -> getConfiguredTeamByName(ut.getTeam()))

@@ -46,17 +46,26 @@ function SearchFilter() {
             return true;
 
         var searchUpperCase = searchString.toUpperCase();
+        if (searchString.indexOf("has:") === 0) {
+            var term = searchString.split(":")[1];
+
+            switch(term) {
+                case SearchFilter.INVALID_ASSIGNEE_TAG:
+                    return issue.mismatchingUsers.length > 0;
+            }
+            return false;
+        }
         if (matchByAttribute(issue.issueKey, searchUpperCase))
             return true;
-        else if (matchByAttribute(issue.assignee, searchUpperCase))
+        else if (matchByAttribute(issue.assignee.name, searchUpperCase))
             return true;
-        else if (matchByAttribute(issue.subResponsaveis, searchUpperCase))
+        else if (matchByAttribute(issue.coAssignees.map(function(s){return s.name}), searchUpperCase))
             return true;
         else if (matchByAttribute(issue.summary, searchUpperCase))
             return true;
         else if (issue.release && matchByAttribute(issue.release.name, searchUpperCase))
             return true;
-        else if (matchByAttribute(issue.usersTeam, searchUpperCase))
+        else if (matchByAttribute(issue.teamNames, searchUpperCase))
             return true;
         else if (matchByAttribute(issue.labels, searchUpperCase))
             return true;
@@ -72,6 +81,7 @@ function SearchFilter() {
 
         for (var index in attribute) {
             var value = attribute[index];
+            
             if (value && value.toUpperCase().indexOf(search) !== -1)
                 return true;
         }
@@ -99,6 +109,11 @@ function SearchFilter() {
         }
         // if all keys are empty, return as matched
         return allEmpty;
+    }
+
+    this.searchByQuery = function(source, query) {
+        searchData.query = query;
+        source.fire('iron-signal', {name:'search-filter-changed', data:searchData});
     }
 
     this.updateFilter = function(source, change) {
@@ -150,5 +165,5 @@ function SearchFilter() {
         }
     };
 }
-
+SearchFilter.INVALID_ASSIGNEE_TAG="invalid-assignee";
 var searchFilter = new SearchFilter();

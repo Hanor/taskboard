@@ -52,13 +52,13 @@ class TestIssue extends AbstractUiFragment {
     }
 
     public TestIssue assertHasFirstAssignee() {
-        WebElement assignee1 = issueElement.findElement(By.id("assignee1"));
+        WebElement assignee1 = issueElement.findElement(By.id("assignee0"));
         waitVisibilityOfElement(assignee1);
         return this;
     }
 
     public TestIssue assertHasSecondAssignee() {
-        WebElement assignee2 = issueElement.findElement(By.id("assignee2"));
+        WebElement assignee2 = issueElement.findElement(By.id("assignee1"));
         waitVisibilityOfElement(assignee2);
         return this;
     }

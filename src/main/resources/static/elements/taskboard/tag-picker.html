@@ -1,0 +1,188 @@
+<dom-module id="tag-picker">
+    <template>
+        <style>
+            .clickable {
+                cursor: pointer;
+            }
+            
+            #tag-picker-input {
+                font-size: 12px !important;
+                color: white;
+                background-color: transparent;
+                border: none;
+                width: 100%;
+            }
+            #tag-picker-input:focus {
+                outline: none;
+            }
+            
+            div.select-input-wrapper {
+                height: 24px;
+                display: flex;
+            }
+            
+            .tp-autocomplete__icon {
+                padding: 2px;
+                color: #FFF !important;
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+            
+            iron-icon[icon="search"] {
+                width: 20px;
+                height: 20px;
+            }
+            
+            paper-spinner {
+                width: 14px;
+                height: 14px;
+                margin: auto;
+            }
+
+            #close {
+                width: 14px;
+                height: 14px;
+                color: #8E8E8E;
+            }
+            
+            paper-autocomplete-suggestions paper-item {
+                font-size: 12px;
+                line-height: 24px !important;
+                padding-top: 0px !important;
+                padding-bottom: 0px !important;
+                min-height: 0px !important;
+                display: flex;
+                padding-right: 4px;
+                padding-left: 4px;
+            }
+            
+            #suggestionsWrapper {
+                color: #333;
+                width: auto;
+                border-radius: 5px;
+                margin-top: 10px !important;
+                margin-left: -6px !important;
+            }
+            paper-item.active {
+                background-color: #B5E8FF !important;
+            }
+        </style>
+        <style is="custom-property">
+            paper-spinner {
+                --paper-spinner-layer-1-color: var(--paper-purple-200);
+                --paper-spinner-layer-2-color: var(--paper-cyan-200);
+                --paper-spinner-layer-3-color: var(--paper-blue-grey-200);
+                --paper-spinner-layer-4-color: var(--paper-amber-200);
+            }
+            paper-autocomplete-suggestions {
+                --suggestions-wrapper : {
+                    color: #333;
+                    width: auto;
+                    border-radius: 5px;
+                    margin-top: 10px !important;
+                    margin-left: -6px !important;
+                    font-size: 12px;
+                }
+                --suggestions-item : {
+                    font-size: 12px;
+                    line-height: 24px !important;
+                    padding-top: 0px !important;
+                    padding-bottom: 0px !important;
+                    min-height: 0px !important;
+                    display: flex;
+                    padding-right: 4px;
+                    padding-left: 4px;
+                }
+            }
+        </style>
+
+        <div id="elementSelector" class="select-input-wrapper">
+                <iron-icon icon="search" class="tp-autocomplete__icon"></iron-icon>
+                <input slot='input' id="tag-picker-input" class="tag-picker-autocomplete__input" value="{{text::input}}"></paper-input>
+
+                <template is="dom-if" if="{{!searching}}">
+                    <iron-icon id="close" icon="taskboard-icons:close" class="tp-autocomplete__icon clickable" on-tap="_onClose"></iron-icon>
+                </template>
+                <template is="dom-if" if="{{searching}}">
+                    <paper-spinner active="true" alt="Searching..."></paper-spinner>
+                </template>
+        </div>
+        <paper-autocomplete-suggestions
+                id = "tag-selector-autocomplete"
+                for="tag-picker-input"
+                remoteSource="{{remoteSource}}"
+                source="{{source}}"
+                highlight-first="true"
+                show-results-on-focus="true"
+                text-property="[[textProperty]]"
+                value-property="[[valueProperty]]"
+                on-selected-option-changed="_onSelect">
+        </paper-autocomplete-suggestions>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'tag-picker',
+                properties: {
+                    selected: {
+                        type: String,
+                        notify: true
+                    },
+                    text: {
+                        type: String,
+                        notify: true
+                    },
+                    textProperty: {
+                        type: String
+                    },
+                    valueProperty: {
+                        type: String
+                    },
+                    remoteSource: {
+                        type: Boolean,
+                        value: false
+                    },
+                    searching: {
+                        type: Boolean,
+                        value: false
+                    },
+                },
+                
+                source: {
+                    type: Array,
+                    value: []
+                },
+                
+                setQueryFn: function(queryFn) {
+                    this.$$("paper-autocomplete-suggestions").queryFn = queryFn;
+                },
+                
+                clear: function() {
+                    this.text = "";
+                },
+                
+                suggestionsMinWidth: function(width) {
+                    $(this.$$("paper-autocomplete-suggestions")).find("#suggestionsWrapper").css("min-width", width)
+                },
+                
+                focus: function() {
+                    this.suggestionsMinWidth($(this).parent().width()+12)
+                    $(this.$$("#tag-picker-input")).focus();
+                },
+                
+                _onSelect: function(e) {
+                    this.fire("selected-value", e.detail.value)
+                },
+                
+                _onClose: function(e) {
+                    this.fire("x-clicked")
+                },
+
+                suggestions: function(s) {
+                    this.$$("paper-autocomplete-suggestions").suggestions(s)
+                }
+            });
+        })();
+    </script>
+</dom-module>

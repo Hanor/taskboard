@@ -320,7 +320,7 @@ public class IssueFieldsExtractorTest {
 
     @Test
     public void extractBlockedValid() throws JSONException {
-        JSONArray jsonBlocked = new JSONArray("[{value:'Yes'}]");
+        JSONArray jsonBlocked = new JSONArray("[{id:'0'}]");
         mockIssueField(BLOCKED_ID, jsonBlocked);
 
         assertTrue(MSG_ASSERT_BLOCKED, IssueFieldsExtractor.extractBlocked(jiraProperties, issue));

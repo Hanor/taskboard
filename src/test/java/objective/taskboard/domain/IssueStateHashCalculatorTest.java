@@ -78,7 +78,20 @@ public class IssueStateHashCalculatorTest {
                 .map(method -> method.getName())
                 .collect(Collectors.toSet());
 
+        // these fields are ignored because they are computed out of other data
+        ignoredMethods.add("getRawAssignedTeamsIds");
         ignoredMethods.add("getCardTshirtSize");
+        ignoredMethods.add("getMismatchingUsers");
+        ignoredMethods.add("getAssignees");
+        ignoredMethods.add("isDemand");
+        ignoredMethods.add("isFeature");
+        ignoredMethods.add("isSubTask");
+        ignoredMethods.add("getParentSummary");
+        ignoredMethods.add("getTeamNames");
+        ignoredMethods.add("getTshirtSizes");
+        ignoredMethods.add("isUsingDefaultTeam");
+        ignoredMethods.add("isUsingParentTeam");
+        
         ignoredMethods.add("getStateHash");
         ignoredMethods.add("getClass");
 

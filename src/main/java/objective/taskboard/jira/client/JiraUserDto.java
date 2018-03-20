@@ -12,6 +12,7 @@ public class JiraUserDto {
     private String self;
     private String name;
     private String displayName;
+    private String emailAddress;
     
     @JsonProperty
     private Map<String, URI> avatarUrls;
@@ -30,5 +31,9 @@ public class JiraUserDto {
     
     public String getSelf() {
         return self;
+    }
+    
+    public String getEmailAddress() {
+        return emailAddress;
     }
 }

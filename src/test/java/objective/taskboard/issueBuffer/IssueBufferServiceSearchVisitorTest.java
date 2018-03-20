@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import objective.taskboard.data.Issue;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
 import objective.taskboard.domain.converter.CardVisibilityEvalService;
@@ -68,7 +69,7 @@ public class IssueBufferServiceSearchVisitorTest {
     private IssueBufferService issueBufferService;
 
     @Mock
-    private objective.taskboard.data.Issue issue;
+    private Issue issue;
 
     @InjectMocks
     JiraIssueToIssueConverter issueConverter ;
@@ -93,6 +94,10 @@ public class IssueBufferServiceSearchVisitorTest {
         TShirtSize tShirtSize = new TShirtSize();
         tShirtSize.setIds(new ArrayList<String>());
         customFieldConfiguration.setTShirtSize( tShirtSize);
+        CustomFieldDetails assignedTeams = new CustomFieldDetails();
+        release.setId("customfield_10100");
+        customFieldConfiguration.setAssignedTeams(assignedTeams);
+        
         
         IssueType issueType = new IssueType();
         issueType.setDemand(new IssueTypeDetails());

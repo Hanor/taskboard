@@ -51,6 +51,8 @@ public class CacheConfiguration {
     public static final String JIRA_TIME_ZONE = "jiraTimeZone";
     public static final String DASHBOARD_PROGRESS_DATA = "dashboardProgressData";
     public static final String JIRA_USER = "jiraUser";
+    public static final String COLOR_BY_ISSUETYPE_AND_STATUS = "colorByIssueTypeAndStatus";
+    public static final String CONFIGURATION_COLOR = "getColorByIssueTypeAndStatusMap";
 
     @Bean
     public CacheManager cacheManager() {
@@ -58,6 +60,9 @@ public class CacheConfiguration {
         simpleCacheManager.setCaches(Arrays.asList(
                 new GuavaCache(CONFIGURATION, CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).concurrencyLevel(1).build()),
                 new GuavaCache(ISSUE_TYPE_METADATA, CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).concurrencyLevel(1).build()),
+                new GuavaCache(CONFIGURATION_COLOR, CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).concurrencyLevel(1).build()),
+                new GuavaCache(COLOR_BY_ISSUETYPE_AND_STATUS, CacheBuilder.newBuilder().expireAfterWrite(12, TimeUnit.HOURS).concurrencyLevel(1).build()),
+                new GuavaCache(ISSUE_TYPE_METADATA, CacheBuilder.newBuilder().expireAfterWrite(12, TimeUnit.HOURS).concurrencyLevel(1).build()),
                 new GuavaCache(PRIORITIES_METADATA, CacheBuilder.newBuilder().expireAfterWrite(12, TimeUnit.HOURS).concurrencyLevel(1).build()),
                 new GuavaCache(STATUSES_METADATA, CacheBuilder.newBuilder().expireAfterWrite(12, TimeUnit.HOURS).concurrencyLevel(1).build()),
                 new GuavaCache(ISSUE_LINKS_METADATA, CacheBuilder.newBuilder().expireAfterWrite(12, TimeUnit.HOURS).concurrencyLevel(1).build()),

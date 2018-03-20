@@ -27,6 +27,10 @@
             paper-button[disabled].colorful {
                 opacity: .6;
             }
+
+            .no-team-matches {
+                color: red;
+            }
         </style>
 
         <iron-signals
@@ -81,6 +85,21 @@
                                  error-message="Please enter a positive value"
                                  ></paper-input>
 
+                    <paper-autocomplete
+                                    id = "defaultTeam"
+                                    label="Default Team" 
+                                    source="{{availableTeams}}"
+                                    highlight-first="true"
+                                    show-results-on-focus="true"
+                                    text-property="teamName"
+                                    value-property="id"
+                                    required="true"
+                                    text="{{selectedTeamName}}"
+                                    value="{{selectedTeamId}}"
+                                    error-message="Default team is required"
+                                    always-float-label>
+                    </paper-autocomplete>
+
                     <div class="input-wrapper">
                         <paper-toggle-button class="tb-toggle-button" checked="{{!projectConfiguration.isArchived}}"
                                              on-change="_onChangeArchived">
@@ -120,12 +139,72 @@
                     _updateButton: {
                         type: Object,
                         value: function () { return {} }
+                    },
+                    availableTeams: {
+                        type: Array,
+                        value: []
+                    },
+                    suggestions: {
+                        type: Array,
+                        notify: true,
+                        value: []
+                    },
+                    selectedTeamName: {
+                        type: String,
+                        notify: true
+                    },
+                    selectedTeamId: {
+                        type: String
+                    },
+                    invalidTeam: {
+                        type: Boolean
                     }
                 },
+
+                observers: [
+                    '_resizeModal(subtasks, timetracking, isUpdating, errorMessage)',
+                    '_revalidateTeamField(selectedTeamName,suggestions)'
+                ],
 
                 ready: function() {
                     var updateButton = ButtonBuilder('Update').id('updateProjectConfiguration').onClick(this.updateConfiguration.bind(this)).build();
                     this.set('_updateButton', updateButton);
+                    this.availableTeams = taskboard.getAvailableTeams();
+                    var self = this;
+                    this.$.defaultTeam.queryFn = function(source, query) {
+                        self.suggestions = source.filter(function(t) {
+                            return t.teamName.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+                        });
+                        return self.suggestions;
+                    }
+
+                    this.$.defaultTeam.validate = function(quickValidation) {
+                        self.$.defaultTeam.invalid=false;
+                        if (this.text.length > 0 && self.suggestions.length === 0) {
+                            this.errorMessage = "No matches found"
+                            this.invalid=true
+                            return false;
+                        }
+
+                        if (quickValidation)
+                            return true;
+
+                        if (this.text.length === 0) {
+                            this.errorMessage = "Default team is required"
+                            this.invalid=false;
+                        }
+
+                        if (taskboard.getTeamById(this.value).teamName !== this.text) {
+                            this.errorMessage = "Invalid team"
+                            this.invalid=false;
+                        }
+
+                        return !this.invalid;
+                    }
+                },
+
+                _revalidateTeamField: function(selectedTeamName) {
+                    this.$.defaultTeam.validate(true)
                 },
 
                 open: function(projectConfiguration) {
@@ -141,12 +220,18 @@
 
                     this.$.modal.open();
                     this.$.projectStartDate.$.input.focus();
+
+                    var team = taskboard.getAvailableTeams().filter(function(t){return t.id == projectConfiguration.defaultTeam})[0];
+                    this.selectedTeamName = team.teamName
+                    this.selectedTeamId = team.id;
+                    this.suggestions = [team]
                 },
 
                 _setProjectFilterConfiguration: function(projectFilterConfiguration) {
                     var newProjFilterConf = clone(projectFilterConfiguration);
                     newProjFilterConf.startDate = this._getLocaleDate(newProjFilterConf.startDate);
                     newProjFilterConf.deliveryDate = this._getLocaleDate(newProjFilterConf.deliveryDate);
+                    newProjFilterConf.defaultTeam = projectFilterConfiguration.defaultTeam;
                     this.set('projectConfiguration', {});
                     this.set('projectConfiguration', newProjFilterConf);
                 },
@@ -157,10 +242,11 @@
 
                 updateConfiguration: function() {
                     var self = this;
-                    var projectKey = self.projectConfiguration.projectKey;
 
+                    var projectKey = self.projectConfiguration.projectKey;
+                    this.projectConfiguration.defaultTeam = this.selectedTeamId;
                     self.errorMessage = '';
-                    
+
                     if (!self._validate())
                         return;
 
@@ -172,7 +258,8 @@
                         deliveryDate: self._getISODate(self.projectConfiguration.deliveryDate),
                         isArchived: self.projectConfiguration.isArchived,
                         risk: self.projectConfiguration.risk,
-                        projectionTimespan: self.projectConfiguration.projectionTimespan
+                        projectionTimespan: self.projectConfiguration.projectionTimespan,
+                        defaultTeam: self.projectConfiguration.defaultTeam
                     };
 
                     $.ajax({
@@ -190,7 +277,8 @@
                         );
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                         console.error(errorThrown);
-                        self.showError(jqXHR, self);
+                        self.showRequestError.bind(self);
+                        self.showRequestError(jqXHR);
                     });
                 },
 
@@ -198,21 +286,33 @@
                     this.showLoadingSpinner = show;
                 },
 
-                showError: function(jqXHR, self) {
-                    self.showLoading(false);
-                    if  (jqXHR && jqXHR.responseText) {
-                        var responseError = JSON.parse(jqXHR.responseText);
-                        self.errorMessage = responseError.message;
-                    } else {
-                        self.errorMessage = "The request has failed";
-                    }
+                showError: function(errorMessage) {
+                    this.errorMessage = errorMessage;
+                    $(".error-message").show().delay(3000).fadeOut();
+                },
+
+                showRequestError: function(jqXHR) {
+                    this.showLoading(false);
+                    var message = "The request has failed";;
+                    if  (jqXHR && jqXHR.responseText) 
+                        message = JSON.parse(jqXHR.responseText).message;
+                    this.showError(message);
                 },
 
                 _validate: function() {
-                    return this.$.projectStartDate.validate() &
-                        this.$.projectDeliveryDate.validate() &
-                        this.$.projectRisk.validate() &
-                        this.$.projectionTimespan.validate();
+                    var fieldsToTest = [
+                        this.$.projectStartDate,
+                        this.$.projectDeliveryDate,
+                        this.$.projectRisk,
+                        this.$.defaultTeam,
+                        this.$.projectionTimespan ];
+
+                    var isValid = true;
+                    fieldsToTest.forEach(function(f, i){
+                        isValid = f.validate() && isValid;
+                    })
+
+                    return isValid;
                 },
 
                 _getLocaleDate: function(date) {

@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -146,7 +147,18 @@ public class IssueFieldsExtractor {
     }
 
     public  static boolean extractBlocked(JiraProperties jiraProperties, JiraIssueDto issue) {
-        return extractSingleValueCheckbox(jiraProperties.getCustomfield().getBlocked().getId(), issue);
+        JSONArray jsonArray = issue.getField(jiraProperties.getCustomfield().getBlocked().getId());
+
+        if (jsonArray == null || jsonArray.length() == 0)
+            return false;
+
+        try {
+            return jsonArray.getJSONObject(0) != null 
+                   && jsonArray.getJSONObject(0).getInt("id") == jiraProperties.getCustomfield().getBlocked().getYesOptionId();
+        } catch (JSONException e) {
+            logErrorExtractField(issue, jiraProperties.getCustomfield().getBlocked().getId() + ".value", e);
+            return false;
+        }
     }
 
     public  static String extractLastBlockReason(JiraProperties jiraProperties, JiraIssueDto issue) {
@@ -267,6 +279,16 @@ public class IssueFieldsExtractor {
         });
         result.sort((item1, item2) -> item1.timestamp.compareTo(item2.timestamp));
         return result;
+    }
+
+
+    public static List<Long> extractAssignedTeamsIds(JiraProperties jiraProperties, JiraIssueDto issue) {
+        String valueString = issue.getField(jiraProperties.getCustomfield().getAssignedTeams().getId());
+
+        if (valueString == null || valueString.isEmpty())
+            return newArrayList();
+
+        return Arrays.asList(valueString.split(",")).stream().map(v -> Long.parseLong(v)).collect(Collectors.toList());
     }
 
     private static void logErrorExtractField(JiraIssueDto issue, String fieldName, JSONException e) {

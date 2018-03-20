@@ -20,8 +20,11 @@
  */
 package objective.taskboard.database;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -37,15 +40,23 @@ public class TaskboardDatabaseService {
     @Autowired
     private LaneCachedRepository laneRepository;
 
-    public List<LaneConfiguration> laneConfiguration() {
-        return getConfigurations();
-    }
-
     @Cacheable(CacheConfiguration.CONFIGURATION)
-    private List<LaneConfiguration> getConfigurations() {
-        
+    public List<LaneConfiguration> laneConfiguration() {
         List<Lane> lanes = laneRepository.getAll();
         return TaskboardConfigToLaneConfigurationTransformer.getInstance().transform(lanes);
+    }
+    
+    @Cacheable(CacheConfiguration.CONFIGURATION_COLOR)
+    public Map<Pair<Long, Long>, String> getColorByIssueTypeAndStatus() {
+        Map<Pair<Long, Long>, String> colorByIssueTypeAndStatus = new LinkedHashMap<>();
+        laneConfiguration().stream()
+            .flatMap(l->l.getStages().stream())
+            .flatMap(s->s.getSteps().stream())
+            .forEach(s->s.getIssuesConfiguration().stream().
+                    forEach(ic->colorByIssueTypeAndStatus.put(Pair.of(ic.getIssueType(), ic.getStatus()), s.getColor()))
+                    );
+
+        return colorByIssueTypeAndStatus;
     }
 
 }

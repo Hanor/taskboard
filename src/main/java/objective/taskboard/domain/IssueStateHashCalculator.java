@@ -12,7 +12,6 @@ public class IssueStateHashCalculator {
     public int calculateHash(Issue issue) {
         return Objects.hashCode(
                   issue.getColor()
-                , issue.getUsersTeam()
                 , issue.getTeams()
                 , issue.getId()
                 , issue.getIssueKey()
@@ -27,7 +26,7 @@ public class IssueStateHashCalculator {
                 , issue.getParentType()
                 , issue.getParentTypeIconUri()
                 , issue.getDependencies()
-                , issue.getSubResponsaveis()
+                , issue.getCoAssignees()
                 , issue.getAssignee()
                 , issue.getPriority()
                 , issue.getDueDate()

@@ -1,0 +1,115 @@
+<dom-module id="user-picker">
+    <template>
+        <tag-picker
+            id = "user-selector-autocomplete"
+            on-selected-value="_onSelect"
+            on-x-clicked="_onClose"
+            text="{{text}}"
+            remoteSource="true"
+            searching="{{searching}}"
+            >
+        </tag-picker>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'user-picker',
+
+                properties: {
+                    selected: {
+                        type: String,
+                        notify: true
+                    },
+                    text: {
+                        type: String,
+                        notify: true
+                    },
+                    teams: {
+                        type: Array,
+                        value: []
+                    },
+                    searching: {
+                        type: Boolean,
+                        value: false
+                    }
+                },
+                
+                observers: [
+                    '_onChangeText(text)'
+                ],
+                
+                availableUsers: {
+                    type: Array,
+                    value: [],
+                    notify: true
+                },
+                
+                clear: function() {
+                    this.$$("tag-picker").clear();
+                },
+                
+                focus: function() {
+                    this.$$("tag-picker").focus();
+                },
+                
+                _onSelect: function(e) {
+                    this.selected = e.detail.value;
+                    this.fire("selected-user", {target: this})
+                },
+                
+                _onClose: function(e) {
+                    this.fire("close-clicked", {target: this})
+                },
+                
+                _onChangeText: function(text) {
+                    if (_.isEmpty(text)) {
+                        this.set('availableUsers',[]);
+                        return;
+                    }
+                    if (text.length < 3)
+                        return;
+
+                    if (this.previousRequest)
+                        clearTimeout(this.previousRequest);
+
+                    var self = this;
+                    this.previousRequest = setTimeout(function() {
+                        self.searching = true;
+                        $.ajax({
+                            url: '/ws/users/search?&query=' + text + '&teamFilter='+self.teams.join(","),
+                            type: 'get',
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                            async: true
+                        })
+                        .done(function (userList) {
+                            if (userList.length === 0) {
+                                self.$$("tag-picker").suggestions([{"text":"No matches"}]);
+                                return;
+                            }
+
+                            self.$$("tag-picker").suggestions(
+                                userList.map(function(t){
+                                    return {
+                                        "text": t.displayName,
+                                        "value": t.name
+                                    }
+                                }));
+                        }).
+                        fail(function (jqXhr, textStatus, errorThrown) {
+                            console.error(jqXhr);
+                            console.error(textStatus);
+                            console.error(errorThrown);
+                        })
+                        .always(function() {
+                            self.previousRequest = null;
+                            self.searching = false;
+                        })
+                    }, 100)
+                },
+            });
+        })();
+    </script>
+</dom-module>

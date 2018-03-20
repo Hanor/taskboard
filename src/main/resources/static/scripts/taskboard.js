@@ -29,6 +29,14 @@ function Taskboard() {
     this.getLoggedUser = function() {
         return window.user;
     }
+    
+    this.getAvailableTeams = function() {
+        return TEAMS;
+    }
+
+    this.getTeamById = function(id) {
+        return TEAMS_BY_ID[id];
+    }
 
     this.getTaskboardLogoUrl = function() {
         var logoUrlExistis = window.logo !== null && window.logo !== undefined && window.logo !== '';
@@ -54,18 +62,11 @@ function Taskboard() {
         return teamFilter.aspectsSubitemFilter;
     };
 
-    this.getTeamsOfProject = function(projectKey) {
-        var projectFilter = _.find(this.getAspectFilters(), function(filter) {
-            return filter.description == "Project";
-        });
-        var projectSubitemFilter = _.find(projectFilter.aspectsSubitemFilter, function(subitem) {
-            return subitem.value == projectKey;
-        });
-        return projectSubitemFilter ? projectSubitemFilter.teams : [];
-    };
-
     this.setIssues = function(issues) {
         this.issues = issues;
+        for (var index in this.issues) {
+            this.issues[index] = this.resolveIssueFields(issues[index]);
+        }
         setIssuesBySteps(issues);
         this.refitSteps();
     };
@@ -263,17 +264,13 @@ function Taskboard() {
         return dependencies;
     }
 
-    this.isInvalidTeam = function(teams) {
-        return teams.indexOf(INVALID_TEAM) != -1;
-    };
-
     this.applyFilterPreferences = function() {
         var filterPreferences = userPreferences.getFilters();
 
         if (_.isEmpty(filterPreferences))
             return;
 
-        var filterTeams = [INVALID_TEAM];
+        var filterTeams = [];
         aspectFilters.forEach(function(item) {
             if (item.description !== 'Project')
                 return;
@@ -316,8 +313,8 @@ function Taskboard() {
         return this.statuses;
     };
 
-    this.getFieldName = function(fieldId) {
-        return FIELDNAMES[fieldId] || fieldId;
+    this.getFieldName = function(fs) {
+        return FIELDNAMES[fs.fieldId] || fs.fieldId;
     };
 
     this.getStatus = function(statusId) {
@@ -437,6 +434,7 @@ function Taskboard() {
             eventType: updateType,
             issue: converted
         }})
+        return converted;
     }
 
     this.issueGivenKey = function(issueKey) {
@@ -452,13 +450,25 @@ function Taskboard() {
     }
 
     this.convertAndRegisterIssue = function(issue) {
-        var converted = issue;
+        var converted = this.resolveIssueFields(issue);
+        
         var previousInstance = getPreviousIssueInstance(issue.issueKey);
         if (previousInstance === null)
             self.issues.push(converted)
         else
             self.issues[previousInstance.index] = converted;
         return converted;
+    }
+    
+    this.resolveIssueFields = function(issue) {
+        var converted = issue;
+        if (issue.additionalEstimatedHoursField)
+            issue.additionalEstimatedHoursField.name = this.getFieldName(issue.additionalEstimatedHoursField);
+        issue.subtasksTshirtSizes.forEach(function(ts) {
+            ts.name = this.getFieldName(ts);
+        }.bind(this))
+        
+        return issue;
     }
 
     function hasSomeFilteredIssue(issues) {
@@ -536,6 +546,23 @@ function Taskboard() {
             .value();
     }
 
+    this.showError = function(source, message, actions) {
+        source.fire("iron-signal", {name:"show-error-message", data: { message: message, actions: actions}});
+    }
+    
+    this.showIssueError = function(source, issueKey, message) {
+        source.fire("iron-signal", {name:"show-issue-error-message", data: {
+            issueKey: issueKey,
+            errorMessage: message
+        }});
+    }
+    
+    this.statusOrder = function(issueType, status) {
+        if (STATUS_ORDER_BY_ISSUETYPE[issueType]) 
+            return STATUS_ORDER_BY_ISSUETYPE[issueType].indexOf(status);
+        
+        return STATUS_ORDER_BY_ISSUETYPE["subtasks"].indexOf(status);
+    }
 }
 
 var taskboard = new Taskboard();

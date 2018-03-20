@@ -20,85 +20,100 @@
  */
 package objective.taskboard.domain.converter;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static java.util.Collections.singletonList;
-import static objective.taskboard.domain.converter.JiraIssueToIssueConverter.INVALID_TEAM;
-import static org.springframework.util.StringUtils.isEmpty;
-
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Sets;
-
 import objective.taskboard.data.Issue;
+import objective.taskboard.data.Issue.CardTeam;
+import objective.taskboard.data.Team;
+import objective.taskboard.data.User;
+import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.filterConfiguration.TeamFilterConfigurationService;
+import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
+import objective.taskboard.repository.TeamCachedRepository;
 
 @Service
 public class IssueTeamService {
+    private static final Logger log = LoggerFactory.getLogger(IssueTeamService.class);    
 
     @Autowired
     private TeamFilterConfigurationService teamFilterConfigurationService;
-
-    public Set<String> getTeams(Issue issue) {
-        Set<String> issueTeams = new LinkedHashSet<>();
-        for (List<String> teams : getIssueTeams(issue).values())
-            issueTeams.addAll(teams);
-
+    
+    @Autowired
+    private TeamCachedRepository teamRepo;
+    
+    @Autowired
+    private ProjectFilterConfigurationCachedRepository projectRepo;
+    
+    public Long getDefaultTeamId(Issue issue) {
+        Optional<ProjectFilterConfiguration> projectOpt = projectRepo.getProjectByKey(issue.getProjectKey());
+        if (!projectOpt.isPresent()) {
+            log.warn("Project not found for issue " + issue.getIssueKey() + ". This situation should be impossible");
+            return null;
+        }
+        
+        Optional<Team> team = teamRepo.findById(projectOpt.get().getDefaultTeam());
+        if (!team.isPresent()) { 
+            log.warn("Default team ID " + projectOpt.get().getDefaultTeam() + " for project " + issue.getProjectKey() + " not found!");
+            return null;
+        }
+        
+        return team.get().getId();
+    }
+    
+    public Set<CardTeam> getTeamsForIds(List<Long> ids) {
+        Set<CardTeam> issueTeams = new LinkedHashSet<>();
+        for (Long teamId : ids) {
+            Optional<Team> team = teamRepo.findById(teamId);
+            if (!team.isPresent()) {
+                log.warn("Invalid team id " + teamId + ". Team not found");
+                continue;
+            }
+            issueTeams.add(CardTeam.from(team.get()));
+        }
         return issueTeams;
     }
+    
+    public CardTeam getDefaultTeam(String projectKey) {
+        Optional<ProjectFilterConfiguration> projectOpt = projectRepo.getProjectByKey(projectKey);
+        Optional<Team> team = teamRepo.findById(projectOpt.get().getDefaultTeam());
+        if (team.isPresent())
+            return CardTeam.from(team.get());
 
-    public String getUsersTeam(Issue issue) {
-        return String.join(",", getIssueTeams(issue).keySet());
+        throw new IllegalStateException("Default team ID " + projectOpt.get().getDefaultTeam() + " for project " + projectKey + " not found!");
     }
 
-    Map<String, List<String>> getIssueTeams(Issue issue) {
-        Map<String, List<String>> usersTeam = getIssueUsersTeams(issue);
-        if (!usersTeam.isEmpty())
-            return usersTeam;
+    /**
+     * Returns assigned users that are not in the issue teams 
+     * @param issue
+     * @return
+     */
+    public Set<String> getMismatchingUsers(Issue issue) {
+        List<User> assignees = new LinkedList<>();
+        assignees.add(issue.getAssignee());
+        assignees.addAll(issue.getCoAssignees());
+        
+        Set<String> validTeams = issue.getTeams().stream().map(t->t.name).collect(Collectors.toSet());
+        Set<String> mismatches = new LinkedHashSet<>();
 
-        Optional<Issue> parent = issue.getParentCard();
+        for (User user : assignees) {
+            if (!user.isAssigned()) continue;
 
-        Map<String, List<String>> parentUsersTeam = parent.isPresent()? getIssueUsersTeams(parent.get()):newHashMap();
-        if (!parentUsersTeam.isEmpty())
-            return parentUsersTeam;
-
-        String reporter = issue.getReporter();
-        if (reporter == null)
-            return newHashMap();
-
-        return getUsersTeams(Sets.newHashSet(reporter), issue.getProjectKey(), false);
-    }
-
-    private Map<String, List<String>> getIssueUsersTeams(Issue issue) {
-        Set<String> users = new LinkedHashSet<>();
-
-        String assignee = issue.getAssignee();
-        if (!isEmpty(assignee))
-            users.add(assignee);
-        for (IssueCoAssignee coAssignee : issue.getCoAssignees())
-            users.add(coAssignee.getName());
-
-        return getUsersTeams(users, issue.getProjectKey(), true);
-    }
-
-    private Map<String, List<String>> getUsersTeams(Set<String> users, String projectKey, boolean useInvalidTeam) {
-        Map<String, List<String>> usersTeams = newHashMap();
-
-        for (String user : users) {
-            List<String> teams = teamFilterConfigurationService.getConfiguredTeamsNamesByUserAndProject(user, projectKey);
-
-            if (teams.isEmpty() && useInvalidTeam)
-                teams = singletonList(INVALID_TEAM);
-
-            usersTeams.put(user, teams);
+            List<Team> teams = teamFilterConfigurationService.getConfiguredTeamsByUser(user.name);
+            
+            if (!teams.stream().anyMatch(t -> validTeams.contains(t.getName())))
+                mismatches.add(user.name);
         }
 
-        return usersTeams;
+        return mismatches;    
     }
 }

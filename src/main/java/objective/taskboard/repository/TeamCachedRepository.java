@@ -23,6 +23,7 @@ package objective.taskboard.repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
@@ -60,12 +61,12 @@ public class TeamCachedRepository {
         return null;
     }
 
-    public Team findById(Long teamId) {
+    public Optional<Team> findById(Long teamId) {
         for (Team team : cache) {
             if (team.getId().equals(teamId))
-                return team;
+                return Optional.of(team);
         }
-        return null;
+        return Optional.empty();
     }
 
     public Boolean exists(String teamName) {

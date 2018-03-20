@@ -19831,6 +19831,7 @@
                     "self": "http://localhost:4567/rest/api/2/customFieldOption/12606",
                     "value": "Standard"
                 },
+                "customfield_10100": "521",
                 "customfield_11451": null,
                 "customfield_11452": null,
                 "customfield_11455": null,
@@ -19966,6 +19967,7 @@
         "customfield_11450": "Additional Estimated Hours",
         "customfield_11451": "Blocked",
         "customfield_11452": "Last Block Reason",
+        "customfield_10100": "Assigned Teams",
         "customfield_11455": "Release",
         "customfield_11456": "Co-Assignees",
         "customfield_11457": "T-Shirt Size",
@@ -20047,6 +20049,11 @@
             "type": "array"
         },
         "customfield_11452": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+            "customId": 11452,
+            "type": "string"
+        },
+        "customfield_10100": {
             "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
             "customId": 11452,
             "type": "string"

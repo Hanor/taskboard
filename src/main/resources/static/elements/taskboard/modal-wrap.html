@@ -114,6 +114,7 @@
 
                 close: function() {
                     this.$$('paper-dialog').close();
+                    this.fire("close-clicked");
                 },
 
                 resize: function() {

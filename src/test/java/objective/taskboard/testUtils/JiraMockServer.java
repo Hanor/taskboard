@@ -185,7 +185,9 @@ public class JiraMockServer {
 
         get("rest/api/latest/user",  (req, res) ->loaduser(req.queryParams("username")));
         get("rest/api/latest/myself",  (req, res) ->loaduser(username));
-        
+
+        get("/rest/projectbuilder/1.0/users",  (req, res) -> findUsers(req.queryParams("q")));
+
         get("rest/api/latest/serverInfo",  (req, res) ->{
             String auth = new String(Base64.getDecoder().decode(req.headers("Authorization").replace("Basic ","").getBytes()));
             username = auth.split(":")[0];
@@ -251,10 +253,19 @@ public class JiraMockServer {
                     case "customfield_11440"://Class Of Service
                         setClassOfService(fields, aKey, reqFields.getJSONObject(aKey));
                         break;
+                    case "customfield_10100"://Assigned team
+                        fields.put(aKey, reqFields.getString(aKey));
+                        break;
+                    case "customfield_11451"://blocked
+                        fields.put(aKey, reqFields.getJSONArray(aKey));
+                        break;
+                    case "customfield_11452"://last block reason
+                        fields.put(aKey, reqFields.getString(aKey));
+                        break;
                     default:
                         throw new IllegalStateException("Unsupported Field in Mock : " + aKey);
                 }
-                
+                fields.put("updated", nowIso8601());
             }
             res.status(204);
             return "";
@@ -674,6 +685,23 @@ public class JiraMockServer {
                 .replace("\"name\": \"taskboard\"", "\"name\": \"" + username + "\"")
                 .replace("\"displayName\": \"Taskboard\",", "\"displayName\": \"" + capitalize(username) + "\",");
         return loadMockData;
+    }
+
+    private String findUsers(String nameStart) throws JSONException {
+        String loadMockData = loadMockData("users-autocomplete.response.json");
+        JSONArray allUsers = new JSONArray(loadMockData);
+        int allUsersSize = allUsers.length();
+
+        JSONArray filteredUserList = new JSONArray();
+        for(int i = 0; i < allUsersSize; i++) {
+            JSONObject user = allUsers.getJSONObject(i);
+            if (user.getString("displayName").toLowerCase().matches("(?i).*\\b"+nameStart.toLowerCase()+".*"))
+                filteredUserList.put(user);
+            else if (user.getString("name").toLowerCase().matches(".*\\b"+nameStart.toLowerCase()+".*"))
+                filteredUserList.put(user);
+        }
+
+        return filteredUserList.toString();
     }
 
     private static class WebHookConfiguration {

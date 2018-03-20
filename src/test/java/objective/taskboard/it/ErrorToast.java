@@ -49,9 +49,15 @@ public class ErrorToast extends AbstractUiFragment {
     }
 
     public void close() {
-        WebElement closeButton = errorToast.findElement(By.tagName("paper-button"));
+        WebElement closeButton = errorToast.findElement(By.cssSelector("tb-button[data-action-name='Close']"));
         waitForClick(closeButton);
         assertErrorToastIsClosed();
+    }
+
+    public void clickButtonWithText(String actionName) {
+        WebElement closeButton = errorToast.findElement(By.cssSelector("tb-button[data-action-name='" + actionName + "']"));
+        waitForClick(closeButton);
+        
     }
 
 }

@@ -23,6 +23,7 @@ package objective.taskboard.domain;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Streams;
@@ -41,7 +42,7 @@ public class Project {
         Project project = new Project();
         project.setKey(jiraProject.getKey());
         project.setName(jiraProject.getName());
-        project.setTeamsIds(projectFilterConfiguration.getTeamsIds());
+        project.setTeamsIds(Arrays.asList(projectFilterConfiguration.getDefaultTeam()));
 
         List<Version> versions = newArrayList();
         if (jiraProject.getVersions() != null)

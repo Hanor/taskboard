@@ -21,22 +21,17 @@
 package objective.taskboard.domain.converter;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static objective.taskboard.domain.converter.JiraIssueToIssueConverter.INVALID_TEAM;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
+import org.apache.tomcat.util.buf.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,228 +39,69 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.common.collect.Sets;
+
 import objective.taskboard.data.Issue;
+import objective.taskboard.data.Team;
+import objective.taskboard.data.User;
+import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.filterConfiguration.TeamFilterConfigurationService;
+import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
+import objective.taskboard.repository.TeamCachedRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IssueTeamServiceTest {
-
-    private static final String NAME_ASSIGNEE = "assignee";
-    private static final String NAME_CO_ASSIGNEE = "co-assignee";
-    private static final String NAME_PARENT_ASSIGNEE = "parent assignee";
-    private static final String NAME_PARENT_CO_ASSIGNEE = "parent co-assignee";
-    private static final String NAME_REPORTER = "reporter";
-    private static final String NAME_PARENT_REPORTER = "parent reporter";
-
-    private static final String MSG_USERS_SHOULD_BE_EMPTY = "Users should be empty";
-
     @InjectMocks
     private IssueTeamService subject;
 
     @Mock
     private TeamFilterConfigurationService teamFilterConfigurationService;
+    
+    @Mock
+    private ProjectFilterConfigurationCachedRepository projectRepo;
+    
+    @Mock
+    private TeamCachedRepository teamRepo;
 
     private Issue issue = new Issue();
-    private Issue parentCard = new Issue();
+    private Team team1337;
+    private Team bravo7331;
 
     @Before
     public void before() {
         when(teamFilterConfigurationService.getConfiguredTeamsNamesByUserAndProject(anyString(), anyString())).thenReturn(singletonList("Team"));
         issue.setIssueKey("FOO-34");
+        issue.setProjectKey("FOO");
+        ProjectFilterConfiguration mockProject = mock(ProjectFilterConfiguration.class);
+        when(projectRepo.getProjectByKey("FOO")).thenReturn(Optional.of(mockProject));
+        when(mockProject.getDefaultTeam()).thenReturn(1337L);
+        
+        team1337 = new Team();
+        team1337.setName("L33t");
+        when(teamRepo.findById(1337L)).thenReturn(Optional.of(team1337));
+        
+        bravo7331 = new Team();
+        bravo7331.setName("bravo1337");
+        when(teamRepo.findById(7331L)).thenReturn(Optional.of(bravo7331));
     }
-
+    
     @Test
-    public void issueWithValidAssignee() {
-        given.issueHasAssignee();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertUserTeam(issueTeams, NAME_ASSIGNEE);
+    public void getMismatchingUsers_whenThereAreUsersOutsideIssueTeam_shouldReturnTheirNames() {
+        Issue i = mock(Issue.class);
+        when(i.getRawAssignedTeamsIds()).thenReturn(asList(7331L));
+        when(i.getTeams()).thenReturn(new HashSet<>(asList(Issue.CardTeam.from(bravo7331))));
+        
+        when(teamFilterConfigurationService.getConfiguredTeamsByUser("fulano")).thenReturn(asList(team1337));
+        when(teamFilterConfigurationService.getConfiguredTeamsByUser("beltrano")).thenReturn(asList(bravo7331));
+        when(i.getAssignee()).thenReturn(new User("fulano"));
+        when(i.getCoAssignees()).thenReturn(asList(new User("beltrano")));
+        
+        Set<String> mismatchingUsers = subject.getMismatchingUsers(i);
+        
+        assertEquals("fulano", StringUtils.join(mismatchingUsers));
     }
-
-    @Test
-    public void issueWithValidCoAssignee() {
-        given.issueHasCoAssignee();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertUserTeam(issueTeams, NAME_CO_ASSIGNEE);
-    }
-
-    @Test
-    public void issueWithInvalidAssignee() {
-        given.issueHasAssignee()
-                .issueAssigneeHasNoTeam();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertThat(issueTeams).containsOnly(
-                entry(NAME_ASSIGNEE, singletonList(INVALID_TEAM))
-        );
-    }
-
-    @Test
-    public void issueWithNoUserAndNoParent() {
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertTrue(MSG_USERS_SHOULD_BE_EMPTY, issueTeams.isEmpty());
-    }
-
-    @Test
-    public void parentIssueWithValidAssignee() {
-        given.parentIssueHasAssignee();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertUserTeam(issueTeams, NAME_PARENT_ASSIGNEE);
-    }
-
-    @Test
-    public void parentIssueWithValidCoAssignee() {
-        given.parentIssueHasCoAssignee();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertUserTeam(issueTeams, NAME_PARENT_CO_ASSIGNEE);
-    }
-
-    @Test
-    public void issueWithValidReporter() {
-        given.issueHasReporter();
-        issue.setParentCard(parentCard);
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertUserTeam(issueTeams, NAME_REPORTER);
-    }
-
-    @Test
-    public void issueWithReporterNull() {
-        issue.setParentCard(parentCard);
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        assertTrue(MSG_USERS_SHOULD_BE_EMPTY, issueTeams.isEmpty());
-    }
-
-    @Test
-    public void givenIssueAndParentHasAllUsersFilled_usersContainsIssueAssigneeAndCoAssignee() {
-        given.issueHasAssignee()
-                .issueHasCoAssignee()
-                .issueHasReporter()
-                .parentIssueHasAssignee()
-                .parentIssueHasCoAssignee()
-                .parentIssueHasReporter();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        List<String> users = asList(subject.getUsersTeam(issue).split(","));
-        Set<String> teams = subject.getTeams(issue);
-
-        assertThat(issueTeams).containsOnly(
-                entry(NAME_ASSIGNEE, singletonList("Team"))
-                , entry(NAME_CO_ASSIGNEE, singletonList("Team"))
-        );
-        assertThat(users).containsOnly(NAME_ASSIGNEE, NAME_CO_ASSIGNEE);
-        assertThat(teams).containsOnly("Team");
-    }
-
-    @Test
-    public void givenIssueHasReporterAndParentHasAllUsersFilled_usersContainsParentAssigneeAndCoAssignee() {
-        given.issueHasReporter()
-                .parentIssueHasAssignee()
-                .parentIssueHasCoAssignee()
-                .parentIssueHasReporter();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        List<String> users = asList(subject.getUsersTeam(issue).split(","));
-        Set<String> teams = subject.getTeams(issue);
-
-        assertThat(issueTeams).containsOnly(
-                entry(NAME_PARENT_ASSIGNEE, singletonList("Team"))
-                , entry(NAME_PARENT_CO_ASSIGNEE, singletonList("Team"))
-        );
-        assertThat(users).containsOnly(NAME_PARENT_ASSIGNEE, NAME_PARENT_CO_ASSIGNEE);
-        assertThat(teams).containsOnly("Team");
-    }
-
-    @Test
-    public void givenIssueAndParentHasReporterFilled_usersContainsIssueReporter() {
-        given.issueHasReporter()
-                .parentIssueHasReporter();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        List<String> users = asList(subject.getUsersTeam(issue).split(","));
-        Set<String> teams = subject.getTeams(issue);
-
-        assertThat(issueTeams).containsOnly(
-                entry(NAME_REPORTER, singletonList("Team"))
-        );
-        assertThat(users).containsOnly(NAME_REPORTER);
-        assertThat(teams).containsOnly("Team");
-    }
-
-    @Test
-    public void givenIssueHasReporterAndReporterHasNoTeam_issueTeamsContainsReporterWithoutTeams() {
-        given.issueHasReporter()
-                .issueReporterHasNoTeam();
-
-        Map<String, List<String>> issueTeams = subject.getIssueTeams(issue);
-        List<String> users = asList(subject.getUsersTeam(issue).split(","));
-        Set<String> teams = subject.getTeams(issue);
-
-        assertThat(issueTeams).containsOnly(
-                entry(NAME_REPORTER, emptyList())
-        );
-        assertThat(users).containsOnly(NAME_REPORTER);
-        assertThat(teams).isEmpty();
-    }
-
-    private void assertUserTeam(Map<String, List<String>> issueTeams, String nameCoAssignee) {
-        assertTrue("User should have been found", issueTeams.containsKey(nameCoAssignee));
-
-        List<String> teams = issueTeams.get(nameCoAssignee);
-        assertEquals("User teams quantity", 1, teams.size());
-        assertEquals("User team", "Team", teams.get(0));
-    }
-
-    private final FluentScenario given = new FluentScenario();
-    private class FluentScenario {
-        FluentScenario issueHasAssignee() {
-            issue.setAssignee(NAME_ASSIGNEE);
-            return this;
-        }
-
-        FluentScenario issueHasCoAssignee() {
-            issue.setCoAssignees(singletonList(new IssueCoAssignee(NAME_CO_ASSIGNEE, null)));
-            return this;
-        }
-
-        FluentScenario issueHasReporter() {
-            issue.setReporter(NAME_REPORTER);
-            return this;
-        }
-
-        FluentScenario parentIssueHasAssignee() {
-            issue.setParentCard(parentCard);
-            parentCard.setAssignee(NAME_PARENT_ASSIGNEE);
-            return this;
-        }
-
-        FluentScenario parentIssueHasCoAssignee() {
-            issue.setParentCard(parentCard);
-            parentCard.setCoAssignees(singletonList(new IssueCoAssignee(NAME_PARENT_CO_ASSIGNEE, null)));
-            return this;
-        }
-
-        FluentScenario parentIssueHasReporter() {
-            issue.setParentCard(parentCard);
-            parentCard.setReporter(NAME_PARENT_REPORTER);
-            return this;
-        }
-
-        FluentScenario issueAssigneeHasNoTeam() {
-            return userHasNoTeam(NAME_ASSIGNEE);
-        }
-
-        FluentScenario issueReporterHasNoTeam() {
-            return userHasNoTeam(NAME_REPORTER);
-        }
-
-        FluentScenario userHasNoTeam(String name) {
-            doReturn(emptyList())
-                    .when(teamFilterConfigurationService).getConfiguredTeamsNamesByUserAndProject(eq(name), anyString());
-            return this;
-        }
+    
+    public static Set<Long> setOf(Long ...elements) {
+        return Sets.newHashSet(elements);
     }
 }

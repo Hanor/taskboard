@@ -9683,6 +9683,7 @@
                 "customfield_11447": null,
                 "customfield_11449": null,
                 "customfield_11450": null,
+                "customfield_10100": "521",
                 "customfield_11451": null,
                 "customfield_11452": null,
                 "customfield_11455": null,
@@ -11866,6 +11867,7 @@
                     "self": "http://localhost:4567/rest/api/latest/customFieldOption/12606",
                     "value": "Standard"
                 },
+                "customfield_10100": "521",
                 "customfield_11451": null,
                 "customfield_11452": null,
                 "customfield_11455": null,
@@ -13060,9 +13062,9 @@
                 },
                 "created": "2017-05-31T13:45:16.000+0000",
                 "customfield_11440": {
-                    "id": "12606",
-                    "self": "http://localhost:4567/rest/api/latest/customFieldOption/12606",
-                    "value": "Standard"
+                    "id": "12608",
+                    "self": "http://localhost:4567/rest/api/latest/customFieldOption/12608",
+                    "value": "Expedite"
                 },
                 "customfield_11451": null,
                 "customfield_11452": null,
@@ -16676,7 +16678,7 @@
                     "self": "http://localhost:4567/rest/api/latest/customFieldOption/12657",
                     "value": "S"
                 },
-                "description": null,
+                "description": "h2. Additional Details\r\nh2. Open Questions\r\n # In select image from site assets/asset library should we have pagination in assets listing? If not, may have perfomance issues when there's too many assets.\r\n\r\nh2. Assumptions\r\n * The WYSIWYG editor will be a custom skinned CKEdtior.\r\n * Additional capabilities will be added to the WYSIWYG editor to support image resizing.\r\n * Allowing users to input, store, and later display direct HTML does not violate Google security policies\r\n * Images included in the text widget will become site assets\r\n * It's not possible to change the image position after it's added to the widget\r\n * Select image\r\n ** Will display assets in the same way as in Dashboard Site Assets/Assets Library tab\r\n *** Folders first, then assets\r\n *** Sort by name or Last modified\r\n ** Search will behave in the same way as in Dashboard Site Assets/Assets Library tab\r\n *** User will have to hit Enter in order to perform the search \r\n *** There's no filters, just search by keyword\r\n** Upload by URL will create a copy of the image and store in Liferay Documents and Library \r\n*** If the image in the URL changes, will not change in Pario \r\n\r\nh2. {color:red}OUT OF SCOPE{color}\r\n* Crop and filters  - this is covered by FOO-32\r\n\r\nh2. Wireframes\r\n * Modal, one level deep : [https://drive.google.com/file/d/0BwKq6YhrAPzQT2lRd3g2Sm83RGs/view]\r\n * image in text widget: [https://foo.bar] ",
                 "issuelinks": [],
                 "issuetype": {
                     "avatarId": 12256,
@@ -56431,7 +56433,7 @@
                     "released":false
                 },
                 "customfield_11456": null,
-                "description": "Vide Tarefas",
+                "description": "h2. Additional Details\r\nh2. Open Questions\r\n # In select image from site assets/asset library should we have pagination in assets listing? If not, may have perfomance issues when there's too many assets.\r\n\r\nh2. Assumptions\r\n * The WYSIWYG editor will be a custom skinned CKEdtior.\r\n * Additional capabilities will be added to the WYSIWYG editor to support image resizing.\r\n * Allowing users to input, store, and later display direct HTML does not violate Google security policies\r\n * Images included in the text widget will become site assets\r\n * It's not possible to change the image position after it's added to the widget\r\n * Select image\r\n ** Will display assets in the same way as in Dashboard Site Assets/Assets Library tab\r\n *** Folders first, then assets\r\n *** Sort by name or Last modified\r\n ** Search will behave in the same way as in Dashboard Site Assets/Assets Library tab\r\n *** User will have to hit Enter in order to perform the search \r\n *** There's no filters, just search by keyword\r\n** Upload by URL will create a copy of the image and store in Liferay Documents and Library \r\n*** If the image in the URL changes, will not change in Pario \r\n\r\nh2. {color:red}OUT OF SCOPE{color}\r\n* Crop and filters  - this is covered by FOO-32\r\n\r\nh2. Wireframes\r\n * Modal, one level deep : [https://foo.bar]\r\n * image in text widget: [https://foo.bar] ",
                 "issuelinks": [
                     {
                         "id": "143711",
@@ -60055,6 +60057,7 @@
         "customfield_11450": "Additional Estimated Hours",
         "customfield_11451": "Blocked",
         "customfield_11452": "Last Block Reason",
+        "customfield_10100": "Assigned Teams",
         "customfield_11455": "Release",
         "customfield_11456": "Co-Assignees",
         "customfield_11457": "T-Shirt Size",
@@ -60139,6 +60142,11 @@
         "customfield_11452": {
             "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
             "customId": 11452,
+            "type": "string"
+        },
+        "customfield_10100": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+            "customId": 10100,
             "type": "string"
         },
         "customfield_11455": {

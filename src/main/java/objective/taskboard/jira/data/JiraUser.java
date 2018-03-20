@@ -1,6 +1,7 @@
 package objective.taskboard.jira.data;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import retrofit.http.GET;
@@ -34,11 +35,20 @@ public class JiraUser {
         return avatarUrls.get(S48_48);
     }
 
+    public static class JiraUserAutocomple {
+        public String name;
+        public String displayName;
+        public String emailAddress;
+    }
+
     public interface Service {
         @GET("/rest/api/latest/user?expand=groups")
         JiraUser get(@Query("username") String name);
 
         @GET("/rest/api/latest/myself")
         JiraUser myself();
+
+        @GET("/rest/projectbuilder/1.0/users")
+        List<JiraUserAutocomple> findUsers(@Query("q") String name);
     }
 }

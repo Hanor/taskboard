@@ -10,10 +10,13 @@ import java.util.regex.Pattern;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import retrofit.RetrofitError;
 import retrofit.mime.TypedByteArray;
 
+@ResponseStatus(value = HttpStatus.BAD_REQUEST)
 public class FrontEndMessageException extends RuntimeException {
 
     private static final long serialVersionUID = -3096553868407268805L;
@@ -27,6 +30,8 @@ public class FrontEndMessageException extends RuntimeException {
     }
 
     private static String parseExceptionMessage(RetrofitError e) {
+        if (e.getResponse().getStatus() == HttpStatus.NOT_FOUND.value())
+            return "NOT FOUND";
         List<String> errors = new ArrayList<>();
         errors.addAll(getErrorsFromResponse(e));
         errors.addAll(getErrorsMessagesFromResponse(e));

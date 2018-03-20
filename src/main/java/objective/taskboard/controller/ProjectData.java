@@ -23,13 +23,11 @@ package objective.taskboard.controller;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class ProjectData {
     public String projectKey;
-    public Set<String> teams = new HashSet<>();
+    public String defaultTeam;
     public List<String> followUpDataHistory = new ArrayList<String>();
 
     public static class ProjectConfigurationData {
@@ -39,5 +37,6 @@ public class ProjectData {
         public Boolean isArchived;
         public BigDecimal risk;
         public Integer projectionTimespan;
+        public Long defaultTeam;
     }
 }

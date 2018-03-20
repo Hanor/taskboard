@@ -28,11 +28,9 @@ import static objective.taskboard.repository.PermissionRepository.DASHBOARD_TACT
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,11 +43,10 @@ import objective.taskboard.controller.ProjectCreationData.ProjectCreationDataTea
 import objective.taskboard.controller.ProjectData.ProjectConfigurationData;
 import objective.taskboard.data.Team;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.domain.ProjectTeam;
 import objective.taskboard.domain.TeamFilterConfiguration;
 import objective.taskboard.followup.FollowUpFacade;
 import objective.taskboard.jira.ProjectService;
-import objective.taskboard.repository.ProjectTeamRepository;
+import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.repository.TeamCachedRepository;
 import objective.taskboard.repository.TeamFilterConfigurationCachedRepository;
 import objective.taskboard.utils.DateTimeUtils;
@@ -59,7 +56,7 @@ import objective.taskboard.utils.DateTimeUtils;
 public class ProjectController {
 
     @Autowired
-    ProjectTeamRepository projectTeamRepo;
+    ProjectFilterConfigurationCachedRepository projectRepository;
 
     @Autowired
     TeamCachedRepository teamRepository;
@@ -103,43 +100,7 @@ public class ProjectController {
 
     @RequestMapping(method = RequestMethod.PATCH, consumes="application/json")
     public ResponseEntity<String> updateProjectsTeams(@RequestBody ProjectData [] projectsTeams) {
-        List<ProjectTeam> projectTeamCfgsToAdd = new LinkedList<>();
-        List<String> errors = new LinkedList<>();
-        List<ProjectTeam> projectTeamCfgsToRemove = new LinkedList<>();
-        for (ProjectData ptd : projectsTeams) {
-            List<ProjectTeam> projectTeamsThatAreNotInTheRequest = projectTeamRepo.findByIdProjectKey(ptd.projectKey);
-            
-            for (String teamName : ptd.teams) {
-                Team team = teamRepository.findByName(teamName);
-
-                if (team == null) {
-                    errors.add("Team " + teamName + " not found.");
-                    continue;
-                }
-                Optional<ProjectTeam> projectXteam = projectTeamsThatAreNotInTheRequest.stream()
-                        .filter(pt -> pt.getTeamId().equals(team.getId()))
-                        .findFirst();
-                
-                if (projectXteam.isPresent()) 
-                    projectTeamsThatAreNotInTheRequest.remove(projectXteam.get());
-                else {
-                    ProjectTeam projectTeam = new ProjectTeam();
-                    projectTeam.setProjectKey(ptd.projectKey);
-                    projectTeam.setTeamId(team.getId());
-                    projectTeamCfgsToAdd.add(projectTeam);
-                }
-            }
-            projectTeamCfgsToRemove.addAll(projectTeamsThatAreNotInTheRequest);
-        }
-        if (!errors.isEmpty()) 
-            return ResponseEntity.badRequest().body(StringUtils.join(errors,"\n"));
-        
-        for (ProjectTeam pt : projectTeamCfgsToAdd) 
-            projectTeamRepo.save(pt);
-        
-        projectTeamCfgsToRemove.stream().forEach(ptcfg -> projectTeamRepo.delete(ptcfg));
-        
-        return ResponseEntity.ok("");
+        throw new UnsupportedOperationException("This endpoint has been discontinued. Change the default team directly in taskboard");
     }
 
     @RequestMapping(value="{projectKey}", method = RequestMethod.GET)
@@ -181,10 +142,26 @@ public class ProjectController {
         configuration.setArchived(data.isArchived);
         configuration.setRiskPercentage(data.risk.divide(BigDecimal.valueOf(100)));
         configuration.setProjectionTimespan(data.projectionTimespan);
+        configuration.setDefaultTeam(data.defaultTeam);
 
         projectService.saveTaskboardProject(configuration);
 
         return ResponseEntity.ok().build();
+    }
+
+    @RequestMapping(value = "{projectKey}/configuration", method = RequestMethod.GET)
+    public ResponseEntity<ProjectConfigurationData> getProjectConfiguration(@PathVariable("projectKey") String projectKey) {
+        Optional<ProjectFilterConfiguration> optProject = projectRepository.getProjectByKey(projectKey);
+        if (!optProject.isPresent())
+            return ResponseEntity.notFound().build();
+
+        ProjectFilterConfiguration project = optProject.get();
+        ProjectConfigurationData data = new ProjectConfigurationData();
+        data.startDate = project.getStartDate() != null ? project.getStartDate().toString() : "";
+        data.deliveryDate = project.getDeliveryDate() != null ? project.getDeliveryDate().toString() : "";
+        data.isArchived = project.isArchived();
+
+        return ResponseEntity.ok(data);
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes="application/json")
@@ -217,9 +194,15 @@ public class ProjectController {
     }
 
     private void createTeamAndConfigurations(String projectKey, String teamName, String manager, String coach, List<String> members) {
+        Optional<ProjectFilterConfiguration> projectByKey = projectRepository.getProjectByKey(projectKey);
+        if (!projectByKey.isPresent())
+            throw new IllegalArgumentException("Project with key " + projectKey + " not found.");
+        
         Team team = createTeam(teamName, manager, coach, members);
-        TeamFilterConfiguration teamFilterConfiguration = createTeamFilterConfiguration(team);
-        createProjectTeam(projectKey, teamFilterConfiguration);
+        createTeamFilterConfiguration(team);
+        ProjectFilterConfiguration project = projectByKey.get();
+        project.setDefaultTeam(team.getId());
+        projectRepository.save(project);
     }
 
     private Team createTeam(String name, String manager, String coach, List<String> members) {
@@ -233,13 +216,6 @@ public class ProjectController {
         return teamFilterConfigurationRepository.save(teamFilterConfiguration);
     }
 
-    private ProjectTeam createProjectTeam(String projectKey, TeamFilterConfiguration teamFilterConfiguration) {
-        final ProjectTeam projectTeam = new ProjectTeam();
-        projectTeam.setProjectKey(projectKey);
-        projectTeam.setTeamId(teamFilterConfiguration.getTeamId());
-        return projectTeamRepo.save(projectTeam);
-    }
-
     private ProjectConfigurationData generateProjectConfigurationData(ProjectFilterConfiguration projectFilterConfiguration) {
         ProjectConfigurationData data = new ProjectConfigurationData();
         data.projectKey = projectFilterConfiguration.getProjectKey();
@@ -248,26 +224,14 @@ public class ProjectController {
         data.isArchived = projectFilterConfiguration.isArchived();
         data.risk = projectFilterConfiguration.getRiskPercentage().multiply(BigDecimal.valueOf(100));
         data.projectionTimespan = projectFilterConfiguration.getProjectionTimespan();
+        data.defaultTeam = projectFilterConfiguration.getDefaultTeam();
         return data;
     }
 
     private ProjectData generateProjectData(ProjectFilterConfiguration projectFilterConfiguration) {
         ProjectData projectData = new ProjectData();
         projectData.projectKey = projectFilterConfiguration.getProjectKey();
-        projectData.teams.addAll(getTeams(projectFilterConfiguration));
         projectData.followUpDataHistory = followUpFacade.getHistoryGivenProjects(projectData.projectKey);
         return projectData;
     }
-
-    private List<String> getTeams(ProjectFilterConfiguration projectFilterConfiguration) {
-        return projectTeamRepo.findAll().stream()
-            .filter(projectTeam -> projectTeam.getProjectKey().equals(projectFilterConfiguration.getProjectKey()))
-            .map(projectTeam -> getProjectTeamName(projectTeam))
-            .collect(toList());
-    }
-
-    private String getProjectTeamName(ProjectTeam projectTeam) {
-        return teamRepository.findById(projectTeam.getTeamId()).getName();
-    }
-
 }

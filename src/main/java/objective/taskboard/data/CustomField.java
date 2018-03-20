@@ -29,6 +29,8 @@ public class CustomField implements Serializable {
     private String fieldId;
     private Serializable value;
     private Long optionId;
+    
+    public CustomField(){}
 
     public CustomField(String fieldId, Serializable value) {
         this(fieldId, value, null);
@@ -39,7 +41,7 @@ public class CustomField implements Serializable {
         this.value = value;
         this.optionId = optionId;
     }
-
+    
     public String getFieldId() {
         return fieldId;
     }

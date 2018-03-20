@@ -7,6 +7,45 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
+@font-face {
+    font-family: 'ptsans-bolditalic';
+    src: url('/static/fonts/ptsans-bolditalic.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'ptsans-bold';
+    src: url('/static/fonts/ptsans-bold.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'ptsans-italic';
+    src: url('/static/fonts/ptsans-italic.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'ptsans-regular';
+    src: url('/static/fonts/ptsans-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'ptsans-caption-bold';
+    src: url('/static/fonts/pt_sans-caption-web-bold-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'ptsans-caption';
+    src: url('/static/fonts/pt_sans-caption-web-regular-webfont.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
 *, *:after, *:before {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -49,9 +88,6 @@ paper-dialog, paper-dialog.tb-paper-dialog {
     max-width: calc(100% - 24px);
     max-height: calc(100% - 24px);
     margin: 24px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overflow-y: overlay;
 }
 
 
@@ -429,30 +465,30 @@ paper-radio-button.tb-paper-radio-button paper-ripple#ink {
 /*
     Autocomplete
 */
-tb-autocomplete #suggestionsWrapper {
+.followup-kpis-page tb-autocomplete #suggestionsWrapper {
     margin-top: -8px;
     color: #333;
 }
-tb-autocomplete #labelAndInputContainer input {
+.followup-kpis-page tb-autocomplete #labelAndInputContainer input {
     color: #FFF !important;
 }
-tb-autocomplete paper-input-container .input-wrapper {
+.followup-kpis-page tb-autocomplete paper-input-container .input-wrapper {
     display: flex;
 }
-tb-autocomplete paper-input-container .input-wrapper .suffix {
+.followup-kpis-page tb-autocomplete paper-input-container .input-wrapper .suffix {
     display: flex;
     flex: 0 0 auto;
 }
-tb-autocomplete paper-input-container .input-wrapper .tb-autocomplete__input {
+.followup-kpis-page tb-autocomplete paper-input-container .input-wrapper .tb-autocomplete__input {
     color: #FFF !important;
 }
-tb-autocomplete paper-input-container .input-wrapper paper-icon-button {
+.followup-kpis-page tb-autocomplete paper-input-container .input-wrapper paper-icon-button {
     width: 24px;
     height: 24px;
     padding: 2px;
     color: #FFF !important;
 }
-tb-autocomplete paper-input-container .input-wrapper paper-icon-button iron-icon {
+.followup-kpis-page tb-autocomplete paper-input-container .input-wrapper paper-icon-button iron-icon {
     display: block;
 }
 tb-autocomplete[disable-clear="true"] .input-wrapper paper-icon-button#clear {
@@ -464,6 +500,7 @@ tb-autocomplete[disable-clear="true"] .input-wrapper paper-icon-button#clear {
 */
 paper-toggle-button.tb-toggle-button {
     font-size: 14px;
+    height: 22px;
 }
 paper-toggle-button[disabled] .paper-toggle-button {
     opacity: .6;

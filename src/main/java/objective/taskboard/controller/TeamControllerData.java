@@ -31,10 +31,12 @@ public class TeamControllerData {
     public String teamName;
     public String manager;
     public List<String> teamMembers = new ArrayList<>();
+    public Long id;
     
     public TeamControllerData(Team team ) {
         teamName = team.getName();
         manager = team.getManager();
+        id = team.getId();
         for (UserTeam member : team.getMembers()) {
             teamMembers.add(member.getUserName());
         }

@@ -52,6 +52,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 
+import objective.taskboard.data.Issue;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
 import objective.taskboard.jira.JiraProperties;
@@ -176,6 +177,9 @@ public class JiraIssueToIssueConverterTest {
         when(release.getId()).thenReturn(RELEASE_ID);
         when(customField.getRelease()).thenReturn(release);
 
+        when(customField.getAssignedTeams()).thenReturn(mock(CustomFieldDetails.class));
+        when(customField.getCoAssignees()).thenReturn(mock(CustomFieldDetails.class));
+        
         when(jiraProperties.getCustomfield()).thenReturn(customField);
 
         mockIssue(issue, ISSUE_KEY);
@@ -203,8 +207,9 @@ public class JiraIssueToIssueConverterTest {
         when(issue.getDueDate()).thenReturn(new DateTime(0));
         when(issue.getDescription()).thenReturn("Description");
 
-        when(issueTeamService.getUsersTeam(any())).thenReturn("assignee");
-        when(issueTeamService.getTeams(any())).thenReturn(Sets.newSet("team"));
+        Issue.CardTeam cardTeam = new Issue.CardTeam();
+        cardTeam.name = "team";
+        when(issueTeamService.getTeamsForIds(any())).thenReturn(Sets.newSet(cardTeam));
 
         objective.taskboard.data.Issue converted = subject.convertSingleIssue(issue, buildProvider());
 
@@ -220,15 +225,14 @@ public class JiraIssueToIssueConverterTest {
         assertEquals("Parent type id", 0L, converted.getParentType());
         assertEquals("Parent type icon URI", "", converted.getParentTypeIconUri());
         assertEquals("Dependencies quantity", 0, converted.getDependencies().size());
-        assertEquals("Co-assignees", "", converted.getSubResponsaveis());
-        assertEquals("Assignee name", "assignee", converted.getAssignee());
-        assertEquals("Users team", "assignee", converted.getUsersTeam());
+        assertEquals("Co-assignees", 0, converted.getCoAssignees().size());
+        assertEquals("Assignee name", "assignee", converted.getAssignee().name);
         assertEquals("Priority", 1L, converted.getPriority());
         assertEquals("Due date", new Date(0), converted.getDueDate());
         assertEquals("Creation date millis", new DateTime(0).getMillis(), converted.getCreated());
         assertEquals("Description", "Description", converted.getDescription());
         assertEquals("Teams", 1, converted.getTeams().size());
-        assertEquals("Team name", "team", converted.getTeams().iterator().next());
+        assertEquals("Team name", "team", converted.getTeams().iterator().next().name);
         assertEquals("Comments", "", converted.getComments());
         assertFalse("Blocked", converted.isBlocked());
         assertEquals("Last block reason", "", converted.getLastBlockReason());

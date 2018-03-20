@@ -108,6 +108,10 @@
                     }
                 },
 
+                ready: function() {
+                    window.shownWarnings = [];
+                },
+
                 showLevel: function(show) {
                     return show;
                 },
@@ -130,23 +134,34 @@
 
                 checkIssuesInvalidTeam: function() {
                     var issuesInvalidTeam = this.getIssuesInvalidTeam();
+                    var showWarning = false;
+                    for (var i in issuesInvalidTeam) {
+                        if (window.shownWarnings.indexOf(issuesInvalidTeam[i]) === -1) {
+                            window.shownWarnings.push(issuesInvalidTeam[i])
+                            showWarning = true;
+                        }
+                    }
+                    if (!showWarning) return;
+                    if (issuesInvalidTeam.length === 0)
+                        return;
 
-                    this.fire("iron-signal", {name:"show-error-message",
-                                              data:issuesInvalidTeam.length > 0 ?
-                                                       "Some users are assigned to tasks that are not in their project teams: " +
-                                                       issuesInvalidTeam.slice(0, 5).join("; ") +
-                                                       (issuesInvalidTeam.length > 5 ? " ..." : ";") +
-                                                       " Total: " + issuesInvalidTeam.length
-                                                   : ""});
+                    var self = this;
+                    taskboard.showError(this, 
+                            "Some users are assigned to tasks that are not in their teams.",
+                            [{name:"Close and show cards with problems", callback: function(toast) {
+								searchFilter.searchByQuery(self, "has:"+SearchFilter.INVALID_ASSIGNEE_TAG);
+								toast.close()
+                            }}]
+                    )
                 },
 
                 getIssuesInvalidTeam: function() {
                     var filteredIssues = taskboard.getFilteredIssues();
                     var issuesInvalidTeam = [];
                     filteredIssues.forEach(function(issue) {
-                        if (!taskboard.isInvalidTeam(issue.teams))
+                        if (issue.mismatchingUsers.length === 0)
                             return;
-                        issuesInvalidTeam.push(issue.issueKey + ": " + issue.usersTeam);
+                        issuesInvalidTeam.push(issue.issueKey);
                     });
                     return issuesInvalidTeam;
                 },

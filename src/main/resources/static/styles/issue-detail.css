@@ -1,0 +1,4 @@
+@CHARSET "UTF-8";
+issue-detail paper-autocomplete-suggestions paper-item.active {
+    background-color: #B5E8FF !important;
+}

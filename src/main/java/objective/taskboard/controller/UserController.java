@@ -1,5 +1,11 @@
 package objective.taskboard.controller;
 
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 /*-
  * [LICENSE]
  * Taskboard
@@ -22,13 +28,25 @@ package objective.taskboard.controller;
  */
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpSession;
+import objective.taskboard.jira.JiraService;
+import objective.taskboard.jira.data.JiraUser.JiraUserAutocomple;
 
 @RestController
 @RequestMapping("/ws/users")
 public class UserController {
+    @Autowired
+    private JiraService jiraBean;
+
+    @RequestMapping(path = "search", method = RequestMethod.GET)
+    public List<JiraUserAutocomple> usersThatNameStartsWith(
+            @RequestParam("query") String userQuery, 
+            @RequestParam("teamFilter") String teamFilter) {
+        return jiraBean.findUsers(userQuery);
+    }    
 
     @RequestMapping("logout")
     public String logout(HttpSession session) {

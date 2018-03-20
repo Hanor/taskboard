@@ -21,7 +21,6 @@
 package objective.taskboard.controller;
 
 import static java.util.stream.Collectors.toList;
-import static objective.taskboard.domain.converter.JiraIssueToIssueConverter.INVALID_TEAM;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,12 +102,43 @@ public class IssueController
 
     @RequestMapping(path = "/", method = RequestMethod.POST)
     public List<Issue> issues() {
-        return issueBufferService.getIssues();
+        List<Issue> issues = issueBufferService.getIssues();
+        return issues;
     }
 
-    @RequestMapping(path = "assign", method = RequestMethod.POST)
-    public Issue assign(@RequestBody String issueKey) throws JSONException {
-        return issueBufferService.assignToMe(issueKey);
+    @RequestMapping(path = "addMeAsAssignee", method = RequestMethod.POST)
+    public Issue addMeAsAssignee(@RequestBody String issueKey) {
+        return issueBufferService.addMeAsAssignee(issueKey);
+    }
+
+    @RequestMapping(path = "addAssigneeToIssue/{issue}", method = RequestMethod.POST)
+    public Issue addAssigneeToIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
+        return issueBufferService.addAssigneeToIssue(issueKey, user.username);
+    }
+
+    @RequestMapping(path = "removeAssigneeFromIssue/{issue}", method = RequestMethod.POST)
+    public Issue removeAssigneeFromIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
+        return issueBufferService.removeAssigneeFromIssue(issueKey, user.username);
+    }
+
+    @RequestMapping(path = "addTeamToIssue/{issue}", method = RequestMethod.POST)
+    public Issue addTeamToIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
+        return issueBufferService.addTeamToIssue(issueKey, team.id);
+    }
+
+    @RequestMapping(path = "replaceTeamInIssue/{issue}", method = RequestMethod.POST)
+    public Issue replaceTeamInIssue(@PathVariable("issue") String issueKey, @RequestBody ReplaceTeamRequestDTO replaceTeamRequest) {
+        return issueBufferService.replaceTeamInIssue(
+                issueKey,
+                replaceTeamRequest.teamToReplace,
+                replaceTeamRequest.replacementTeam);
+    }
+
+    @RequestMapping(path = "removeTeamFromIssue/{issue}", method = RequestMethod.POST)
+    public Issue removeTeamFromIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
+        return issueBufferService.removeTeamFromIssue(
+                issueKey,
+                team.id);
     }
 
     @RequestMapping(path = "transition", method = RequestMethod.POST)
@@ -182,10 +212,10 @@ public class IssueController
         return issueBufferService.updateIssueBuffer(issue);
     }
 
-    @RequestMapping("unblock-task/{issue}")
-    public void unblockTask(@PathVariable("issue") String issue) {
+    @RequestMapping(path = "unblock-task/{issue}", method = RequestMethod.POST)
+    public Issue unblockTask(@PathVariable("issue") String issue) {
         jiraBean.unblock(issue);
-        issueBufferService.updateIssueBuffer(issue);
+        return issueBufferService.updateIssueBuffer(issue);
     }
     
     @RequestMapping("reorder")
@@ -202,7 +232,7 @@ public class IssueController
         List<AspectItemFilter> defaultFieldFilters = new ArrayList<>();
         defaultFieldFilters.add(AspectItemFilter.from("Issue Type", "type", getIssueTypeFilterItems()));
         defaultFieldFilters.add(AspectItemFilter.from("Project", "projectKey", getProjectFilterItems()));
-        defaultFieldFilters.add(AspectItemFilter.from("Team", "teams", getTeamFilterItems()));
+        defaultFieldFilters.add(AspectItemFilter.from("Team", "teamNames", getTeamFilterItems()));
         return defaultFieldFilters;
     }
 
@@ -237,7 +267,7 @@ public class IssueController
                 .map(t -> AspectSubitemFilter.from(t.getName(), t.getName(), true))
                 .sorted(this::compareFilter)
                 .collect(toList());
-        teamsFilter.add(AspectSubitemFilter.from(INVALID_TEAM, INVALID_TEAM, true));
+        
         return teamsFilter;
     }
 
@@ -253,5 +283,17 @@ public class IssueController
         public Long transitionId;
         public Map<String, Object> fields;
     }
+    
+    private static class TeamRequestDTO {
+        public Long id;
+    }
 
+    private static class ReplaceTeamRequestDTO {
+        public Long teamToReplace;
+        public Long replacementTeam;
+    }
+
+    private static class UserRequestDTO {
+        public String username;
+    }
 }

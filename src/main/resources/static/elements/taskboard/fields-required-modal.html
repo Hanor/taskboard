@@ -23,57 +23,9 @@
     <template>
 
         <style>
-            paper-button {
-                float: right;
-                padding: 10px;
-            }
-
-            paper-button.colorful {
-                color: #4285f4;
-                margin-bottom: 6px;
-            }
-
-            paper-button[raised].colorful {
-                background: #4285f4;
-                color: #fff;
-            }
-
-            .card-custom {
-                --paper-card: {
-                    width: auto;
-                    font-size: 12px;
-                    padding: 5px;
-                    margin-top: 5px;
-                    padding-top: 10px;
-                    min-height: 200px;
-                    min-width: 200px;
-                }
-            }
-
-            .card-header-custom {
-                padding-bottom: 15px;
-                width: 100%;
-                font-size: 24px;
-                text-align: center;
-            }
-
-            .content-box {
-                background-color: #eee;
-                width: auto;
-                min-height: auto;
-                border-radius: 5px;
-                box-shadow: inset 1px 1px 1px #A5A1A1;
-                padding-top: 6px;
-            }
-
             .content-row {
                 width: auto;
                 display: flex;
-            }
-
-            #fieldsModal {
-                padding-left: 5px;
-                padding-right: 5px;
             }
 
             .column-block {
@@ -81,11 +33,6 @@
                 padding-left: 5px;
                 padding-right: 5px;
                 min-height: auto;
-            }
-
-            .half-button {
-                width: 100%;
-                padding: 10px;
             }
 
             .input-fields {
@@ -101,27 +48,6 @@
             textarea {
                 max-width: 470px;
                 max-height: 400px;
-            }
-
-            .title {
-                font-size: 24px;
-                display: inline;
-                color: #3F51B5;
-                font-weight: bold;
-            }
-
-            .buttonClose {
-                min-width: auto;
-                padding: 0;
-                margin: 0;
-            }
-
-            .buttons {
-                padding: 0;
-                width: auto !important;
-                height: auto;
-                display: initial;
-                float: right;
             }
 
             .error-message {
@@ -148,48 +74,40 @@
             }
         </style>
 
-        <paper-dialog id="fieldsModal" entry-animation="scale-up-animation" exit-animation="fade-out-animation" modal>
-             <paper-card class="card-custom">
-                <div class="card-header-custom">
-                    <div class="title">
-                        {{action}}
-                    </div>
-                    <div class="buttons">
-                        <paper-button class="buttonClose" on-tap="clearProperties" >
-                            <iron-icon icon="clear"></iron-icon>
-                        </paper-button>
-                    </div>
-                </div>
-                <div class="content-box">
-                    <template is="dom-if" if="{{hasRecords(fields)}}">
-                         <template is="dom-repeat" items="{{fields}}" as="field">
-                               <div class="content-row">
-                                    <div class="column-block">
-                                        <span class="required">* </span>
-                                        <span class="sub-header">[[field.name]]: </span>
+        <modal-wrap id="fieldsModal"
+                    title="[[action]]"
+                    on-close-clicked="closed"
+                    >
+
+            <modal-wrap-content>
+                <template is="dom-if" if="{{hasRecords(fields)}}">
+                     <template is="dom-repeat" items="{{fields}}" as="field">
+                           <div class="content-row">
+                                <div class="column-block">
+                                    <span class="required">* </span>
+                                    <span class="sub-header">[[field.name]]: </span>
+                                    <br/>
+                                    <template is="dom-if" if="{{!isTextArea(field.type)}}">
+                                        <input is="iron-input" id$="{{field.name}}" class="input-fields" type="text" required value="{{getValue(field.id)}}"/>
+                                    </template>
+                                    <template is="dom-if" if="{{isTextArea(field.type)}}">
+                                        <textarea id$="{{field.name}}" class="input-fields" required>{{getValue(field.id)}}</textarea>
+                                    </template>
+                                    <template is="dom-if" if="{{errorMessage}}">
                                         <br/>
-                                        <template is="dom-if" if="{{!isTextArea(field.type)}}">
-                                            <input is="iron-input" id$="{{field.name}}" class="input-fields" type="text" required value="{{getValue(field.id)}}"/>
-                                        </template>
-                                        <template is="dom-if" if="{{isTextArea(field.type)}}">
-                                            <textarea id$="{{field.name}}" class="input-fields" required>{{getValue(field.id)}}</textarea>
-                                        </template>
-                                        <template is="dom-if" if="{{errorMessage}}">
-                                            <br/>
-                                            <span class="error-message">{{field.name}} Required</span>
-                                        </template>
-                                    </div>
+                                        <span class="error-message">{{field.name}} Required</span>
+                                    </template>
                                 </div>
-                        </template>
+                            </div>
                     </template>
-                    <div class="content-row">
-                        <div class="column-block half-button">
-                            <paper-button class="colorful" on-tap="confirmed" type="submit" raised>{{action}}</paper-button>
-                        </div>
-                    </div>
-                </div>
-            </paper-card>
-        </paper-dialog>
+                </template>
+            </modal-wrap-content>
+
+            <modal-wrap-footer>
+                <tb-button button="[[_btAction]]"></tb-button>
+            </modal-wrap-footer>
+
+        </modal-wrap>
 
     </template>
 
@@ -217,6 +135,11 @@
 
                     errorMessage: {
                         type:Boolean,
+                    },
+
+                    _btAction: {
+                        type: Object,
+                        value: function () { return {} }
                     }
                 },
 
@@ -226,7 +149,13 @@
                     this.fields = fields;
                     this.callback = callback;
                     this.action = action;
-                    this.$.fieldsModal.toggle();
+                    this.$.fieldsModal.open();
+                    setTimeout(function() { 
+                        $(this.$$(".input-fields")).focus();
+                    }.bind(this),10);
+
+                    var btAction = ButtonBuilder(this.action).id("action-button").onClick(this.confirmed.bind(this)).build();
+                    this.set('_btAction', btAction);
                 },
 
                 hasRecords: function(records) {
@@ -242,13 +171,13 @@
                 },
 
                 clearProperties: function() {
+                    this.$.fieldsModal.close();
                     this.action = null;
                     this.fields = [];
                     this.issue = [];
                     this.callback = [];
                     this.errorMessage = null;
                     this.clearFieldsValues();
-                    this.$.fieldsModal.toggle();
                 },
 
                 clearFieldsValues: function() {
@@ -270,6 +199,10 @@
                     copyProperties(this.issue, values);
                     this.callback(this.issue);
                     this.clearProperties();
+                },
+                
+                closed: function() {
+                    this.fire("close-clicked");
                 },
 
                 getValuesFields: function() {
