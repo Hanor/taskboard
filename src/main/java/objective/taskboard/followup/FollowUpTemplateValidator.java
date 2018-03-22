@@ -96,9 +96,9 @@ public class FollowUpTemplateValidator {
 
     public static class InvalidTemplateException extends RuntimeException {
 
-    	private static final long serialVersionUID = 1L;
-		
-    	public static final String DEFAULT_MESSAGE = "Invalid file, cannot be used as template";
+        private static final long serialVersionUID = 1L;
+
+        public static final String DEFAULT_MESSAGE = "Invalid file, cannot be used as template";
         private static final MessageSource MESSAGES;
 
         static {

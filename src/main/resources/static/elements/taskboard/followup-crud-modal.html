@@ -353,8 +353,7 @@
                 showError: function(jqXHR, self) {
                     self.showLoading(false);
                     if  (jqXHR && jqXHR.responseText) {
-                        var responseError = JSON.parse(jqXHR.responseText);
-                        self.$.alertModalTemplate.open("Error", responseError.message);
+                        self.$.alertModalTemplate.open("Error", jqXHR.responseText);
                     } else {
                         self.$.alertModalTemplate.open("Error", "The request has failed");
                     }

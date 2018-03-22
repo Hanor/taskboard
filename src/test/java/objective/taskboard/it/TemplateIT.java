@@ -53,7 +53,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,32 +90,28 @@ public class TemplateIT extends AbstractIntegrationTest {
     public void uploadNotOkTemplate() throws URISyntaxException, IOException, JSONException {
         HttpResponse response = uploadTemplate(notOkTemplate());
         assertThat(response.getStatusLine().getStatusCode(), not(200));
-        JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-        assertEquals("Invalid template, Worksheet \"From Jira\" should be empty", json.getString("message"));
+        assertEquals("Invalid template, Worksheet \"From Jira\" should be empty", extractMessage(response));
     }
 
     @Test
     public void uploadOkTemplateWithoutSharedStrings() throws IOException, URISyntaxException, JSONException {
         HttpResponse response = uploadTemplate(okTemplateWithoutSharedStrings());
         assertThat(response.getStatusLine().getStatusCode(), not(200));
-        JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-        assertEquals("Invalid file, could not find path \"xl/sharedStrings.xml\" within template", json.getString("message"));
+        assertEquals("Invalid file, could not find path \"xl/sharedStrings.xml\" within template", extractMessage(response));
     }
 
     @Test
     public void uploadCorruptedFile() throws IOException, URISyntaxException, JSONException {
         HttpResponse response = uploadTemplate(corruptedFile());
         assertThat(response.getStatusLine().getStatusCode(), not(200));
-        JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-        assertEquals("Invalid file, seems to be corrupted", json.getString("message"));
+        assertEquals("Invalid file, seems to be corrupted", extractMessage(response));
     }
 
     @Test
     public void uploadImage() throws IOException, URISyntaxException, JSONException {
         HttpResponse response = uploadTemplate(favicon());
         assertThat(response.getStatusLine().getStatusCode(), not(200));
-        JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-        assertEquals("Invalid file, cannot be used as template", json.getString("message"));
+        assertEquals("Invalid file, cannot be used as template", extractMessage(response));
     }
 
     private static Header[] doLogin(HttpClient client) throws URISyntaxException, IOException {
@@ -187,5 +182,9 @@ public class TemplateIT extends AbstractIntegrationTest {
 
     private static File favicon() throws URISyntaxException {
         return new File(TemplateIT.class.getResource("/static/favicon.ico").toURI());
+    }
+
+    private String extractMessage(HttpResponse response) throws IOException {
+        return EntityUtils.toString(response.getEntity());
     }
 }
