@@ -42,7 +42,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <meta name="theme-color" content="#303F9F"/>
 
     <!-- Web Application Manifest -->
-    <link rel="manifest" href="manifest.json"/>
+    <link rel="manifest" href="/static/manifest.json"/>
 
     <!-- Tile color for Win8 -->
     <meta name="msapplication-TileColor" content="#3372DF"/>
@@ -61,29 +61,149 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <!-- Tile icon for Win8 (144x144) -->
     <meta name="msapplication-TileImage" content="/static/images/touch/ms-touch-icon-144x144-precomposed.png"/>
 
-    <!-- build:css styles/main.css -->
-    <link rel="stylesheet" href="/static/styles/main.css"/>
-    <!-- endbuild-->
-
-    <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
-    <script src="/static/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/static/bower_components/underscore/underscore.js"></script>
-    <script src="/static/bower_components/jquery/dist/jquery.js"></script>
-    <!-- endbuild -->
-
-    <!-- build:js scripts/app.js -->
-    <script src="/static/scripts/utils.js"></script>
-    <!-- endbuild-->
-
-    <!-- will be replaced with elements/elements.vulcanized.html -->
-    <link rel="import" href="/static/elements/elements.html"/>
-    <!-- endreplace-->
 </head>
 
-<body class="fullbleed layout horizontal">
+<style>
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-Light.ttf') format('truetype');
+        font-weight: 300;
+    }
 
-    <span id="browser-sync-binding"></span>
-    <log-in class="fit"></log-in>
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-LightItalic.ttf') format('truetype');
+        font-weight: 300;
+        font-style: italic;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-Regular.ttf') format('truetype');
+        font-weight: 400;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-Italic.ttf') format('truetype');
+        font-weight: 400;
+        font-style: italic;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-Medium.ttf') format('truetype');
+        font-weight: 500;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-MediumItalic.ttf') format('truetype');
+        font-weight: 500;
+        font-style: italic;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-Bold.ttf') format('truetype');
+        font-weight: 700;
+    }
+
+    @font-face {
+        font-family: 'Roboto';
+        src: url('/static/bower_components/font-roboto/RobotoTTF/Roboto-BoldItalic.ttf') format('truetype');
+        font-weight: 700;
+        font-style: italic;
+    }
+
+    *, *:after, *:before {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #FFF;
+        font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #333;
+        overflow: hidden;
+    }
+</style>
+
+<body>
+
+    <div class="login">
+
+        <div id="login__header">
+            <h1 class="login__title">
+                Taskboard
+            </h1>
+        </div>
+
+        <form class="login__form form">
+            <div class="form__error"></div>
+            <div class="form__fields">
+                <div class="form__row">
+                    <label class="form__label" for="username">Username</label>
+                    <input class="form__input-text" type="text" id="username" name="username" />
+                </div>
+                <div class="form__row">
+                    <label class="form__label" for="password">Password</label>
+                    <input class="form__input-text" type="password" id="password" name="password" />
+                </div>
+            </div>
+            <div class="form__submit">
+                <button class="form__submit-button">Login</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        var form  = document.querySelector('form');
+        var username = document.querySelector('#username');
+        var password = document.querySelector('#password');
+        var error = document.querySelector('.form__error');
+
+        form.addEventListener('submit', onSubmit);
+
+        function onSubmit(event) {
+            event.preventDefault();
+            setError('');
+            if (username.value === '' || password.value === '') {
+                setError('Username and Password are required');
+                return false;
+            }
+            requestLogin();
+        }
+
+        function requestLogin() {
+            clearStorages();
+
+            var httpRequest = new XMLHttpRequest();
+            var url = '/login';
+            httpRequest.open('POST', url, true);
+            httpRequest.onload = function(progressEvent) {
+                if (progressEvent.target.status === 200) {
+                    window.location = "/";
+                } else {
+                    var errorObj = JSON.parse(progressEvent.target.responseText);
+                    setError(errorObj.message);
+                }
+            };
+            httpRequest.send(new FormData(form));
+        }
+
+        function clearStorages() {
+            localStorage.clear();
+            sessionStorage.clear();
+        }
+
+        function setError(errorMessage) {
+            error.innerHTML = errorMessage;
+        }
+
+    </script>
 
 </body>
 
