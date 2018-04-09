@@ -8,8 +8,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
@@ -49,7 +47,6 @@ public class DashboardProjectProgressController {
     @Autowired
     private Authorizer authorizer;
 
-    @PostConstruct
     @SuppressWarnings("unchecked")
     public void initCache() {
         cache = (Cache<Key, ResponseEntity<Object>>) cacheManager.getCache(CacheConfiguration.DASHBOARD_PROGRESS_DATA).getNativeCache();

@@ -25,10 +25,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -47,8 +44,6 @@ import objective.taskboard.auth.LoggedUserDetails;
 import objective.taskboard.jira.JiraService;
 
 
-@Configuration
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private RESTAuthenticationFailureHandler authenticationFailureHandler;

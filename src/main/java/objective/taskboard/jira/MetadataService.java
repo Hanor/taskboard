@@ -1,5 +1,6 @@
 package objective.taskboard.jira;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +21,10 @@ public class MetadataService {
 
     public Map<Long, IssueType> getIssueTypeMetadata() {
         return cache.getIssueTypeMetadata();
+    }
+    
+    public Collection<IssueType> getIssueTypes() {
+        return cache.getIssueTypeMetadata().values();
     }
 
     public Map<Long, Priority> getPrioritiesMetadata() {

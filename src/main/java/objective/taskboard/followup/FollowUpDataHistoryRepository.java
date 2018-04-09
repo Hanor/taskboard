@@ -161,13 +161,17 @@ public class FollowUpDataHistoryRepository {
         FollowUpTimeline timeline = FollowUpTimeline.getTimeline(parseLocalDate(date), projectRepo.getProjectByKey(project));
         return new FollowUpDataSnapshot(timeline, loader.create(), cluster);
     }
-
+    
     public List<String> getHistoryGivenProjects(String... projectsKey) {
-        return getHistoryGivenProjectsInFilesystem(asList(projectsKey)).stream().map(d->d.format(FILE_NAME_FORMATTER)).collect(Collectors.toList());
+        return getHistoryGivenProjects(false, projectsKey);
+    }
+
+    public List<String> getHistoryGivenProjects(boolean includeToday, String... projectsKey) {
+        return getHistoryGivenProjectsInFilesystem(asList(projectsKey), includeToday).stream().map(d->d.format(FILE_NAME_FORMATTER)).collect(Collectors.toList());
     }
     
-    private List<LocalDate> getHistoryGivenProjectsInFilesystem(List<String> projectsKey) {
-        return getHistoryGivenProjects(projectsKey, new FileSystemHistoryProvider());
+    private List<LocalDate> getHistoryGivenProjectsInFilesystem(List<String> projectsKey, boolean includeToday) {
+        return getHistoryGivenProjects(projectsKey, new FileSystemHistoryProvider(includeToday));
     }
     
     private List<LocalDate> getHistoryGivenProjectsFromDatabase(List<String> projectsKey) {
@@ -289,7 +293,11 @@ public class FollowUpDataHistoryRepository {
     }
 
     public void save(String projectKey, FollowUpDataSnapshot followUpDataEntry) throws IOException {
-        saveSnapshotInFile(projectKey, followUpDataEntry.getTimeline().getReference(), followUpDataEntry.getData());
+        save(projectKey, followUpDataEntry, false);
+    }
+    
+    public void save(String projectKey, FollowUpDataSnapshot followUpDataEntry, boolean migration) throws IOException {
+        saveSnapshotInFile(projectKey, followUpDataEntry.getTimeline().getReference(), followUpDataEntry.getData(), migration);
         calculateAndPersistEffortForProject(
                 followUpDataEntry.getTimeline().getReference(),
                 projectKey,
@@ -297,12 +305,16 @@ public class FollowUpDataHistoryRepository {
     }
     
     void saveSnapshotInFile(String projectKey, LocalDate date, FollowupData data) throws IOException {
+        saveSnapshotInFile(projectKey, date, data, false);
+    }
+    
+    void saveSnapshotInFile(String projectKey, LocalDate date, FollowupData data, boolean migration) throws IOException {
         Path pathProject = dataBaseDirectory.path(PATH_FOLLOWUP_HISTORY).resolve(projectKey);
         if (!pathProject.toFile().exists())
             createDirectories(pathProject);
 
         String dateString = date.format(FILE_NAME_FORMATTER);
-        Path pathJSON = pathProject.resolve(dateString + EXTENSION_JSON);
+        Path pathJSON = pathProject.resolve(dateString + EXTENSION_JSON + (migration ? ".migration" : ""));
 
         try {
             String json = gson.toJson(sanitizeData(data));
@@ -318,7 +330,7 @@ public class FollowUpDataHistoryRepository {
 
     public void syncEffortHistory(String projectKey) {
         List<String> includeProjects = Arrays.asList(projectKey);
-        getHistoryGivenProjectsInFilesystem(includeProjects).stream()
+        getHistoryGivenProjectsInFilesystem(includeProjects, false).stream()
                 .forEach(date ->calculateAndPersistEffortForProject(date, projectKey));
     }
     
@@ -340,6 +352,12 @@ public class FollowUpDataHistoryRepository {
     }
     
     private class FileSystemHistoryProvider implements HistoryProvider {
+        private final boolean includeToday;
+        
+        public FileSystemHistoryProvider(boolean includeToday) {
+            this.includeToday = includeToday;
+        }
+
         @Override
         public Set<LocalDate> getHistoryByProject(String projectKey) {
             Path pathProject = dataBaseDirectory.path(PATH_FOLLOWUP_HISTORY).resolve(projectKey);
@@ -355,7 +373,7 @@ public class FollowUpDataHistoryRepository {
                         .filter(file -> file.isFile())
                         .filter(file -> file.getName().toLowerCase().endsWith(fileExtension))
                         .map(file -> file.getName().replace(fileExtension, ""))
-                        .filter(fileName -> !today.equals(fileName))
+                        .filter(fileName -> includeToday ? true : !today.equals(fileName))
                         .map(d->parseLocalDate(d))
                         .collect(toSet());
 

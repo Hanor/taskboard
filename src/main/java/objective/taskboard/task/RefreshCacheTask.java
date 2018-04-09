@@ -25,7 +25,6 @@ import static java.lang.String.format;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.data.Team;
@@ -67,7 +66,6 @@ public class RefreshCacheTask {
     @Autowired
     private ProjectFilterConfigurationCachedRepository projectRepository;
 
-    @Scheduled(fixedRate = 600000)
     public void refreshUserTeam() {
         log.info("Refreshing UserTeam cache...");
         userTeamRepository.loadCache();
@@ -75,7 +73,6 @@ public class RefreshCacheTask {
         log.info(format("UserTeam cache refreshed, %d records loaded.", users.size()));
     }
 
-    @Scheduled(fixedRate = 600000)
     public void refreshTeam() {
         log.info("Refreshing Team cache...");
         teamRepository.loadCache();
@@ -83,7 +80,6 @@ public class RefreshCacheTask {
         log.info(format("Team cache refreshed, %d records loaded.", team.size()));
     }
 
-    @Scheduled(fixedRate = 21600000)
     public void refreshTeamFilterConfiguration() {
         log.info("Refreshing Team Filter Configuration cache...");
         teamFilterConfigurationRepository.loadCache();
@@ -91,7 +87,6 @@ public class RefreshCacheTask {
         log.info(format("Team Filter Configuration cache refreshed, %d records loaded.", teamFilterConfiguration.size()));
     }
 
-    @Scheduled(fixedRate = 600000)
     public void refreshFilter() {
         log.info("Refreshing Filter cache...");
         filterRepository.loadCache();
@@ -99,7 +94,6 @@ public class RefreshCacheTask {
         log.info(format("Filter cache refreshed, %d records loaded.", filter.size()));
     }
 
-    @Scheduled(fixedRate = 1200000)
     public void refreshLane() {
         log.info("Refreshing Lane cache...");
         laneRepository.loadCache();
@@ -107,7 +101,6 @@ public class RefreshCacheTask {
         log.info(format("Lane cache refreshed, %d records loaded.", lane.size()));
     }
 
-    @Scheduled(fixedRate = 600000)
     public void refreshProject() {
         log.info("Refreshing Project cache...");
         projectRepository.loadCache();
@@ -115,7 +108,6 @@ public class RefreshCacheTask {
         log.info(format("Project cache refreshed, %d records loaded.", project.size()));
     }
 
-    @Scheduled(fixedRate = 600000)
     public void refreshIssueTypeVisibility() {
         log.info("Refreshing issue type visibility cache...");
         issueTypeConfigurationCachedRepository.loadCache();

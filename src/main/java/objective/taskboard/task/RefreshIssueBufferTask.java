@@ -23,15 +23,12 @@ package objective.taskboard.task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.issueBuffer.IssueBufferService;
 
 @Component
 public class RefreshIssueBufferTask implements ApplicationListener<ContextRefreshedEvent> {
-
-    private static final long RATE_MILISECONDS = 60 * 1000L;
 
     @Autowired
     private IssueBufferService issueBufferService;
@@ -40,7 +37,6 @@ public class RefreshIssueBufferTask implements ApplicationListener<ContextRefres
     public void onApplicationEvent(ContextRefreshedEvent event) {
     }
 
-    @Scheduled(fixedRate = RATE_MILISECONDS, initialDelay = 0)
     public void updateIssueBuffer() {
         System.out.println("UPDATING ISSUE BUFFER");
         issueBufferService.updateIssueBuffer();

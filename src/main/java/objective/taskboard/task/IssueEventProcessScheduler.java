@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.issueBuffer.IssueBufferService;
@@ -37,8 +36,6 @@ public class IssueEventProcessScheduler {
     @Autowired
     private IssueBufferService issueBufferService;
 
-    private static final long RATE_MILISECONDS = 1000l;
-    
     List<JiraEventProcessor> list = Collections.synchronizedList(new ArrayList<>());
 
     private synchronized List<JiraEventProcessor> getItens() {
@@ -53,7 +50,6 @@ public class IssueEventProcessScheduler {
         list.add(eventProcessor);
     }
 
-    @Scheduled(fixedRate = RATE_MILISECONDS)
     public void processItems() {
         List<JiraEventProcessor> toRemove = new ArrayList<>();
 

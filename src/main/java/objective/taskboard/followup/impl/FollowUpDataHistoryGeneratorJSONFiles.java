@@ -22,10 +22,7 @@ package objective.taskboard.followup.impl;
 
 import java.io.IOException;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
@@ -54,14 +51,12 @@ public class FollowUpDataHistoryGeneratorJSONFiles implements FollowUpDataHistor
         this.historyRepository = historyRepository;
     }
 
-    @PostConstruct
     public void initialize() {
         syncProjectsHistoryOnDatabase();
         scheduledGenerate();
     }
 
     @Override
-    @Scheduled(cron = "${jira.followup.executionDataHistoryGenerator.cron}", zone = "${jira.followup.executionDataHistoryGenerator.timezone}")
     public void scheduledGenerate() {
         if (isExecutingDataHistoryGenerate)
             return;

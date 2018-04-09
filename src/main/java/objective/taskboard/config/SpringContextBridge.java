@@ -21,10 +21,19 @@
 
 package objective.taskboard.config;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+
+import objective.taskboard.auth.LoggedUserDetails;
 
 @Component
 public class SpringContextBridge implements ApplicationContextAware {
@@ -39,5 +48,31 @@ public class SpringContextBridge implements ApplicationContextAware {
         if (applicationContext == null)
             return null;
         return applicationContext.getBean(klass);
+    }
+    
+    @Bean
+    public SimpMessagingTemplate createMTemplate() {
+        MessageChannel messageChannel = new MessageChannel() {
+            @Override
+            public boolean send(Message<?> message, long timeout) {
+                return true;
+            }
+            
+            @Override
+            public boolean send(Message<?> message) {
+                return true;
+            }
+        };
+        return new SimpMessagingTemplate(messageChannel);
+    }
+    
+    @Bean
+    public LoggedUserDetails createFakeUser() {
+        return new LoggedUserDetails() {
+            @Override
+            public List<Role> getUserRoles() {
+                return Collections.emptyList();
+            }
+        };
     }
 }
