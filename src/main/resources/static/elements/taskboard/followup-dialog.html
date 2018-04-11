@@ -95,7 +95,7 @@
                             <paper-radio-group class="scroll" id="listOfTemplates"
                                     selected="{{selectedTemplate}}"
                                     attr-for-selected="value">
-                                <template id="templateRadioElements" is="dom-repeat" items="{{allTemplates}}">
+                                <template id="templateList" is="dom-repeat" items="{{allTemplates}}" on-rendered-item-count-changed="_onTemplateListChanged">
                                     <paper-radio-button title="{{item.projects}}" class="tb-paper-radio-button"
                                         checked="{{item.checked}}"
                                         value="{{item.id}}">{{item.name}}</paper-radio-button>
@@ -205,7 +205,7 @@
                 observers: [
                     '_onSelectTemplate(selectedTemplate)',
                     '_setReady(projects, allTemplates)',
-                    '_resizeModal(allTemplates, projects, showNoTemplatesFoundWarning, errorMessage)',
+                    '_resizeModal(_isReady, allTemplates, projects, showNoTemplatesFoundWarning, errorMessage)',
                 ],
 
                 opendialog: function () {
@@ -350,6 +350,11 @@
 
                 _resizeModal: function() {
                     this.$.modal.resize();
+                },
+
+                _onTemplateListChanged: function() {
+                    this.$$('#templateList').render();
+                    this._resizeModal();
                 },
 
                 _shouldShowContent: function(_isReady, showNoTemplatesFoundWarning) {

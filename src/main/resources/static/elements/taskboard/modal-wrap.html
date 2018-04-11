@@ -60,6 +60,7 @@
         <paper-dialog class="modal tb-paper-dialog"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation"
+                      on-iron-overlay-opened="_onOpened"
                       with-backdrop modal
                       data-loading$="[[loading]]"
                       >
@@ -117,6 +118,10 @@
 
                 resize: function() {
                     this.$$('.modal').notifyResize();
+                },
+
+                _onOpened: function() {
+                    this.resize();
                 }
             });
         })();
