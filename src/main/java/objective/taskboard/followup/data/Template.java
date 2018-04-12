@@ -20,31 +20,23 @@
  */
 package objective.taskboard.followup.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import java.util.List;
-
-import objective.taskboard.domain.ProjectFilterConfiguration;
 
 @Entity
 @Table(name="TEMPLATE", uniqueConstraints = @UniqueConstraint(name="unique_template_name", columnNames = {"name"}))
-@NamedQueries({
-        @NamedQuery(name = "Template.findTemplatesForProjectKeys",
-                    query = "SELECT distinct t FROM Template t JOIN t.projects p WHERE p.projectKey IN (?1)"),
-        @NamedQuery(name = "Template.findTemplatesWithProjectKey",
-                    query = "SELECT distinct t FROM Template t JOIN t.projects p WHERE p.projectKey = ?1")
-})
 public class Template {
 
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -55,13 +47,11 @@ public class Template {
     @Column(nullable = false)
     private String path;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "TEMPLATE_PROJECT",
-                joinColumns = { @JoinColumn(name = "template_id", referencedColumnName = "id",
-                        nullable = false, updatable = false) },
-                inverseJoinColumns = { @JoinColumn(name = "project_key", referencedColumnName = "projectKey",
-                        nullable = false, updatable = false) })
-    private List<ProjectFilterConfiguration> projects;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "FOLLOWUP_TEMPLATE_ROLE",
+                     joinColumns = @JoinColumn(name = "template_id"))
+    @Column(name = "role")
+    private List<String> roles = new ArrayList<String>();
 
     public Long getId() {
         return this.id;
@@ -75,8 +65,8 @@ public class Template {
         return this.path;
     }
 
-    public List<ProjectFilterConfiguration> getProjects() {
-        return this.projects;
+    public List<String> getRoles() {
+        return this.roles;
     }
 
     public void setId(final Long id) {
@@ -91,8 +81,8 @@ public class Template {
         this.path = path;
     }
 
-    public void setProjects(final List<ProjectFilterConfiguration> projects) {
-        this.projects = projects;
+    public void setRoles(final List<String> roles) {
+        this.roles = roles;
     }
 
     @Override
@@ -105,7 +95,7 @@ public class Template {
         if (id != null ? !id.equals(template.id) : template.id != null) return false;
         if (name != null ? !name.equals(template.name) : template.name != null) return false;
         if (path != null ? !path.equals(template.path) : template.path != null) return false;
-        return projects != null ? projects.equals(template.projects) : template.projects == null;
+        return roles != null ? roles.equals(template.roles) : template.roles == null;
     }
 
     @Override
@@ -113,7 +103,7 @@ public class Template {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (path != null ? path.hashCode() : 0);
-        result = 31 * result + (projects != null ? projects.hashCode() : 0);
+        result = 31 * result + (roles != null ? roles.hashCode() : 0);
         return result;
     }
 
@@ -123,7 +113,7 @@ public class Template {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", path='" + path + '\'' +
-                ", projects=" + projects +
+                ", roles=" + roles +
                 '}';
     }
 }

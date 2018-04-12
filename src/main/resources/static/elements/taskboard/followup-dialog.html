@@ -27,7 +27,8 @@
             }
 
             .followup-dialog-content {
-                min-width: 400px;
+                min-width: 250px;
+                min-height: 60px;
             }
 
             .sub-header {
@@ -41,9 +42,10 @@
                 margin-top: 20px;
             }
 
-            .content-row.content-row--flex {
+            .content-row--flex {
                 display: flex;
                 align-items: center;
+                flex: 0;
             }
 
             .warn-box {
@@ -52,7 +54,7 @@
             }
 
             .scroll {
-                max-height: 250px;
+                max-height: 80px;
                 overflow-y: auto;
                 width: 100%;
             }
@@ -61,11 +63,15 @@
                 text-decoration: underline;
                 cursor: pointer;
             }
+
+            .select-project {
+                width: 100%;
+            }
         </style>
 
         <iron-ajax id="ajaxProjects"
                    method="GET"
-                   url="/api/projects/followup"
+                   url="/api/projects"
                    content-type='application/json'
                    last-response="{{projects}}"></iron-ajax>
         <iron-ajax id="ajaxTemplates"
@@ -96,7 +102,7 @@
                                     selected="{{selectedTemplate}}"
                                     attr-for-selected="value">
                                 <template id="templateList" is="dom-repeat" items="{{allTemplates}}" on-rendered-item-count-changed="_onTemplateListChanged">
-                                    <paper-radio-button title="{{item.projects}}" class="tb-paper-radio-button"
+                                    <paper-radio-button title="{{item.name}}" class="tb-paper-radio-button"
                                         checked="{{item.checked}}"
                                         value="{{item.id}}">{{item.name}}</paper-radio-button>
                                 </template>
@@ -109,7 +115,20 @@
                             </div>
                         </template>
 
-                        <div class="content-row content-row--flex">
+                        <div class="content-row">
+                            <tb-autocomplete class="select-project taskboard"
+                                             items="[[templateProjects]]"
+                                             value-property="projectKey"
+                                             text-property="projectKey"
+                                             label="Project"
+                                             text="{{selectedProjectKey}}"
+                                             disable-clear="true"
+                                             show-search-icon="{{hasMoreThanOneProject}}"
+                                             disabled="{{!hasMoreThanOneProject}}"
+                            ></tb-autocomplete>
+                        </div>
+
+                        <div class="content-row--flex">
                             <paper-dropdown-menu class="followup-dropdown" disabled="{{!showDateSelect}}"
                                 name="date" always-float-label label="Date" selected-item="{{selectedItemDate}}"
                                 on-value-changed="dateOnChange" on-keydown="dateOnKeyDown">
@@ -136,7 +155,9 @@
                     <template is="dom-if" if="[[showNoTemplatesFoundWarning]]">
                         <div id="noTemplateWarning" class="alert alert-warning warn-box">
                             <strong>No template available</strong><br />
-                            <span class="set-template-link" on-tap="openTemplateFollowupDialog">Click here</span> to create a template
+                            <template is="dom-if" if="[[showCreateTemplateMessage]]">
+                                <span class="set-template-link" on-tap="openTemplateFollowupDialog">Click here</span> to create a template
+                            </template>
                         </div>
                     </template>
 
@@ -159,6 +180,15 @@
                 properties: {
                     projects: {
                         type: Array
+                    },
+                    templateProjects: {
+                        type: Array
+                    },
+                    selectedProjectKey: {
+                        type: String
+                    },
+                    hasMoreThanOneProject: {
+                        type: Boolean
                     },
                     allTemplates: {
                         type: Array
@@ -206,10 +236,14 @@
                     '_onSelectTemplate(selectedTemplate)',
                     '_setReady(projects, allTemplates)',
                     '_resizeModal(_isReady, allTemplates, projects, showNoTemplatesFoundWarning, errorMessage)',
+                    'filterDates(selectedProjectKey)'
                 ],
 
                 opendialog: function () {
                     this.set('projects', undefined);
+                    this.set('templateProjects', []);
+                    this.set('selectedProjectKey', '');
+                    this.set('hasMoreThanOneProject', false);
                     this.set('allTemplates', undefined);
                     this.set('errorMessage', '');
                     this.set('_isReady', false);
@@ -240,43 +274,36 @@
                     if (this.selectedTemplate === undefined)
                         return;
 
+                    this.filterProjects();
+                },
+
+                filterProjects: function() {
+                    var template = this.getTemplateById(this.selectedTemplate);
+                    this.templateProjects = _.filter(this.projects, function(p) {
+                        return _.intersection(p.roles, template.roles).length > 0;
+                    });
+                    this.hasMoreThanOneProject = this.templateProjects.length > 1;
+                    this.selectedProjectKey = this.templateProjects.length == 1 ? this.templateProjects[0].projectKey : '';
+
                     this.filterDates();
-                    this._updateGenerateButtonStatus();
                 },
 
                 filterDates: function() {
-                    var selectedProjects = this.filterSelectedProjects();
-
-                    this.availableDates = _.chain(selectedProjects)
-                        .map(function(p) { return p.followUpDataHistory; })
-                        .reduce(function(result, projectHistoryDates){ return _.intersection(result, projectHistoryDates); })
-                        .value()
-                        .sort()
-                        .reverse();
+                    var selectedProject = this.getSelectedProject();
+                    this.availableDates = selectedProject ? selectedProject.followUpDataHistory : [];
 
                     this.showDateSelect = this.availableDates.length > 0;
                     this.clearSelectedDate();
+                    this._updateGenerateButtonStatus();
                 },
 
                 getTemplateById: function(id) {
                     return _.find(this.allTemplates, function(t) { return t.id === id; });
                 },
 
-                getProjectByKey: function(key) {
-                    return _.find(this.projects, function(p) { return p.projectKey === key; });
-                },
-
-                filterSelectedProjects: function() {
-                    var selectedTemplate = this.getTemplateById(this.selectedTemplate);
-                    if(!selectedTemplate) {
-                        return [];
-                    }
-
-                    return _.map(selectedTemplate.projects, this.getProjectByKey.bind(this));
-                },
-
-                filterSelectedProjectKeys: function() {
-                    return _.map(this.filterSelectedProjects(), function(p) { return p.projectKey; });
+                getSelectedProject: function() {
+                    var self = this;
+                    return _.find(this.templateProjects, function(p) { return p.projectKey.toLowerCase() === self.selectedProjectKey.toLowerCase(); });
                 },
 
                 clearSelectedDate: function() {
@@ -303,10 +330,10 @@
                 downloadFollowup: function() {
                     var self = this;
                     this.errorMessage = '';
-                    var selectedKeys = this.filterSelectedProjectKeys();
+                    var selectedProject = this.getSelectedProject();
 
-                    if (selectedKeys.length === 0) {
-                        this.showErrorMessage("Please, selected at least one project");
+                    if (!selectedProject) {
+                        this.showErrorMessage("Please, select a project");
                         return;
                     }
 
@@ -317,7 +344,7 @@
 
                     var url = "ws/followup";
                     var query = {};
-                    query.projects = selectedKeys.join(",");
+                    query.projects = selectedProject.projectKey;
                     query.template = this.getTemplateById(this.selectedTemplate).name;
                     query.timezone = taskboard.getTimeZoneIdFromBrowser();
                     if(this.selectedIndexDate > 0)
@@ -371,7 +398,7 @@
                 },
 
                 _updateGenerateButtonStatus: function() {
-                    this.set('_generateButton.disabled', this.downloadInProgress || !this.selectedTemplate);
+                    this.set('_generateButton.disabled', this.downloadInProgress || !this.selectedTemplate || !this.getSelectedProject());
                 }
 
             });

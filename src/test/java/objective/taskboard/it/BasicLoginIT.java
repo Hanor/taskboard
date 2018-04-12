@@ -27,10 +27,10 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
     public void givenAdminUser_whenLogin_thenHasAdminAccess() {
         LoginPage loginPage = LoginPage.to(webDriver);
         loginPage.login("foo", "bar");
-        
+
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Foo");
-        mainPage.assertFollowupButtonIsVisible()
+        mainPage.assertFollowupButtonIsNotVisible()
             .assertTemplateButtonIsVisible()
             .assertDashboardButtonIsVisible()
             .assertSizingImportButtonIsVisible();
@@ -40,7 +40,7 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
     public void givenDeveloperUser_whenLogin_thenHasDeveloperAccess() {
         LoginPage loginPage = LoginPage.to(webDriver);
         loginPage.login("thomas.developer", "thomas.developer");
-        
+
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Thomas.developer");
         mainPage.assertFollowupButtonIsNotVisible()
@@ -53,7 +53,7 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
     public void givenCustomerUser_whenLogin_thenHasCustomerAccess() {
         LoginPage loginPage = LoginPage.to(webDriver);
         loginPage.login("albert.customer", "albert.customer");
-        
+
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Albert.customer");
         mainPage.assertFollowupButtonIsNotVisible()

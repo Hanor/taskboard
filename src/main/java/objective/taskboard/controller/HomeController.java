@@ -37,6 +37,7 @@ import objective.taskboard.auth.Authorizer;
 import objective.taskboard.cycletime.CycleTimeProperties;
 import objective.taskboard.cycletime.HolidayService;
 import objective.taskboard.data.User;
+import objective.taskboard.followup.FollowUpFacade;
 import objective.taskboard.google.GoogleApiConfig;
 import objective.taskboard.jira.FieldMetadataService;
 import objective.taskboard.jira.JiraProperties;
@@ -67,6 +68,9 @@ public class HomeController {
     @Autowired
     private FieldMetadataService fieldMetadataService;
 
+    @Autowired
+    private FollowUpFacade followupFacade;
+
     @RequestMapping("/")
     public String home(Model model) {
         User user = jiraService.getLoggedUser();
@@ -83,6 +87,7 @@ public class HomeController {
         model.addAttribute("googleClientId", googleApiConfig.getClientId());
         model.addAttribute("permissions", serialize(authorizer.getProjectsPermission()));
         model.addAttribute("fieldNames", getFieldNames());
+        model.addAttribute("hasFollowupTemplateAvailable", followupFacade.getTemplatesForCurrentUser().size() > 0);
         return "index";
     }
 

@@ -23,7 +23,6 @@ package objective.taskboard.controller;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.util.Arrays.asList;
-import static objective.taskboard.repository.PermissionRepository.ADMINISTRATIVE;
 import static objective.taskboard.utils.DateTimeUtils.determineTimeZoneId;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -33,7 +32,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +49,8 @@ import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.FollowUpDataHistoryGenerator;
 import objective.taskboard.followup.FollowUpFacade;
 import objective.taskboard.followup.FollowUpGenerator;
+import objective.taskboard.followup.TemplateService;
+import objective.taskboard.followup.data.Template;
 import objective.taskboard.utils.DateTimeUtils;
 @RestController
 @RequestMapping("/ws/followup")
@@ -78,6 +78,9 @@ public class FollowUpController {
     @Autowired
     private Authorizer authorizer;
 
+    @Autowired
+    private TemplateService templateService;
+
     @RequestMapping
     public ResponseEntity<Object> download(@RequestParam("projects") String projects, @RequestParam("template") String template,
             @RequestParam("date") Optional<String> date, @RequestParam("timezone") String zoneId) {
@@ -88,10 +91,10 @@ public class FollowUpController {
             return new ResponseEntity<>("Template not selected", BAD_REQUEST);
 
         String [] includedProjects = projects.split(",");
-        List<String> allowedProjectKeys = authorizer.getAllowedProjectsForPermissions(ADMINISTRATIVE);
+        Template templateFollowup = templateService.getTemplate(template);
 
-        if (!allowedProjectKeys.containsAll(asList(includedProjects)))
-            return new ResponseEntity<>("One or more projects don't exist", BAD_REQUEST);
+        if (templateFollowup == null || !authorizer.hasAnyRoleInProjects(templateFollowup.getRoles(), asList(includedProjects)))
+            return new ResponseEntity<>("Template or some project does not exist", BAD_REQUEST);
 
         ZoneId timezone = determineTimeZoneId(zoneId);
 

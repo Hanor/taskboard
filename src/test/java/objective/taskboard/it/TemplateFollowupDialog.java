@@ -39,9 +39,9 @@ public class TemplateFollowupDialog extends AbstractUiFragment {
     private WebElement templateNameInput;
     private WebElement templateFileLabel;
     private WebElement templateFileInput;
-    private List<WebElement> projectsCheckbox;
+    private List<WebElement> rolesCheckbox;
     
-    private final String DEFAUT_ERROR_MESSAGE = "Make sure the name is not empty, at least one project has been selected, " + 
+    private final String DEFAUT_ERROR_MESSAGE = "Make sure the name is not empty, at least one role has been selected, " +
             "and that the template file has been uploaded.";
     
     @FindBy(css=".template-followup-button")
@@ -65,9 +65,9 @@ public class TemplateFollowupDialog extends AbstractUiFragment {
         createButton = dialog.findElement(By.id("createTemplate"));
         templateNameInput = dialog.findElement(By.cssSelector("#templateNameInputl input"));
         templateFileLabel = dialog.findElement(By.cssSelector("label[for=inputTemplate]"));
-        projectsCheckbox = dialog.findElements(By.cssSelector("paper-checkbox"));
+        rolesCheckbox = dialog.findElements(By.cssSelector("paper-checkbox"));
         waitVisibilityOfElements(newTemplateItem, createButton, templateNameInput, templateFileLabel);
-        waitVisibilityOfElementList(projectsCheckbox);
+        waitVisibilityOfElementList(rolesCheckbox);
 
         templateFileInput = dialog.findElement(By.id("inputTemplate")); // isInvisible
         return this;
@@ -90,8 +90,8 @@ public class TemplateFollowupDialog extends AbstractUiFragment {
         closeAlertDialog();
         return this;
     }
-    
-    public TemplateFollowupDialog tryToCreateATemplateWithoutSelectAProject() {
+
+    public TemplateFollowupDialog tryToCreateATemplateWithoutSelectARole() {
         waitForClick(newTemplateItem);
         templateNameInput.sendKeys("Template test");
         waitForClick(createButton);
@@ -99,17 +99,18 @@ public class TemplateFollowupDialog extends AbstractUiFragment {
         closeAlertDialog();
         return this;
     }
-    
+
     public TemplateFollowupDialog tryToCreateATemplateWithoutSelectAFile() {
         waitForClick(newTemplateItem);
-        waitForClick(projectsCheckbox.get(0));
+        templateNameInput.sendKeys("Template test");
+        waitForClick(rolesCheckbox.get(0));
         waitForClick(createButton);
         assertErrorMessage(DEFAUT_ERROR_MESSAGE);
         closeAlertDialog();
         return this;
     }
     
-    public TemplateFollowupDialog createATemplate(String templateName, Integer... projectsIndex) {
+    public TemplateFollowupDialog createATemplate(String templateName, Integer... rolesIndex) {
         File file = null;
         
         try {
@@ -122,8 +123,8 @@ public class TemplateFollowupDialog extends AbstractUiFragment {
         open();
         waitForClick(newTemplateItem);
         templateNameInput.sendKeys(templateName);
-        for (Integer projectIndex : projectsIndex)
-            waitForClick(projectsCheckbox.get(projectIndex));
+        for (Integer roleIndex : rolesIndex)
+            waitForClick(rolesCheckbox.get(roleIndex));
 
         sendKeysToFileInput(templateFileInput, file.toString());
         waitForClick(createButton);

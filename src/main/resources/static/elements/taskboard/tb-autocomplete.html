@@ -114,6 +114,7 @@
                         if (!_.isEmpty(this.selected) && this.selected.toLowerCase() === query.toLowerCase()) {
                             var suggestionsEl = this.$$('paper-autocomplete').$$('paper-autocomplete-suggestions');
                             suggestionsEl._onSuggestionsChanged();
+                            this.set('_showNotFound', false);
                             return source;
                         }
 
@@ -133,8 +134,8 @@
                         var text, value;
 
                         if (typeof item === 'object') {
-                            text = item[valueProperty];
-                            value = item[textProperty];
+                            text = item[textProperty];
+                            value = item[valueProperty];
                         } else {
                             text = item.toString();
                             value = item.toString();

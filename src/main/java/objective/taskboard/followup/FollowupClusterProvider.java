@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.followup.cluster.FollowUpClusterItemRepository;
-import objective.taskboard.followup.data.Template;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 
 @Component
@@ -22,10 +21,6 @@ public class FollowupClusterProvider {
     @Autowired
     private ProjectFilterConfigurationCachedRepository projectRepository;
 
-    public FollowupCluster getFor(Template followUpConfiguration) {
-        return getFor(followUpConfiguration.getProjects().get(0));
-    }
-    
     public FollowupCluster getForProject(String projectKey) {
         Optional<ProjectFilterConfiguration> project = projectRepository.getProjectByKey(projectKey);
         return project.map(this::getFor).orElse(new EmptyFollowupCluster());

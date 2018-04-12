@@ -21,61 +21,48 @@ package objective.taskboard.followup.impl;
  * [/LICENSE]
  */
 
-import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.TemplateService;
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.repository.TemplateRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-public class DefaultTemplateService implements TemplateService{
-
-    @Autowired
-    private ProjectFilterConfigurationCachedRepository projectRepository;
+public class DefaultTemplateService implements TemplateService {
 
     @Autowired
     private TemplateRepository templateRepository;
 
     @Override
-    public void saveTemplate(String templateName, List<String> projectKeys, String path) {
-        List<ProjectFilterConfiguration> associatedProjects = findAssociatedProjects(projectKeys);
-        
+    public void saveTemplate(String templateName, List<String> roles, String path) {
         Template template = new Template();
         template.setName(templateName);
         template.setPath(path);
-        template.setProjects(associatedProjects);
+        template.setRoles(roles);
 
         templateRepository.save(template);
     }
-    
-    public void updateTemplate(Long id, String templateName, String projects, String path) {
-        List<String> projectKeys = Arrays.asList(projects.split(","));
-        List<ProjectFilterConfiguration> associatedProjects = findAssociatedProjects(projectKeys);
-        
+
+    @Override
+    public void updateTemplate(Long id, String templateName, List<String> roles, String path) {
         Template template = templateRepository.findById(id);
         template.setName(templateName);
-        template.setProjects(associatedProjects);
-        
+        template.setRoles(roles);
+
         if (path != null)
             template.setPath(path);
 
         Template templateWithSameName = getTemplate(template.getName());
         if (templateWithSameName != null && !templateWithSameName.getId().equals(template.getId()))
             throw new RuntimeException("This template name is already in use");
-        
-        Template templateWithTheSameProjectKey = findATemplateOnlyMatchedWithThisProjectKey(projectKeys);
-        if (templateWithTheSameProjectKey != null && !templateWithTheSameProjectKey.getId().equals(template.getId()))
-            throw new RuntimeException("This match of projects is already used by other template");
-        
+
         templateRepository.save(template);
     }
-    
+
+    @Override
     public void deleteTemplate(Long id) {
         Template template = new Template();
         template.setId(id);
@@ -83,47 +70,18 @@ public class DefaultTemplateService implements TemplateService{
     }
 
     @Override
-    public List<Template> findTemplatesForProjectKeys(List<String> projectKeys) {
-        return templateRepository.findTemplatesForProjectKeys(projectKeys)
-            .stream()
-            .filter(template -> template.getProjects()
-                .stream()
-                .allMatch(project -> projectKeys.contains(project.getProjectKey())))
-            .collect(Collectors.toList());
+    public List<Template> getTemplates() {
+        return templateRepository.findAll();
     }
 
     @Override
     public Template getTemplate(String templateName) {
         return templateRepository.findByName(templateName);
     }
-    
+
     @Override
     public Template getTemplate(Long id) {
         return templateRepository.findById(id);
     }
-    
-    public Template findATemplateOnlyMatchedWithThisProjectKey(List<String> projectKeys) {
-        if (projectKeys.size() != 1)
-            return null;
-        
-        String projectKey = projectKeys.get(0);
-        List<Template> templates = templateRepository.findTemplatesWithProjectKey(projectKey)
-                .stream()
-                .filter(template -> template.getProjects().size() == 1)
-                .collect(Collectors.toList());
-        
-        if (templates.size() > 0) {
-            return templates.get(0);
-        } else {
-            return null;
-        }
-    }
-    
-    private List<ProjectFilterConfiguration> findAssociatedProjects(List<String> projectKeys) {
-        return projectRepository.getProjects()
-            .stream()
-            .filter(proj -> projectKeys.contains(proj.getProjectKey()))
-            .collect(Collectors.toList());
-    }
-    
+
 }

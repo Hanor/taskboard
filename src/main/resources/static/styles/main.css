@@ -397,6 +397,14 @@ paper-radio-button.tb-paper-radio-button paper-ripple#ink {
 }
 
 /*
+    Checkbox
+*/
+
+paper-checkbox.tb-paper-checkbox paper-ripple#ink {
+    display: none;
+}
+
+/*
     Follow Up Dropdown
 */
 .followup-dropdown {
@@ -457,6 +465,20 @@ tb-autocomplete paper-input-container .input-wrapper paper-icon-button iron-icon
 }
 tb-autocomplete[disable-clear="true"] .input-wrapper paper-icon-button#clear {
     display: none !important;
+}
+
+tb-autocomplete.taskboard #suggestionsWrapper {
+    position: fixed;
+    width: auto;
+}
+tb-autocomplete.taskboard #labelAndInputContainer input {
+    color: #333 !important;
+}
+tb-autocomplete.taskboard paper-input-container .input-wrapper .tb-autocomplete__input {
+    color: #333 !important;
+}
+tb-autocomplete.taskboard paper-input-container .input-wrapper paper-icon-button {
+    color: #333 !important;
 }
 
 /*

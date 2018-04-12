@@ -20,11 +20,11 @@
  */
 package objective.taskboard.followup;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -32,6 +32,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import objective.taskboard.auth.Authorizer;
 import objective.taskboard.controller.TemplateData;
 import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.domain.Project;
@@ -67,7 +68,10 @@ public class FollowUpFacade {
     
     @Autowired
     private FollowUpDataHistoryRepository historyRepository;
-    
+
+    @Autowired
+    private Authorizer authorizer;
+
     public FollowUpGenerator getGenerator(String templateName, Optional<String> date) {
         Template followUpConfiguration = templateService.getTemplate(templateName);
 
@@ -83,18 +87,23 @@ public class FollowUpFacade {
         return new FollowUpDataProviderFromHistory(date.get(), historyRepository);
     }
 
+    public List<TemplateData> getTemplates() {
+        return templateService.getTemplates()
+                .stream()
+                .map(t -> templateConverter.convert(t))
+                .collect(toList());
+    }
+
     public List<TemplateData> getTemplatesForCurrentUser() {
         List<String> projectKeys = projectService.getNonArchivedJiraProjectsForUser()
                 .stream()
                 .map(Project::getKey)
-                .collect(Collectors.toList());
+                .collect(toList());
 
-        List<Template> templates = templateService.findTemplatesForProjectKeys(projectKeys);
-
-        return templates
+        return getTemplates()
                 .stream()
-                .map(t -> templateConverter.convert(t))
-                .collect(Collectors.toList());
+                .filter(t -> authorizer.hasAnyRoleInProjects(t.roles, projectKeys))
+                .collect(toList());
     }
 
     public Optional<TemplateData> getTemplate(Long id) {
@@ -105,28 +114,23 @@ public class FollowUpFacade {
         return Optional.of(templateConverter.convert(template));
     }
 
-    public void createTemplate(String templateName, String projects, MultipartFile file) throws IOException {
-        List<String> projectKeys = Arrays.asList(projects.split(","));
-        
+    public void createTemplate(String templateName, List<String> roles, MultipartFile file) throws IOException {
         if (templateService.getTemplate(templateName) != null)
             throw new RuntimeException("This template name is already in use");
-        
-        if (templateService.findATemplateOnlyMatchedWithThisProjectKey(projectKeys) != null)
-            throw new RuntimeException("This match of projects is already used by other template");
-        
+
         String path = followUpTemplateStorage
                 .storeTemplate(file.getInputStream(), new FollowUpTemplateValidator());
-        
-        templateService.saveTemplate(templateName, projectKeys, path);
+
+        templateService.saveTemplate(templateName, roles, path);
     }
-    
+
     public void deleteTemplate(Long id) throws IOException {
         Template template = templateService.getTemplate(id);
         followUpTemplateStorage.deleteFile(template.getPath());
         templateService.deleteTemplate(id);
     }
-    
-    public void updateTemplate(Long id, String templateName, String projects,
+
+    public void updateTemplate(Long id, String templateName, List<String> roles,
                                Optional<MultipartFile> file) throws IOException {
         String path = null;
         String oldPath = null;
@@ -138,7 +142,7 @@ public class FollowUpFacade {
         }
 
         try {
-            templateService.updateTemplate(id, templateName, projects, path);
+            templateService.updateTemplate(id, templateName, roles, path);
         } catch(Exception t) {
             if(path != null) {
                 followUpTemplateStorage.deleteFile(path);

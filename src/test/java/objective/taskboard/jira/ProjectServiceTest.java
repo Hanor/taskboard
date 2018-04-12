@@ -219,7 +219,15 @@ public class ProjectServiceTest {
 
     @Test
     public void getTaskboardProjects_withPermissionsAndFilterParams_showOnlyProjectsThatUserHasPermission_respectingTheFilter_sortedByProjectKey() {
-        List<ProjectFilterConfiguration> projectsNonArchived = subject.getTaskboardProjects(subject::isNonArchivedAndUserHasAccess, ADMINISTRATIVE);
+        List<ProjectFilterConfiguration> projectsNonArchivedAdmin = subject.getTaskboardProjects(subject::isNonArchivedAndUserHasAccess, ADMINISTRATIVE);
+        assertTrue(projectRepository.getProjects().size() != projectsNonArchivedAdmin.size() && projectsNonArchivedAdmin.size() == 3);
+        assertTrue(projectsNonArchivedAdmin.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_REGULAR_1)));
+        assertTrue(projectsNonArchivedAdmin.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_REGULAR_2)));
+        assertFalse(projectsNonArchivedAdmin.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_ARCHIVED)));
+        assertFalse(projectsNonArchivedAdmin.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_WITHOUT_ACCESS)));
+        assertIsSortedByProjectkey(projectsNonArchivedAdmin);
+
+        List<ProjectFilterConfiguration> projectsNonArchived = subject.getTaskboardProjects(subject::isNonArchivedAndUserHasAccess);
         assertTrue(projectRepository.getProjects().size() != projectsNonArchived.size() && projectsNonArchived.size() == 3);
         assertTrue(projectsNonArchived.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_REGULAR_1)));
         assertTrue(projectsNonArchived.stream().anyMatch(p -> p.getProjectKey().equals(PROJECT_REGULAR_2)));

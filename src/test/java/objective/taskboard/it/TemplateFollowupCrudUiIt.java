@@ -6,11 +6,13 @@ public class TemplateFollowupCrudUiIt extends AuthenticatedIntegrationTest {
     @Test
     public void whenCreateANewFollowupTemplate_VerifyIfItHasNameProjectsAndFile() {
         MainPage mainPage = MainPage.produce(webDriver);
-        mainPage
+        mainPage.assertFollowupButtonIsNotVisible()
             .openTemplateFollowUpDialog()
             .tryToCreateATemplateWithoutName()
-            .tryToCreateATemplateWithoutSelectAProject()
+            .tryToCreateATemplateWithoutSelectARole()
             .tryToCreateATemplateWithoutSelectAFile()
-            .createATemplate("Template Success Test", 1);
+            .createATemplate("Template Success Test", 0, 1);
+        mainPage.reload()
+            .assertFollowupButtonIsVisible();
     }
 }

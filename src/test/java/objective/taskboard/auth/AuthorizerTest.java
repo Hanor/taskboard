@@ -1,11 +1,12 @@
 package objective.taskboard.auth;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -108,15 +109,26 @@ public class AuthorizerTest {
         assertThat(allowedProjects).isEmpty();
     }
 
+    @Test
+    public void givenUserRoles_whenVerifyIfHasAnyRoleInProjects_thenShouldReturnCorrectly() {
+        when(userDetails.getUserRoles()).thenReturn(userRoles());
+
+        assertTrue(subject.hasAnyRoleInProjects(asList("Administrators", "Developers"), asList("PROJ1")));
+        assertTrue(subject.hasAnyRoleInProjects(asList("Administrators", "Developers"), asList("PROJ3")));
+        assertFalse(subject.hasAnyRoleInProjects(asList("Developers", "KPI"), asList("PROJ1")));
+        assertFalse(subject.hasAnyRoleInProjects(asList("Administrators", "KPI"), asList("PROJ3")));
+        assertFalse(subject.hasAnyRoleInProjects(asList("KPI"), asList("PROJ1", "PROJ2", "PROJ3")));
+    }
+
     private static List<LoggedUserDetails.Role> userRoles() {
-        return Arrays.asList(
+        return asList(
                 new LoggedUserDetails.Role(1L, "Administrators", "PROJ1"),
                 new LoggedUserDetails.Role(1L, "Administrators", "PROJ2"),
                 new LoggedUserDetails.Role(1L, "Developers", "PROJ3"));
     }
 
     private List<PermissionRoles> permissions() {
-        return Arrays.asList(
+        return asList(
                 permissionA(),
                 permissionB(),
                 permissionC(),

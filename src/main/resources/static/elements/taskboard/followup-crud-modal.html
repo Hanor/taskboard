@@ -24,8 +24,8 @@
                 margin-top: -10px;
             }
 
-            .projects-list {
-                margin: 15px 0;
+            .roles-list {
+                margin-bottom: 15px;
                 max-height: 250px;
             }
 
@@ -58,27 +58,27 @@
                 display: flex;
             }
 
-            .control paper-button {
-                padding: 0;
-                margin-left: 20px;
-            }
-
             .upload-button {
                 display: flex;
                 align-items: center;
             }
+
+            .labelRoles {
+                font-size: 12px;
+                color: #727272;
+            }
         </style>
 
-        <iron-ajax id="ajaxProjects"
+        <iron-ajax id="ajaxRoles"
                    method="GET"
-                   on-response="_handleProjectsResponse"
-                   url="/api/projects/followup"
+                   on-response="_handleRolesResponse"
+                   url="/ws/roles"
                    content-type='application/json'
-                   last-response="{{projects}}"></iron-ajax>
+                   last-response="{{roles}}"></iron-ajax>
         <iron-ajax id="ajaxTemplates"
                    method="GET"
                    on-response="_handleTemplatesResponse"
-                   url="/api/templates"
+                   url="/api/templates/all"
                    content-type='application/json'
                    last-response="{{templates}}"></iron-ajax>
         <iron-ajax id="ajaxHasSampleTemplate"
@@ -126,9 +126,10 @@
                         <form>
                             <paper-input id="templateNameInputl" always-float-label label="Template name" value="{{templateSelected.name}}">
                             </paper-input>
-                            <div class="projects-list scroll" id="listOfProjects">
-                                <template is="dom-repeat" items="{{templateSelected.projects}}">
-                                    <paper-checkbox checked="{{item.checked}}">{{item.projectKey}}</paper-checkbox><br>
+                            <label class="labelRoles">Roles</label>
+                            <div class="roles-list scroll" id="listOfRoles">
+                                <template is="dom-repeat" items="{{templateSelected.roles}}">
+                                    <paper-checkbox class="tb-paper-checkbox" checked="{{item.checked}}">{{item.name}}</paper-checkbox><br>
                                 </template>
                             </div>
                             <div class="alert alert-warning clean-cache-msg">
@@ -147,8 +148,11 @@
                             <div class="control">
                                 <div class="upload-button">
                                     <label for="inputTemplate">
-                                        <iron-icon icon="file-upload"></iron-icon>
-                                        Browse Template
+                                        <paper-button class="tb-button tb-button--type_link"
+                                                   title="Browse Template">
+                                            <iron-icon icon="file-upload"></iron-icon>
+                                            Browse Template
+                                        </paper-button>
                                     </label>
                                     <input on-change="_onFileSelected" id="inputTemplate" type="file" accept=".xlsm" />
                                 </div>
@@ -184,7 +188,7 @@
                 is: 'followup-crud-modal',
 
                 properties: {
-                    projects: {
+                    roles: {
                         type: Array
                     },
                     templates: {
@@ -199,9 +203,6 @@
                     },
                     showCacheInstructions: {
                         type: Boolean
-                    },
-                    newTemplate: {
-                        type: Object
                     },
                     templateSelected: {
                         type: Object
@@ -243,27 +244,29 @@
                 open: function () {
                     this.set('isNewTemplateSelected', true);
                     this.set('templateSelected', {});
-                    this.set('newTemplate', {});
-                    this.set('projects', []);
+                    this.set('roles', []);
                     this.set('templates', []);
                     this.set('fileData', null);
                     this.set('fileName', '');
                     this.set('showCleanUpCacheInstructions', false);
-                    this.set('hasSampleTemplate', false);
 
                     this.showLoading(true);
-                    this.$.ajaxProjects.generateRequest();
+                    this.$.ajaxRoles.generateRequest();
                     this.$.ajaxHasSampleTemplate.generateRequest();
                     this.$.modal.open();
                 },
 
                 selectTemplate: function(event) {
                     this.templateSelected = event.model.get('item');
+                    this.fileName = '';
+                    this.fileData = null;
                     this.isNewTemplateSelected = false;
                 },
 
                 selectNewTemplate: function() {
-                    this.templateSelected = this.newTemplate;
+                    this.templateSelected = { name: '', roles: this.getRolesDefault() };
+                    this.fileName = '';
+                    this.fileData = null;
                     this.isNewTemplateSelected = true;
                     this.$.templates.selected = 0;
                 },
@@ -277,11 +280,7 @@
                             type: 'DELETE',
                             contentType: 'application/json',
                             success: function() {
-                                self.showLoading(false);
                                 self.$.ajaxTemplates.generateRequest();
-                                self.fileName = '';
-                                self.fileData = null;
-                                self.selectNewTemplate();
                             },
                             error: function(jqXHR) {
                                 self.showError(jqXHR, self);
@@ -309,10 +308,6 @@
                             enctype: 'multipart/form-data',
                             success: function() {
                                 self.$.ajaxTemplates.generateRequest();
-                                self.fileName = '';
-                                self.fileData = null;
-                                self.selectNewTemplate();
-                                self.showLoading(false);
                             },
                             error: function(jqXHR) {
                                 self.showError(jqXHR, self);
@@ -337,11 +332,6 @@
                         enctype: 'multipart/form-data',
                         success: function() {
                             self.$.ajaxTemplates.generateRequest();
-                            self.fileName = '';
-                            self.fileData = null;
-                            self.newTemplate = {name: '', projects: self.getProjectsDefault()};
-                            self.selectNewTemplate();
-                            self.showLoading(false);
                         },
                         error: function(jqXHR) {
                             self.showError(jqXHR, self);
@@ -350,14 +340,11 @@
                 },
 
                 getFormData: function() {
-                    var projectsStr = "";
-                    this.templateSelected.projects.forEach(function(p) {
-                        if(p.checked) projectsStr += p.projectKey + ',';
-                    });
+                    var rolesCheckedNames = this.getTemplateRolesChecked().map(function(r){return r.name});
 
                     var formData = new FormData();
                     formData.append("name", this.templateSelected.name);
-                    formData.append("projects", projectsStr);
+                    formData.append("roles", rolesCheckedNames);
                     if(this.fileData)
                         formData.append("file", this.fileData, this.fileName);
 
@@ -365,11 +352,11 @@
                 },
 
                 isValid: function() {
-                    var projectsChecked = this.templateSelected.projects.filter(function(p){return p.checked});
+                    var rolesChecked = this.getTemplateRolesChecked();
                     var fileWasNotUploadedIfIsANewTemplate = this.isNewTemplateSelected ? !this.fileData : false;
-                    if (fileWasNotUploadedIfIsANewTemplate || projectsChecked.length == 0 ||!this.templateSelected.name) {
+                    if (fileWasNotUploadedIfIsANewTemplate || rolesChecked.length == 0 || !this.templateSelected.name) {
                         this.$.alertModalTemplate.open("Template not ok!",
-                        "Make sure the name is not empty, at least one project has been selected, "+
+                        "Make sure the name is not empty, at least one role has been selected, " +
                         "and that the template file has been uploaded.");
                         return false;
                     }
@@ -377,13 +364,17 @@
                     return true;
                 },
 
-                getProjectsDefault: function() {
-                    if (!this.projects)
+                getTemplateRolesChecked: function() {
+                    return this.templateSelected.roles.filter(function(r){return r.checked});
+                },
+
+                getRolesDefault: function() {
+                    if (!this.roles)
                         return [];
 
-                    return this.projects.map(function(project) {
+                    return this.roles.map(function(role) {
                         return {
-                            projectKey: project.projectKey,
+                            name: role.name,
                             checked: false
                         }
                     });
@@ -419,27 +410,21 @@
                     $("#inputTemplate").val('');
                 },
 
-                _handleProjectsResponse: function() {
-                    this.newTemplate.projects = this.projects.map(function(project) {
-                        return {
-                            projectKey: project.projectKey,
-                            checked: false
-                        }
-                    });
-                    this.selectNewTemplate();
+                _handleRolesResponse: function() {
                     this.$.ajaxTemplates.generateRequest();
                 },
 
                 _handleTemplatesResponse: function() {
+                    this.selectNewTemplate();
                     var templatesArrayList = this.templates;
                     for (var i = 0; i < templatesArrayList.length; i++) {
-                        var projects = this.projects.map(function(project) {
+                        var roles = this.roles.map(function(role) {
                             return {
-                                projectKey: project.projectKey,
-                                checked: templatesArrayList[i].projects.indexOf(project.projectKey) > -1
+                                name: role.name,
+                                checked: templatesArrayList[i].roles.indexOf(role.name) > -1
                             }
                         });
-                        templatesArrayList[i].projects = projects;
+                        templatesArrayList[i].roles = roles;
                     }
                     this.templates = templatesArrayList;
                     this.showLoading(false);

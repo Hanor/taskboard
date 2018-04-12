@@ -5,37 +5,9 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Followup Dialog Test</title>
 
-    <link rel="import" href="/static/bower_components/polymer/polymer.html">
-    <link rel="import" href="/static/bower_components/test-fixture/test-fixture.html">
-
     <script src="/static/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
     <script src="/static/bower_components/web-component-tester/browser.js"></script>
-    <script src="/static/bower_components/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/static/bower_components/iron-test-helpers/mock-interactions.js"></script>
-
-    <!-- dependencies -->
-    <link rel="import" href="/static/bower_components/iron-flex-layout/classes/iron-flex-layout.html">
-    <link rel="import" href="/static/bower_components/iron-icons/iron-icons.html">
-    <link rel="stylesheet" href="/static/styles/main.css">
-
-    <link rel="import" href="/static/bower_components/iron-ajax/iron-ajax.html">
-    <link rel="import" href="/static/bower_components/iron-selector/iron-selector.html">
-    <link rel="import" href="/static/bower_components/iron-icon/iron-icon.html">
-    <link rel="import" href="/static/bower_components/paper-dialog/paper-dialog.html">
-    <link rel="import" href="/static/bower_components/paper-card/paper-card.html">
-    <link rel="import" href="/static/bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-    <link rel="import" href="/static/bower_components/paper-menu/paper-menu.html">
-    <link rel="import" href="/static/bower_components/paper-item/paper-item.html">
-    <link rel="import" href="/static/bower_components/paper-icon-button/paper-icon-button.html">
-    <link rel="import" href="/static/bower_components/paper-radio-button/paper-radio-button.html">
-    <link rel="import" href="/static/bower_components/paper-radio-group/paper-radio-group.html">
-    <link rel="import" href="/static/bower_components/paper-spinner/paper-spinner.html">
-    <link rel="import" href="/static/bower_components/neon-animation/neon-animations.html">
-    <script src="/static/scripts/utils.js"></script>
-    <script src="/static/bower_components/jquery/dist/jquery.js"></script>
-
-    <!-- Import the element to test -->
-    <link rel="import" href="/static/elements/taskboard/followup-dialog.html">
+    <link rel="import" href="/test/test-environment.html">
 
 </head>
 <body>
@@ -70,24 +42,25 @@
             function openDialog() {
                 return new Promise(
                     function(resolve, reject) {
+                        var modal = find('.modal');
                         var listener = function(event) {
-                            followupDialog.$.modal.removeEventListener('neon-animation-finish', listener);
+                            modal.removeEventListener('neon-animation-finish', listener);
                             async(function() { resolve(followupDialog); });
                         }
-                        followupDialog.$.modal.addEventListener('neon-animation-finish', listener);
+                        modal.addEventListener('neon-animation-finish', listener);
                         followupDialog.opendialog();
                         server.respond();
                     }
                 );
             }
 
+            function find(selector) {
+                return $(followupDialog).find(selector)[0];
+            }
+
             setup(function() {
                 followupDialog = fixture('followup-dialog-fixture');
-                window.authorizer = {
-                    hasPermissionInAnyProject: function() {
-                        return true;
-                    }
-                };
+                window.authorizer = new Authorizer();
             });
 
             teardown(function() {
@@ -128,10 +101,20 @@
                     }
                 }
 
+                function selectProject(project) {
+                    return function() {
+                        return new Promise(function(resolve, reject) {
+                            var selectProject = find('.select-project');
+                            selectProject.text = project;
+                            async(function() { resolve(selectProject); });
+                        });
+                    };
+                }
+
                 function selectDate(date) {
                     return function() {
                         return new Promise(function(resolve, reject) {
-                            var dateDropDown = followupDialog.$$('.followup-dropdown');
+                            var dateDropDown = find('.followup-dropdown');
                             var listener = function() {
                                 dateDropDown.$.menuButton.$.dropdown.removeEventListener('iron-overlay-opened', listener);
                                 async(function() { resolve(dateDropDown); });
@@ -141,7 +124,7 @@
                         }).then(function() {
                             return new Promise(function(resolve, reject) {
                                 var paperItem = _.find(
-                                    followupDialog.$.dateMenu.querySelectorAll('paper-item')
+                                    find('#dateMenu').querySelectorAll('paper-item')
                                     , function(paperItem) {
                                         return paperItem.value == date;
                                     });
@@ -156,18 +139,10 @@
                     };
                 }
 
-                function tapGenerate() {
-                    return new Promise(function(resolve, reject) {
-                        var generateButton = followupDialog.$.generate;
-                        MockInteractions.tap(generateButton);
-                        async(function() { resolve(generateButton); });
-                    });
-                }
-
                 function tapButton(selector) {
                     return function() {
                         return new Promise(function(resolve, reject) {
-                            var button = followupDialog.$$(selector);
+                            var button = find(selector);
                             MockInteractions.tap(button);
                             resolve();
                         })
@@ -195,10 +170,10 @@
                             200,
                             responseHeaders.json,
                             '['
-                            +'  {"projectKey":"TASKB","followUpDataHistory":["20180101","20180102","20180103"]}'
-                            +', {"projectKey":"PROJ1","followUpDataHistory":["20180102","20180103","20180104"]}'
-                            +', {"projectKey":"PROJ2","followUpDataHistory":["20180103","20180104","20180105"]}'
-                            +', {"projectKey":"PROJ3","followUpDataHistory":[]}'
+                            +'  {"projectKey":"TASKB","followUpDataHistory":["20180101","20180102","20180103"],"roles":["Administrators"]}'
+                            +', {"projectKey":"PROJ1","followUpDataHistory":["20180102","20180103","20180104"],"roles":["Developers"]}'
+                            +', {"projectKey":"PROJ2","followUpDataHistory":["20180103","20180104","20180105"],"roles":["Administrators"]}'
+                            +', {"projectKey":"PROJ3","followUpDataHistory":[],"roles":["KPI"]}'
                             +']'
                         ]
                     );
@@ -208,10 +183,10 @@
                             200,
                             responseHeaders.json,
                             '['
-                            +'  {"id":1,"name":"TASKB Template","projects":["TASKB"]}'
-                            +', {"id":2,"name":"PROJ1 Template","projects":["PROJ1"]}'
-                            +', {"id":3,"name":"TASKB+PROJ2 Template","projects":["TASKB","PROJ2"]}'
-                            +', {"id":4,"name":"PROJ3 Template","projects":["PROJ3"]}'
+                            +'  {"id":1,"name":"Admin Template","roles":["Administrators"]}'
+                            +', {"id":2,"name":"Dev Template","roles":["Developers"]}'
+                            +', {"id":3,"name":"KPI Template","roles":["KPI"]}'
+                            +', {"id":4,"name":"Generic Template","roles":["Administrators","Developers","KPI"]}'
                             +']'
                         ]
                     );
@@ -234,68 +209,96 @@
                             expect(followupDialog.projects.length).to.be.equal(4);
                             expect(followupDialog.allTemplates.length).to.be.equal(4);
                             expect(followupDialog.showNoTemplatesFoundWarning).to.be.false;
-                            expect(followupDialog.$.noTemplateWarning.hidden).to.be.true;
+                            expect(followupDialog.$$('#noTemplateWarning')).to.be.null;
                         }).then(function() {
-                            expect(followupDialog.$.modal.opened).to.be.true;
-                        }).then(tapButton('.buttonClose'))
+                            expect(find('.modal').opened).to.be.true;
+                        }).then(tapButton('.modal__close-icon'))
                         .then(function() {
-                            expect(followupDialog.$.modal.opened).to.be.false;
+                            expect(find('.modal').opened).to.be.false;
                         });
                 });
 
-                test('select any template => enables button', function() {
+                test('select any template and a project => enables button', function() {
                     return openDialog()
                         .then(function() {
-                            expect(followupDialog.$.generate.disabled).to.be.true;
-                        }).then(tapRadioButton('TASKB Template'))
+                            expect(find('#generate').disabled).to.be.true;
+                        }).then(tapRadioButton('Admin Template'))
                         .then(function() {
-                            expect(followupDialog.$.generate.disabled).to.be.false;
+                            expect(find('#generate').disabled).to.be.true;
+                        }).then(selectProject('TASKBB'))
+                        .then(function() {
+                            expect(find('#generate').disabled).to.be.true;
+                        }).then(selectProject('TASKB'))
+                        .then(function() {
+                            expect(find('#generate').disabled).to.be.false;
                         });
                 });
 
-                test('select TASKB+PROJ2 Template => filter dates', function() {
+                test('select template => filter projects', function() {
                     return openDialog()
-                        .then(tapRadioButton('TASKB+PROJ2 Template'))
                         .then(function() {
-                            var dateMenu = followupDialog.$.dateMenu;
-                            expect(dateMenu.items.length).to.be.equal(2);
+                            expect(find('.select-project').disabled).to.be.true;
+                            expect(find('.select-project').items.length).to.be.equal(0);
+                        })
+                        .then(tapRadioButton('Admin Template'))
+                        .then(function() {
+                            expect(find('.select-project').disabled).to.be.false;
+                            expect(find('.select-project').items.length).to.be.equal(2);
+                        })
+                        .then(tapRadioButton('Dev Template'))
+                        .then(function() {
+                            expect(find('.select-project').disabled).to.be.true;
+                            expect(find('.select-project').items.length).to.be.equal(1);
                         });
                 });
 
-                test('select template + select date + tap generate => no error message + spinner => download complete', function() {
+                test('select project => filter dates', function() {
                     return openDialog()
-                        .then(tapRadioButton('PROJ1 Template'))
+                        .then(tapRadioButton('Generic Template'))
+                        .then(function() {
+                            expect(followupDialog.showDateSelect).to.be.false;
+                            expect(find('.followup-dropdown').disabled).to.be.true;
+                            expect(find('#dateMenu').items.length).to.be.equal(1);
+                        })
+                        .then(selectProject('TASKB'))
+                        .then(function() {
+                            expect(followupDialog.showDateSelect).to.be.true;
+                            expect(find('.followup-dropdown').disabled).to.be.false;
+                            expect(find('#dateMenu').items.length).to.be.equal(4);
+                        })
+                        .then(selectProject('PROJ3'))
+                        .then(function() {
+                            expect(followupDialog.showDateSelect).to.be.false;
+                            expect(find('.followup-dropdown').disabled).to.be.true;
+                            expect(find('#dateMenu').items.length).to.be.equal(1);
+                        });
+                });
+
+                test('select template + select project + select date + tap generate => no error message + spinner => download complete', function() {
+                    return openDialog()
+                        .then(tapRadioButton('Dev Template'))
                         .then(selectDate('20180103'))
-                        .then(tapGenerate)
+                        .then(tapButton('#generate'))
                         .then(function() {
                             expect(followupDialog.errorMessage).to.be.empty;
-                            expect(followupDialog.disableGenerateButton).to.be.true;
+                            expect(followupDialog._generateButton.disabled).to.be.true;
                             expect(followupDialog.downloadInProgress).to.be.true;
-                            var generateButton = followupDialog.$.generate;
-                            var paperSpinner = followupDialog.$$('paper-spinner');
+                            var generateButton = find('#generate');
+                            var paperSpinner = find('paper-spinner');
                             expect(paperSpinner.hidden).to.be.false;
                             expect(generateButton.disabled).to.be.true;
                             sinon.assert.calledOnce(window.$.fileDownload);
                         }).then(callSuccessCallback)
                         .then(function() {
-                            expect(followupDialog.disableGenerateButton).to.be.false;
+                            expect(followupDialog._generateButton.disabled).to.be.false;
                             expect(followupDialog.downloadInProgress).to.be.false;
-                        });
-                });
-
-                test("select template for project without history => disable date dropdown menu", function() {
-                    return openDialog()
-                        .then(tapRadioButton('PROJ3 Template'))
-                        .then(function() {
-                            expect(followupDialog.showDateSelect).to.be.false;
-                            var dateDropDown = followupDialog.$$('.followup-dropdown');
-                            expect(dateDropDown.disabled).to.be.true;
                         });
                 });
 
                 test('select date + tap clear => reset date; select date + press escape => reset date', function() {
                     return openDialog()
-                        .then(tapRadioButton('TASKB Template'))
+                        .then(tapRadioButton('Generic Template'))
+                        .then(selectProject('TASKB'))
                         .then(selectDate('20180102'))
                         .then(wait(100))
                         .then(function() {
@@ -307,7 +310,7 @@
                         .then(wait(100))
                         .then(function() {
                             expect(followupDialog.selectedIndexDate).to.not.equal(0);
-                            var dateDropDown = followupDialog.$$('.followup-dropdown');
+                            var dateDropDown = find('.followup-dropdown');
                             MockInteractions.pressAndReleaseKeyOn(dateDropDown, 27, [], 'Escape');
                             expect(followupDialog.selectedIndexDate).to.be.equal(0);
                         });
@@ -324,10 +327,10 @@
                             200,
                             responseHeaders.json,
                             '['
-                            +'  {"projectKey":"TASKB","followUpDataHistory":["20180101","20180102","20180103"]}'
-                            +', {"projectKey":"PROJ1","followUpDataHistory":["20180102","20180103","20180104"]}'
-                            +', {"projectKey":"PROJ2","followUpDataHistory":["20180103","20180104","20180105"]}'
-                            +', {"projectKey":"PROJ3","followUpDataHistory":[]}'
+                            +'  {"projectKey":"TASKB","followUpDataHistory":["20180101","20180102","20180103"],"roles":["Administrators"]}'
+                            +', {"projectKey":"PROJ1","followUpDataHistory":["20180102","20180103","20180104"],"roles":["Developers"]}'
+                            +', {"projectKey":"PROJ2","followUpDataHistory":["20180103","20180104","20180105"],"roles":["Administrators"]}'
+                            +', {"projectKey":"PROJ3","followUpDataHistory":[],"roles":["KPI"]}'
                             +']'
                         ]
                     );
@@ -345,7 +348,7 @@
                     return openDialog()
                         .then(function() {
                             expect(followupDialog.showNoTemplatesFoundWarning).to.be.true;
-                            expect(followupDialog.$.noTemplateWarning.hidden).to.be.false;
+                            expect(followupDialog.$$('#noTemplateWarning')).not.be.null;
                         });
                 });
             });

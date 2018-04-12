@@ -21,34 +21,25 @@
 
 package objective.taskboard.followup;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.google.common.collect.Lists;
-
-import objective.taskboard.config.CacheConfiguration;
-import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.data.Template;
 import objective.taskboard.followup.impl.DefaultTemplateService;
-import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
-import objective.taskboard.repository.ProjectFilterConfigurationRepository;
 import objective.taskboard.repository.TemplateRepository;
 
 @RunWith(SpringRunner.class)
@@ -56,13 +47,8 @@ import objective.taskboard.repository.TemplateRepository;
 @ContextConfiguration(classes = TemplateServiceTest.Configuration.class)
 public class TemplateServiceTest {
 
-    private static final String PROJ1 = "PROJ1";
-    private static final String PROJ2 = "PROJ2";
-
     @EntityScan(
-            basePackageClasses = {
-                    ProjectFilterConfiguration.class
-                    , Template.class})
+            basePackageClasses = {Template.class})
     public static class Configuration {
         @Bean
         public JpaRepositoryFactoryBean<TemplateRepository, Template, Long> templateRepository() {
@@ -72,87 +58,37 @@ public class TemplateServiceTest {
         public TemplateService templateService() {
             return new DefaultTemplateService();
         }
-        @Bean
-        public JpaRepositoryFactoryBean<ProjectFilterConfigurationRepository, ProjectFilterConfiguration, Long> projectFilterRepository() {
-            return new JpaRepositoryFactoryBean<>(ProjectFilterConfigurationRepository.class);
-        }
-        @Bean
-        public ProjectFilterConfigurationCachedRepository projectFilterConfigurationCachedRepository() {
-            return new ProjectFilterConfigurationCachedRepository();
-        }
-        @Bean
-        public CacheManager cacheManager() {
-            return new CacheConfiguration().cacheManager();
-        }
     }
-
-    @Autowired
-    private ProjectFilterConfigurationCachedRepository projectFilterConfigurationCachedRepository;
 
     @Autowired
     private TemplateService templateService;
 
-    @Before
-    public void createProjects() {
-        List<String> keys = Lists.newArrayList(PROJ1, PROJ2);
-        for(String projectKey : keys) {
-            projectFilterConfigurationCachedRepository.save(new ProjectFilterConfiguration(projectKey));
-        }
-    }
-
     @Test
-    public void givenTemplateForPROJ1_whenSearchForPROJ1_thenReturnOneResult() {
+    public void givenTemplate_whenGetTemplates_thenReturnOneResult() {
         // given
-        repositoryHasTemplateAssociatedWith(PROJ1);
+        repositoryHasTemplate();
 
         // when
-        List<Template> result = templateService.findTemplatesForProjectKeys(Collections.singletonList(PROJ1));
+        List<Template> result = templateService.getTemplates();
 
         // then
         assertThat(result, hasSize(1));
     }
 
     @Test
-    public void givenTemplateForPROJ2_whenSearchForPROJ1_thenReturnNoResults() {
-        // given
-        repositoryHasTemplateAssociatedWith(PROJ2);
-
+    public void givenNoTemplate_whenGetTemplates_thenReturnNoResults() {
         // when
-        List<Template> result = templateService.findTemplatesForProjectKeys(Collections.singletonList(PROJ1));
+        List<Template> result = templateService.getTemplates();
 
         // then
         assertThat(result, hasSize(0));
     }
 
-    @Test
-    public void givenTemplateForPROJ1PROJ2_whenSearchForPROJ1_thenReturnNoResults() {
-        // given
-        repositoryHasTemplateAssociatedWith(PROJ1, PROJ2);
-
-        // when
-        List<Template> result = templateService.findTemplatesForProjectKeys(Collections.singletonList(PROJ1));
-
-        // then
-        assertThat(result, hasSize(0));
-    }
-
-    @Test
-    public void givenTemplateForPROJ1PROJ2_whenSearchForPROJ1PROJ2_thenReturnOneResult() {
-        // given
-        repositoryHasTemplateAssociatedWith(PROJ1, PROJ2);
-
-        // when
-        List<Template> result = templateService.findTemplatesForProjectKeys(Arrays.asList(PROJ1, PROJ2));
-
-        // then
-        assertThat(result, hasSize(1));
-    }
-
-    private void repositoryHasTemplateAssociatedWith(String... projectKeys) {
+    private void repositoryHasTemplate() {
         String templateName = "Test Template";
         String templatePath = "test-path";
         try {
-            templateService.saveTemplate(templateName, Arrays.asList(projectKeys), templatePath);
+            templateService.saveTemplate(templateName, asList("Role"), templatePath);
         } catch (IOException e) {
             e.printStackTrace();
         }

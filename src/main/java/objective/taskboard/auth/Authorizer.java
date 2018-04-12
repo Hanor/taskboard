@@ -63,6 +63,17 @@ public class Authorizer {
                 .collect(toList());
     }
 
+    public boolean hasAnyRoleInProjects(List<String> roles, List<String> projectKeys) {
+        return userDetails.getUserRoles().stream().anyMatch(role -> roles.contains(role.name) && projectKeys.contains(role.projectKey));
+    }
+
+    public List<String> getRolesForProject(String projectKey) {
+        return userDetails.getUserRoles().stream()
+                .filter(role -> role.projectKey.equals(projectKey))
+                .map(role -> role.name)
+                .collect(toList());
+    }
+
     private boolean isPermissionAllowed(PermissionRoles permission, List<Role> userRoles) {
         return userRoles.stream().anyMatch(role -> permission.accepts(role.name));
     }

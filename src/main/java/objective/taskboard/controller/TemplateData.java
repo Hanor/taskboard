@@ -26,7 +26,7 @@ import java.util.List;
 public class TemplateData {
     public Long id;
     public String name;
-    public List<String> projects;
+    public List<String> roles;
 
     public TemplateData() {}
 }

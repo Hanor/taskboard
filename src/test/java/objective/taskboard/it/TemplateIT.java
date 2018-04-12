@@ -139,10 +139,10 @@ public class TemplateIT extends AbstractIntegrationTest {
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         StringBody templateName = new StringBody(file.getName(), ContentType.MULTIPART_FORM_DATA);
-        StringBody projects = new StringBody("PROJ1", ContentType.MULTIPART_FORM_DATA);
+        StringBody roles = new StringBody("Role", ContentType.MULTIPART_FORM_DATA);
         builder.addPart("file", fileBody);
         builder.addPart("name", templateName);
-        builder.addPart("projects", projects);
+        builder.addPart("roles", roles);
         HttpEntity entity = builder.build();
 
         HttpPost post = new HttpPost();

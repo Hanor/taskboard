@@ -20,6 +20,7 @@
  */
 package objective.taskboard.followup;
 
+import static java.util.Arrays.asList;
 import static objective.taskboard.followup.FollowUpHelper.getDefaultFollowupData;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -101,6 +103,7 @@ public class FollowUpFacadeTest {
     private static final String TEMPLATE_NAME = "OkFollowupTemplate.xlsm";
     private static final String PROJECTS = "TASKB,PROJ1";
     private static final String[] INCLUDED_PROJECTS = PROJECTS.split(",");
+    private static final List<String> ROLES = asList("Role");
     private Template template;
 
     @Before
@@ -108,7 +111,7 @@ public class FollowUpFacadeTest {
         when(dataBaseDirectory.path(anyString())).thenReturn(Paths.get("data/followup-templates"));
 
         MultipartFile file = new MockMultipartFile("file", FollowUpFacadeTest.class.getResourceAsStream(TEMPLATE_NAME));
-        followUpFacade.createTemplate(TEMPLATE_NAME, PROJECTS, file);
+        followUpFacade.createTemplate(TEMPLATE_NAME, ROLES, file);
 
         ArgumentCaptor<String> argCaptor = ArgumentCaptor.forClass(String.class);
         verify(templateService, atLeastOnce()).saveTemplate(any(), any(), argCaptor.capture());

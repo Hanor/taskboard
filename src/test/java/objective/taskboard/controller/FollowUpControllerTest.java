@@ -1,7 +1,6 @@
 package objective.taskboard.controller;
 
 import static java.util.Arrays.asList;
-import static objective.taskboard.repository.PermissionRepository.ADMINISTRATIVE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -28,6 +27,8 @@ import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.FollowUpDataHistoryGenerator;
 import objective.taskboard.followup.FollowUpFacade;
 import objective.taskboard.followup.FollowUpGenerator;
+import objective.taskboard.followup.TemplateService;
+import objective.taskboard.followup.data.Template;
 import objective.taskboard.utils.IOUtilities;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -35,6 +36,8 @@ public class FollowUpControllerTest {
 
     private static final String ZONE_ID = "America/Sao_Paulo";
     private static final String TEMPLATE_NAME = "TEMPLATE_TEST";
+    private static final String TEMPLATE_NAME_NONEXISTENT = "TEMPLATE_NONEXISTENT";
+    private static final List<String> TEMPLATE_ROLES = asList("ROLE1", "ROLE2");
 
     private static final String ALLOWED_PROJECT_KEYS = "PROJ_ALLOWED1,PROJ_ALLOWED2";
     private static final String DISALLOWED_PROJECT_KEYS = "PROJ_DISALLOWED1,PROJ_DISALLOWED2";
@@ -56,6 +59,12 @@ public class FollowUpControllerTest {
     @Mock
     private Authorizer authorizer;
 
+    @Mock
+    private TemplateService templateService;
+
+    @Mock
+    private Template template;
+
     @InjectMocks
     private FollowUpController subject;
 
@@ -64,7 +73,9 @@ public class FollowUpControllerTest {
         when(followUpFacade.getGenerator(any(), any())).thenReturn(followupGenerator);
         when(followUpFacade.getGenericTemplate()).thenReturn(RESOURCE);
         when(followupGenerator.generate(any(), any())).thenReturn(RESOURCE);
-        when(authorizer.getAllowedProjectsForPermissions(ADMINISTRATIVE)).thenReturn(ALLOWED_PROJECT_KEYS_AS_LIST);
+        when(authorizer.hasAnyRoleInProjects(TEMPLATE_ROLES, ALLOWED_PROJECT_KEYS_AS_LIST)).thenReturn(true);
+        when(template.getRoles()).thenReturn(TEMPLATE_ROLES);
+        when(templateService.getTemplate(TEMPLATE_NAME)).thenReturn(template);
     }
 
     @Test
@@ -96,12 +107,17 @@ public class FollowUpControllerTest {
     }
 
     @Test
-    public void download_shouldCheckAdministrativePermissionInAllProjects() throws IOException {
+    public void download_shouldCheckTemplateRolesWithAllProjects() throws IOException {
+        String matchTemplateRolesWithProjectsMessage = "Template or some project does not exist";
+
+        ResponseEntity<Object> responseTemplateNonExistent = subject.download(ALLOWED_PROJECT_KEYS, TEMPLATE_NAME_NONEXISTENT, Optional.empty(), ZONE_ID);
+        assertResponse(BAD_REQUEST, matchTemplateRolesWithProjectsMessage, responseTemplateNonExistent);
+
         ResponseEntity<Object> responseDisallowed = subject.download(DISALLOWED_PROJECT_KEYS, TEMPLATE_NAME, Optional.empty(), ZONE_ID);
-        assertResponse(BAD_REQUEST, "One or more projects don't exist", responseDisallowed);
+        assertResponse(BAD_REQUEST, matchTemplateRolesWithProjectsMessage, responseDisallowed);
 
         ResponseEntity<Object> responseAllowedsAndDisalloweds = subject.download(ALLOWED_AND_DISALLOWED_PROJECT_KEYS, TEMPLATE_NAME, Optional.empty(), ZONE_ID);
-        assertResponse(BAD_REQUEST, "One or more projects don't exist", responseAllowedsAndDisalloweds);
+        assertResponse(BAD_REQUEST, matchTemplateRolesWithProjectsMessage, responseAllowedsAndDisalloweds);
     }
 
     @Test
