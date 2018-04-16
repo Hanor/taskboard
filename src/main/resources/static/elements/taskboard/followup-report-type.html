@@ -1,0 +1,276 @@
+<dom-module id="followup-report-type">
+
+    <template>
+
+        <style>
+            .template-form {
+                width: 562px;
+            }
+
+            .content-row {
+                margin-top: 24px;
+            }
+
+            paper-input#templateNameInputl {
+                margin-top: 28px;
+            }
+
+            .roles-list {
+                height: 208px;
+                border: 1px solid #E5E5E5;
+                border-radius: 4px;
+                margin-top: 8px;
+            }
+
+            .labelRoles {
+                font-size: 16px;
+                color: #555;
+            }
+        </style>
+
+        <iron-ajax id="ajaxRoles"
+                   method="GET"
+                   on-response="_handleRolesResponse"
+                   url="/ws/roles"
+                   content-type='application/json'
+                   last-response="{{roles}}"></iron-ajax>
+
+        <confirm-modal id="confirmationModal"></confirm-modal>
+
+        <alert-modal id="alertModal"></alert-modal>
+
+        <modal-wrap id="modal"
+                    icon="[[icon]]"
+                    title="[[title]]"
+                    loading="[[showLoadingSpinner]]"
+                    is-close-with-validation="[[isCloseWithValidation]]">
+
+            <modal-wrap-content>
+                <div class="template-form">
+                    <form>
+                        <paper-input id="templateNameInputl" class="tb-paper-input" always-float-label label="Name"
+                                     value="{{template.name}}" on-change="_onDataChange"></paper-input>
+                        <drag-and-drop-file class="content-row" file-name="{{fileName}}" file-data="{{fileData}}"
+                                            url-download="[[urlDownload]]"></drag-and-drop-file>
+                        <div class="content-row">
+                            <label class="labelRoles">Allow</label>
+                            <div class="roles-list scroll" id="listOfRoles">
+                                <template is="dom-repeat" items="{{template.roles}}">
+                                    <paper-checkbox class="tb-paper-checkbox" checked="{{item.checked}}"
+                                                    on-tap="_onDataChange">{{item.name}}</paper-checkbox><br>
+                                </template>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </modal-wrap-content>
+            <modal-wrap-footer>
+                <tb-button button="[[_btCancel]]"></tb-button>
+                <tb-button button="[[_btSave]]"></tb-button>
+            </modal-wrap-footer>
+        </modal-wrap>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'followup-report-type',
+
+                properties: {
+                    template: {
+                        type: Object
+                    },
+                    roles: {
+                        type: Array
+                    },
+                    showLoadingSpinner: {
+                        type: Boolean
+                    },
+                    fileName: {
+                        type: String
+                    },
+                    fileData: {
+                        type: Object
+                    },
+                    urlDownload: {
+                        type: String
+                    },
+                    icon: {
+                        type: String
+                    },
+                    title: {
+                        type: String
+                    },
+                    isCloseWithValidation: {
+                        type: Boolean,
+                        value: false
+                    },
+                    _btSave: {
+                        type: Object,
+                        value: function() { return {} }
+                    },
+                    _btDelete: {
+                        type: Object,
+                        value: function() { return {} }
+                    }
+                },
+
+                observers: [
+                    '_onDataChange(fileName)'
+                ],
+
+                ready: function() {
+                    var btSave = ButtonBuilder('Save').id('save').build();
+                    var btCancel = ButtonBuilder('Cancel').id('cancel').type(buttonTypes.LINK).onClick(this.close.bind(this)).build();
+                    this.set('_btSave', btSave);
+                    this.set('_btCancel', btCancel);
+                },
+
+                open: function (templateEdit) {
+                    this.set('template', { name: '', roles: [] });
+                    this.set('roles', []);
+                    this.set('fileName', undefined);
+                    this.set('fileData', undefined);
+                    this.set('urlDownload', '');
+                    this.set('icon', 'taskboard-icons:new');
+                    this.set('title', 'Add report type');
+                    this.set('_btSave.onClick', this._createTemplate.bind(this));
+
+                    if (templateEdit) {
+                        this.set('template', { id: templateEdit.id, name: templateEdit.name, roles: templateEdit.roles });
+                        this.set('icon', 'taskboard-icons:edit');
+                        this.set('title', 'Edit report type');
+                        this.set('fileName', templateEdit.name + "-followup-template.xlsm");
+                        this.set('urlDownload', 'api/templates/' + templateEdit.id);
+                        this.set('_btSave.onClick', this._updateTemplate.bind(this));
+                    }
+
+                    this.set('isCloseWithValidation', false);
+                    this._showLoading(true);
+                    this.$.ajaxRoles.generateRequest();
+                    this.$.modal.open();
+                },
+
+                close: function() {
+                    this.$.modal.close();
+                },
+
+                _updateTemplate: function() {
+                    var self = this;
+                    if (!self._isValid())
+                        return;
+
+                    var text = "Do you want to update this report type?"
+                    this.$.confirmationModal.openDialog("Confirmation", text, function() {
+                        self._showLoading(true);
+                        $.ajax({
+                            url: 'api/templates/' + self.template.id,
+                            type: 'PUT',
+                            data: self._getFormData(),
+                            processData: false,
+                            contentType: false,
+                            enctype: 'multipart/form-data',
+                            success: function() {
+                                self._defaultSuccess();
+                            },
+                            error: function(jqXHR) {
+                                self._showError(jqXHR, self);
+                            }
+                        });
+                    });
+                },
+
+                _createTemplate: function() {
+                    var self = this;
+                    if (!self._isValid())
+                        return;
+
+                    var formData = self._getFormData();
+                    self._showLoading(true);
+                    $.ajax({
+                        url: 'api/templates',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        enctype: 'multipart/form-data',
+                        success: function() {
+                            self._defaultSuccess();
+                        },
+                        error: function(jqXHR) {
+                            self._showError(jqXHR, self);
+                        }
+                    });
+                },
+
+                _defaultSuccess: function() {
+                    this._showLoading(false);
+                    this.set('isCloseWithValidation', false);
+                    this.close();
+                    this.fire('iron-signal', {name: 'refresh-templates'});
+                },
+
+                _getFormData: function() {
+                    var rolesCheckedNames = this._getTemplateRolesChecked().map(function(r){return r.name});
+
+                    var formData = new FormData();
+                    formData.append("name", this.template.name);
+                    formData.append("roles", rolesCheckedNames);
+                    if (this.fileData)
+                        formData.append("file", this.fileData, this.fileName);
+
+                    return formData;
+                },
+
+                _isValid: function() {
+                    var rolesChecked = this._getTemplateRolesChecked();
+                    var fileWasNotUploaded = !this.fileName;
+                    if (!this.template.name || fileWasNotUploaded || rolesChecked.length == 0) {
+                        this.$.alertModal.open("Report type not ok!",
+                        "Make sure the name is not empty, the report type file has been uploaded, " +
+                        "and at least one role has been selected.");
+                        return false;
+                    }
+
+                    return true;
+                },
+
+                _onDataChange: function() {
+                    this.set('isCloseWithValidation', true);
+                },
+
+                _getTemplateRolesChecked: function() {
+                    return this.template.roles.filter(function(r){return r.checked});
+                },
+
+                _showLoading: function(show) {
+                    this.set('showLoadingSpinner', show);
+                    this.$.modal.resize();
+                },
+
+                _showError: function(jqXHR, self) {
+                    self._showLoading(false);
+                    if  (jqXHR && jqXHR.responseText) {
+                        var responseError = JSON.parse(jqXHR.responseText);
+                        self.$.alertModal.open("Error", responseError.message);
+                    } else {
+                        self.$.alertModal.open("Error", "The request has failed");
+                    }
+                },
+
+                _handleRolesResponse: function() {
+                    var template = this.template;
+                    var roles = this.roles.map(function(role) {
+                        return {
+                            name: role.name,
+                            checked: template.roles.indexOf(role.name) > -1
+                        }
+                    });
+                    this.set('template.roles', roles);
+                    this._showLoading(false);
+                }
+
+            });
+        })();
+    </script>
+</dom-module>

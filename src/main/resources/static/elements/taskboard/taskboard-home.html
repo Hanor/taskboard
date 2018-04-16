@@ -313,8 +313,11 @@
                 width: 31px;
             }
 
+            .dashboard-button {
+                padding: 6px !important;
+            }
+
             .followup-button,
-            .template-followup-button,
             .sizing-button,
             .about-button,
             .dashboard-button {
@@ -326,7 +329,6 @@
             }
 
             .followup-button:hover,
-            .template-followup-button:hover,
             .sizing-button:hover,
             .about-button:hover,
             .dashboard-button:hover {
@@ -370,7 +372,6 @@
                last-response="{{cacheState}}"></iron-ajax>
 
         <iron-signals on-iron-signal-level-config-changed="storageLevelsConfig"
-                      on-iron-signal-open-template-followup-modal="openFollowupCrudModal"
                       on-iron-signal-level-weight-changed="storageLevelsConfig"
                       on-iron-signal-level-show-header-changed="storageLevelsConfig"
                       on-iron-signal-level-visibility-changed="storageLevelsConfig"
@@ -385,8 +386,7 @@
                       on-iron-signal-projects-changed="projectsUpdated"
                       ></iron-signals>
 
-        <followup-dialog id="followupdialog"></followup-dialog>
-        <followup-crud-modal id="followupCrudModal"></followup-crud-modal>
+        <followup-report id="followupReport"></followup-report>
 
         <config-project-modal id="projectConfigurationModal"></config-project-modal>
 
@@ -442,16 +442,10 @@
                             </paper-toolbar>
                         </div>
 
-                        <template is="dom-if" if="{{_showFollowupDownloadButton}}">
+                        <template is="dom-if" if="{{_showFollowupReportButton}}">
                             <div>
-                                <paper-icon-button icon="file-download" title="Download Followup Spreadsheet"
-                                                   class="followup-button" on-tap="openFollowupDialog"></paper-icon-button>
-                            </div>
-                        </template>
-                        <template is="dom-if" if="{{_showFollowupUploadButton}}">
-                            <div>
-                                <paper-icon-button icon="file-upload" title="Followup Template"
-                                                   class="template-followup-button" on-tap="openFollowupCrudModal"></paper-icon-button>
+                                <paper-icon-button icon="taskboard-icons:reports" title="Followup reports"
+                                                   class="followup-button" on-tap="openFollowupReport"></paper-icon-button>
                             </div>
                         </template>
                         <template is="dom-if" if="{{_showFollowupDashboardButton}}">
@@ -528,11 +522,7 @@
                         type: String,
                         value: "No issue data yet. Initialising"
                     },
-                    _showFollowupDownloadButton: {
-                        type: Boolean,
-                        value: false
-                    },
-                    _showFollowupUploadButton: {
+                    _showFollowupReportButton: {
                         type: Boolean,
                         value: false
                     },
@@ -718,16 +708,12 @@
                     }
                 },
 
-                openFollowupDialog : function() {
-                    this.$.followupdialog.opendialog();
+                openFollowupReport: function() {
+                    this.$.followupReport.open();
                 },
 
                 openSizingImport: function() {
                     this.$.sizingimport.opendialog();
-                },
-
-                openFollowupCrudModal: function() {
-                    this.$.followupCrudModal.open();
                 },
 
                 openAbout: function() {
@@ -803,8 +789,7 @@
                 verifyPermissions: function() {
                     var hasAdministrativePermissionInAnyProject = authorizer.hasPermissionInAnyProject(authorizer.permissions.ADMINISTRATIVE);
                     var hasDashboardPermissionInAnyProject =  authorizer.hasPermissionInAnyProject(authorizer.permissions.DASHBOARD_TACTICAL) || authorizer.hasPermissionInAnyProject(authorizer.permissions.DASHBOARD_OPERATIONAL);
-                    this.set('_showFollowupDownloadButton', HAS_FOLLOWUP_TEMPLATE_AVAILABLE);
-                    this.set('_showFollowupUploadButton', hasAdministrativePermissionInAnyProject);
+                    this.set('_showFollowupReportButton', HAS_FOLLOWUP_TEMPLATE_AVAILABLE || hasAdministrativePermissionInAnyProject);
                     this.set('_showFollowupDashboardButton', hasDashboardPermissionInAnyProject);
                     this.set('_showSizingImportButton', hasAdministrativePermissionInAnyProject);
                 }

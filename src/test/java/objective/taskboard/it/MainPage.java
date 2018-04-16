@@ -152,12 +152,8 @@ public class MainPage extends AbstractUiFragment {
         return initElements(webDriver, IssueErrorToast.class);
     }
 
-    public FollowupDialog openFollowUp() {
-        return FollowupDialog.open(webDriver);
-    }
-    
-    public TemplateFollowupDialog openTemplateFollowUpDialog() {
-        return TemplateFollowupDialog.open(webDriver);
+    public FollowupReport openFollowUpReport() {
+        return FollowupReport.open(webDriver);
     }
 
     public LaneFragment lane(String laneName) {
@@ -209,15 +205,6 @@ public class MainPage extends AbstractUiFragment {
 
     public MainPage assertFollowupButtonIsNotVisible() {
         waitUntilElementNotExists(className("followup-button"));
-        return this;
-    }
-
-    public MainPage assertTemplateButtonIsVisible() {
-        return assertButtonExistsAndVisible("template-followup-button");
-    }
-
-    public MainPage assertTemplateButtonIsNotVisible() {
-        waitUntilElementNotExists(className("template-followup-button"));
         return this;
     }
 

@@ -5,7 +5,6 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,17 +32,11 @@ public class TemplateController {
     @Autowired
     private Authorizer authorizer;
 
-    @RequestMapping("all")
-    public List<TemplateData> getAll() {
-        if (!authorizer.hasPermissionInAnyProject(ADMINISTRATIVE))
-            return Arrays.asList();
-
-        return followUpFacade.getTemplates();
-    }
-
     @RequestMapping
     public List<TemplateData> get() {
-        return followUpFacade.getTemplatesForCurrentUser();
+        if (!authorizer.hasPermissionInAnyProject(ADMINISTRATIVE))
+            return followUpFacade.getTemplatesForCurrentUser();
+        return followUpFacade.getTemplates();
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes="multipart/form-data")

@@ -1,0 +1,408 @@
+<dom-module id="followup-report">
+    <template>
+        <style>
+            .sub-header {
+                line-height: 20px;
+                font-size: 16px;
+                color: #555;
+                margin-top: 24px;
+            }
+
+            .sub-header:first-child {
+                margin-top: 0;
+            }
+
+            .content-row {
+                margin-top: 8px;
+            }
+
+            .content-row.content-row--flex {
+                display: flex;
+                align-items: center;
+                flex: 0;
+            }
+
+            .template-list {
+                display: flex;
+                width: 560px;
+                height: 208px;
+                border: 1px solid #E5E5E5;
+                border-radius: 4px;
+            }
+
+            .template-list paper-radio-group {
+                flex: 1;
+            }
+
+            .template-list paper-radio-button {
+                border-bottom: 1px solid #E5E5E5;
+                padding: 12px 16px;
+            }
+
+            .template-list paper-radio-button .labelRadioButton {
+                flex: 1;
+            }
+
+            .template-list paper-icon-button {
+                width: 24px;
+                height: 24px;
+                padding: 5px;
+                color: #5DAFFF;
+                margin-left: 10px;
+            }
+
+            .add-link {
+                float: right;
+                font-size: 12px;
+                color: #5DAFFF;
+                cursor: pointer;
+            }
+
+            .clear-button {
+                margin-top: 44px;
+            }
+        </style>
+
+        <iron-ajax id="ajaxProjects"
+                   method="GET"
+                   url="/api/projects"
+                   content-type='application/json'
+                   last-response="{{projects}}"
+                   on-response="_handleResponse"></iron-ajax>
+        <iron-ajax id="ajaxTemplates"
+                   method="GET"
+                   url="/api/templates"
+                   content-type='application/json'
+                   last-response="{{templates}}"
+                   on-response="_handleResponse"></iron-ajax>
+
+        <iron-signals on-iron-signal-refresh-templates="_refreshTemplates"></iron-signals>
+
+        <followup-report-type id="followupReportType"></followup-report-type>
+
+        <confirm-modal id="confirmationModal"></confirm-modal>
+
+        <modal-wrap
+                id="modal"
+                icon="taskboard-icons:reports"
+                title="Followup reports"
+                loading="[[showLoadingSpinner]]"
+                >
+            <modal-wrap-content>
+                <div class="sub-header">
+                    Select a report type
+                    <template is="dom-if" if="[[isAdminUser]]">
+                        <span class="add-link" on-tap="_addTemplate" title="Add Report Type">+ Type</span>
+                    </template>
+                </div>
+                <div class="content-row template-list scroll">
+                    <paper-radio-group id="listOfTemplates"
+                            selected="{{selectedTemplate}}" attr-for-selected="value">
+                        <template id="templateList" is="dom-repeat" items="{{templates}}" on-rendered-item-count-changed="_onTemplateListChanged">
+                            <paper-radio-button title="[[item.name]]" class="tb-paper-radio-button" value="[[item]]">
+                                <div class="labelRadioButton">[[item.name]]</div>
+                                <template is="dom-if" if="[[isAdminUser]]">
+                                    <paper-icon-button id="downloadButton" title="Download" icon="taskboard-icons:download"
+                                                       item$="[[item]]" on-tap="_downloadTemplate"></paper-icon-button>
+                                    <paper-icon-button id="editButton" title="Edit" icon="taskboard-icons:edit"
+                                                       item$="[[item]]" on-tap="_editTemplate"></paper-icon-button>
+                                    <paper-icon-button id="deleteButton" title="Delete" icon="taskboard-icons:delete"
+                                                       item$="[[item]]" on-tap="_deleteTemplate"></paper-icon-button>
+                                </template>
+                            </paper-radio-button>
+                        </template>
+                    </paper-radio-group>
+                </div>
+
+                <div class="content-row">
+                    <tb-autocomplete class="taskboard tb-paper-input"
+                                     items="[[projectsTemplate]]"
+                                     value-property="projectKey"
+                                     text-property="projectKey"
+                                     placeholder="Search"
+                                     label="Select a project"
+                                     always-float-label
+                                     text="{{typedProjectKey}}"
+                                     disable-clear="true"
+                                     show-search-icon="{{hasMoreThanOneProject}}"
+                                     disabled="{{!hasMoreThanOneProject}}"
+                    ></tb-autocomplete>
+                </div>
+
+                <div class="content-row content-row--flex">
+                    <paper-dropdown-menu class="followup-dropdown tb-paper-input" disabled="[[disableDateSelect]]" horizontal-align="left"
+                                         name="date" always-float-label label="Date" on-keydown="_onDateKeyDown">
+                        <paper-menu id="dateMenu" class="dropdown-content" selected="{{selectedDate}}" attr-for-selected="value">
+                            <paper-item value="">Today</paper-item>
+                            <template is="dom-repeat" id="datesRepeat" items="{{availableDates}}" as="itemDate">
+                                <paper-item value="{{itemDate}}">{{_getLocaleDate(itemDate)}}</paper-item>
+                            </template>
+                        </paper-menu>
+                    </paper-dropdown-menu>
+                    <paper-icon-button icon="clear" on-click="_clearSelectedDate" hidden$="[[!_hasSelectedDate(selectedDate)]]"
+                                       class="clear-button"></paper-icon-button>
+                </div>
+
+                <template is="dom-if" if="[[errorMessage]]">
+                    <div class="message-box message-box--error">
+                        <paper-icon-button class="message-box__icon" icon="error" title="Error Icon"></paper-icon-button>
+                        <p class="message-box__message">[[errorMessage]]</p>
+                        <paper-icon-button class="message-box__close" icon="close" title="Close error" on-tap="_closeErrorMessage"></paper-icon-button>
+                    </div>
+                </template>
+            </modal-wrap-content>
+
+            <modal-wrap-footer>
+                <tb-button button="[[_btCancel]]"></tb-button>
+                <tb-button button="[[_btGenerate]]"></tb-button>
+            </modal-wrap-footer>
+        </modal-wrap>
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'followup-report',
+
+                properties: {
+                    projects: {
+                        type: Array
+                    },
+                    projectsTemplate: {
+                        type: Array
+                    },
+                    typedProjectKey: {
+                        type: String
+                    },
+                    hasMoreThanOneProject: {
+                        type: Boolean
+                    },
+                    templates: {
+                        type: Array
+                    },
+                    selectedTemplate: {
+                        type: Object
+                    },
+                    disableDateSelect: {
+                        type: Boolean
+                    },
+                    availableDates: {
+                        type: Array
+                    },
+                    selectedDate: {
+                        type: String
+                    },
+                    errorMessage: {
+                        type: String
+                    },
+                    isAdminUser: {
+                        type: Boolean
+                    },
+                    showLoadingSpinner: {
+                        type: Boolean
+                    },
+                    _btCancel: {
+                        type: Object,
+                        value: function () { return {} }
+                    },
+                    _btGenerate: {
+                        type: Object,
+                        value: function () { return {} }
+                    }
+                },
+
+                observers: [
+                    '_onSelectTemplate(selectedTemplate)',
+                    '_resizeModal(templates, projects, errorMessage)',
+                    '_filterDates(typedProjectKey)'
+                ],
+
+                ready: function() {
+                    var btCancel = ButtonBuilder('Cancel').id("cancel").type(buttonTypes.LINK).onClick(this.close.bind(this)).build();
+                    var btGenerate = ButtonBuilder('Generate').id("generate").disabled(true).onClick(this._downloadFollowup.bind(this)).build();
+                    this.set('_btCancel', btCancel);
+                    this.set('_btGenerate', btGenerate);
+                },
+
+                open: function () {
+                    this.set('projects', []);
+                    this.set('projectsTemplate', []);
+                    this.set('typedProjectKey', '');
+                    this.set('hasMoreThanOneProject', false);
+                    this.set('templates', []);
+                    this.set('selectedTemplate', undefined);
+                    this.set('disableDateSelect', true)
+                    this.set('availableDates', []);
+                    this.set('selectedDate', '');
+                    this.set('errorMessage', '');
+                    this.set('isAdminUser', authorizer.hasPermissionInAnyProject(authorizer.permissions.ADMINISTRATIVE));
+                    this._showLoading(true);
+                    this.$.ajaxProjects.generateRequest();
+                    this.$.ajaxTemplates.generateRequest();
+                    this.$.modal.open();
+                },
+
+                close: function() {
+                    this.$.modal.close();
+                },
+
+                _onSelectTemplate: function() {
+                    this._filterProjects();
+                },
+
+                _filterProjects: function() {
+                    var template = this.selectedTemplate;
+                    this.set('projectsTemplate', _.filter(this.projects, function(p) {
+                        return template && _.intersection(p.roles, template.roles).length > 0;
+                    }));
+                    this.set('hasMoreThanOneProject', this.projectsTemplate.length > 1);
+                    this.set('typedProjectKey', this.projectsTemplate.length == 1 ? this.projectsTemplate[0].projectKey : '');
+
+                    this._filterDates();
+                },
+
+                _filterDates: function() {
+                    var selectedProject = this._getSelectedProject();
+                    this.set('availableDates', selectedProject ? selectedProject.followUpDataHistory : []);
+
+                    this.set('disableDateSelect', this.availableDates.length == 0);
+                    this._clearSelectedDate();
+                    this._updateGenerateButtonStatus();
+                },
+
+                _getSelectedProject: function() {
+                    var self = this;
+                    return _.find(this.projectsTemplate, function(p) { return p.projectKey.toLowerCase() === self.typedProjectKey.toLowerCase(); });
+                },
+
+                _clearSelectedDate: function() {
+                    this.set('selectedDate', '');
+                },
+
+                _hasSelectedDate: function() {
+                    return this.selectedDate != '';
+                },
+
+                _onDateKeyDown: function(e) {
+                    if (e.key === 'Escape')
+                        this._clearSelectedDate();
+                },
+
+                _getLocaleDate: function(item) {
+                    return getDateFromYYYYMMDD(item).toLocaleDateString();
+                },
+
+                _showErrorMessage: function(msg) {
+                    this.set('errorMessage', msg);
+                },
+
+                _closeErrorMessage: function() {
+                    this.set('errorMessage', '');
+                },
+
+                _downloadFollowup: function() {
+                    var self = this;
+                    this._closeErrorMessage();
+                    var selectedProject = this._getSelectedProject();
+
+                    if (!selectedProject) {
+                        this._showErrorMessage("Please, select a project");
+                        return;
+                    }
+
+                    if (!this.selectedTemplate) {
+                        this._showErrorMessage("Report type not selected");
+                        return;
+                    }
+
+                    var url = "ws/followup";
+                    var query = {};
+                    query.projects = selectedProject.projectKey;
+                    query.template = this.selectedTemplate.name;
+                    query.timezone = taskboard.getTimeZoneIdFromBrowser();
+                    if (this.selectedDate)
+                        query.date = this.selectedDate;
+
+                    $.fileDownload(url, {
+                        data: query,
+                        successCallback: function (url) {
+                            self._showLoading(false);
+                            self._updateGenerateButtonStatus();
+                        },
+                        failCallback: function (html, url) {
+                            self._showLoading(false);
+                            self._updateGenerateButtonStatus();
+                            self._showErrorMessage(html ? html : 'Failed to download followup spreadsheet');
+                        }
+                    });
+                    this._showLoading(true);
+                    this._updateGenerateButtonStatus();
+                },
+
+                _downloadTemplate: function(event) {
+                    this.set('selectedTemplate', event.model.item);
+                    window.location = "api/templates/" + event.model.item.id;
+                },
+
+                _addTemplate: function() {
+                    this.$.followupReportType.open();
+                },
+
+                _editTemplate: function(event) {
+                    this.set('selectedTemplate', event.model.item);
+                    this.$.followupReportType.open(event.model.item);
+                },
+
+                _deleteTemplate: function(event) {
+                    var self = this;
+                    self.set('selectedTemplate', event.model.item);
+                    var callback = function() {
+                        self._showLoading(true);
+                        $.ajax({
+                            url: 'api/templates/' + event.model.item.id,
+                            type: 'DELETE',
+                            contentType: 'application/json',
+                            success: function() {
+                                self.set('selectedTemplate', undefined);
+                                self.$.ajaxTemplates.generateRequest();
+                            },
+                            error: function(jqXHR) {
+                                self.showError(jqXHR, self);
+                            }
+                        });
+                    }
+                    var text = "Do you want to delete the report type \"" + event.model.item.name + "\"?";
+                    this.$.confirmationModal.openDialog("Confirmation", text, callback);
+                },
+
+                _showLoading: function(show) {
+                    this.set('showLoadingSpinner', show);
+                    this._resizeModal();
+                },
+
+                _resizeModal: function() {
+                    this.$.modal.resize();
+                },
+
+                _onTemplateListChanged: function() {
+                    this.$$('#templateList').render();
+                    this._resizeModal();
+                },
+
+                _updateGenerateButtonStatus: function() {
+                    this.set('_btGenerate.disabled', this.showLoadingSpinner || !this.selectedTemplate || !this._getSelectedProject());
+                },
+
+                _handleResponse: function() {
+                    this._showLoading(false);
+                },
+
+                _refreshTemplates: function() {
+                    this._showLoading(true);
+                    this.$.ajaxTemplates.generateRequest();
+                }
+
+            });
+        })();
+    </script>
+</dom-module>

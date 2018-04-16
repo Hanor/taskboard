@@ -30,8 +30,7 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
 
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Foo");
-        mainPage.assertFollowupButtonIsNotVisible()
-            .assertTemplateButtonIsVisible()
+        mainPage.assertFollowupButtonIsVisible()
             .assertDashboardButtonIsVisible()
             .assertSizingImportButtonIsVisible();
     }
@@ -44,7 +43,6 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Thomas.developer");
         mainPage.assertFollowupButtonIsNotVisible()
-            .assertTemplateButtonIsNotVisible()
             .assertDashboardButtonIsVisible()
             .assertSizingImportButtonIsNotVisible();
     }
@@ -57,7 +55,6 @@ public class BasicLoginIT extends AbstractUIWithCoverageIntegrationTest {
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.waitUserLabelToBe("Albert.customer");
         mainPage.assertFollowupButtonIsNotVisible()
-            .assertTemplateButtonIsNotVisible()
             .assertDashboardButtonIsNotVisible()
             .assertSizingImportButtonIsNotVisible();
     }

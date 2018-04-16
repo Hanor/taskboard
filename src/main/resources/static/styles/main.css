@@ -373,65 +373,88 @@ paper-button.tb-button.tb-button--type_link[disabled] {
 paper-radio-button.tb-paper-radio-button {
     display: flex;
     align-items: center;
-    margin-top: 8px;
-    padding: 0;
     overflow: hidden;
-    --paper-radio-button-ink-size: 0px;
 }
 
-paper-radio-button.tb-paper-radio-button:first-child {
-    margin-top: 0;
-}
-
-paper-radio-button.tb-paper-radio-button #radioContainer {
-    margin-top: auto;
-    margin-bottom: auto;
-}
 paper-radio-button.tb-paper-radio-button #radioLabel.paper-radio-button {
-    height: 16px;
-    line-height: 16px;
+    font-size: 14px;
+    color: #555;
+    margin-left: 16px;
+    display: flex;
+    flex: 1;
+    align-items: center;
 }
 
-paper-radio-button.tb-paper-radio-button paper-ripple#ink {
+paper-radio-button.tb-paper-radio-button #ink.paper-radio-button {
     display: none;
+}
+
+paper-radio-button.tb-paper-radio-button #offRadio {
+    border: 1px solid #E5E5E5 !important;
+    background-color: #F5F5F5 !important;
+}
+
+paper-radio-button.tb-paper-radio-button #onRadio {
+    background-color: #000 !important;
 }
 
 /*
     Checkbox
 */
 
-paper-checkbox.tb-paper-checkbox paper-ripple#ink {
+paper-checkbox.tb-paper-checkbox {
+    padding: 12px 16px;
+    width: 100%;
+    border-bottom: 1px solid #E5E5E5;
+}
+paper-checkbox.tb-paper-checkbox #checkboxContainer {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: initial !important;
+}
+paper-checkbox.tb-paper-checkbox #checkbox {
+    background-color: #F5F5F5 !important;
+    border-color: #E5E5E5 !important;
+    border-radius: 4px !important;
+    border-width: 1px !important;
+}
+paper-checkbox.tb-paper-checkbox #checkmark {
+    border-color: #000 !important;
+    left: 2px !important;
+    top: 4px !important;
+    width: 18% !important;
+    height: 35% !important;
+}
+paper-checkbox.tb-paper-checkbox #ink {
     display: none;
+}
+paper-checkbox.tb-paper-checkbox #checkboxLabel {
+    padding-left: 16px !important;
+    color: #555 !important
 }
 
 /*
     Follow Up Dropdown
 */
 .followup-dropdown {
-    width: 100%;
-    height: 62px;
+    max-width: 25%;
+    margin-top: 44px;
 }
-
-.followup-dropdown paper-input-container {
-    border-radius: 3px !important;
-    margin-bottom: 15px;
-}
-
-.followup-dropdown label, .followup-dropdown input {
-    color: inherit !important;
-}
-
 .followup-dropdown paper-item {
     min-height: 36px;
     cursor: pointer;
+    color: #555;
+    font-size: 14px;
 }
-
 .followup-dropdown paper-item:hover {
-    background: #DDD;
+    background: #B5E8FF;
 }
-
 .followup-dropdown paper-menu {
     min-width: 105px;
+}
+.followup-dropdown paper-ripple {
+    top: 0 !important;
+    bottom: 0 !important;
 }
 
 /*
@@ -440,6 +463,9 @@ paper-checkbox.tb-paper-checkbox paper-ripple#ink {
 tb-autocomplete #suggestionsWrapper {
     margin-top: -8px;
     color: #333;
+}
+tb-autocomplete #suggestionsWrapper paper-item:hover {
+    background-color: #B5E8FF;
 }
 tb-autocomplete #labelAndInputContainer input {
     color: #FFF !important;
@@ -457,7 +483,7 @@ tb-autocomplete paper-input-container .input-wrapper .tb-autocomplete__input {
 tb-autocomplete paper-input-container .input-wrapper paper-icon-button {
     width: 24px;
     height: 24px;
-    padding: 2px;
+    padding: 4px;
     color: #FFF !important;
 }
 tb-autocomplete paper-input-container .input-wrapper paper-icon-button iron-icon {
@@ -467,18 +493,58 @@ tb-autocomplete[disable-clear="true"] .input-wrapper paper-icon-button#clear {
     display: none !important;
 }
 
+/*
+    Autocomplete Taskboard
+*/
+tb-autocomplete.taskboard paper-autocomplete {
+    max-width: 50%;
+    margin-top: 52px;
+}
 tb-autocomplete.taskboard #suggestionsWrapper {
     position: fixed;
     width: auto;
+    margin-top: 8px;
+    color: #555;
 }
-tb-autocomplete.taskboard #labelAndInputContainer input {
-    color: #333 !important;
-}
-tb-autocomplete.taskboard paper-input-container .input-wrapper .tb-autocomplete__input {
-    color: #333 !important;
+tb-autocomplete.taskboard #suggestionsWrapper paper-item {
+    font-size: 12px;
 }
 tb-autocomplete.taskboard paper-input-container .input-wrapper paper-icon-button {
-    color: #333 !important;
+    color: #555 !important;
+}
+
+/*
+    Input
+*/
+.tb-paper-input #labelAndInputContainer label {
+    color: #555;
+    transform: none;
+    width: 100%;
+    margin-top: -28px;
+    line-height: 20px;
+}
+.tb-paper-input #labelAndInputContainer input {
+    color: #555 !important;
+    font-size: 14px;
+}
+.tb-paper-input #labelAndInputContainer input::placeholder {
+    font-style: oblique;
+    color: #8E8E8E;
+    opacity: 1; /* Firefox */
+}
+.tb-paper-input paper-input-container {
+    padding: 0;
+}
+.tb-paper-input paper-input-container .input-wrapper {
+    border: 1px solid #E5E5E5;
+    border-radius: 4px;
+    padding: 3px 8px 3px 16px;
+}
+.tb-paper-input paper-input-container .floated-label-placeholder {
+    display: none;
+}
+.tb-paper-input paper-input-container .underline {
+    display: none;
 }
 
 /*

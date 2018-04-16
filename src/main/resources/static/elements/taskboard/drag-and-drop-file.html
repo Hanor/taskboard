@@ -1,0 +1,152 @@
+<dom-module id="drag-and-drop-file">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            .drag-and-drop-area {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                border-top: 1px solid #E5E5E5;
+                border-bottom: 1px solid #E5E5E5;
+                color: #555;
+                padding: 10px 4px;
+                margin-top: 8px;
+            }
+
+            .dragged-class {
+                border: 2px dashed #555;
+                background-color: #E5E5E5;
+            }
+
+            .link {
+                color: #5DAFFF;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+            .link:hover {
+                text-decoration: underline;
+            }
+
+            iron-icon {
+                width: 16px;
+                height: 16px;
+                flex: 0 0 auto;
+            }
+
+            label {
+                color: #555;
+                font-size: 16px;
+            }
+
+            span {
+                margin-left: 12px;
+                flex: 1;
+                line-height: 24px;
+            }
+
+            paper-icon-button {
+                color: #5DAFFF;
+                width: 24px;
+                height: 24px;
+                padding: 5px;
+                margin-left: 8px;
+                flex: 0 0 auto;
+            }
+
+            input[type='file'] {
+                display: none;
+            }
+        </style>
+
+        <label>Browse</label>
+        <div id="area" class="drag-and-drop-area" on-dragover="_handleDragOver" on-dragleave="_handleDragLeave"
+             on-drop="_handleDrop">
+            <iron-icon icon="taskboard-icons:attachment"></iron-icon>
+            <span id="dropFileMessage" hidden="[[fileName]]">Drop files to attach, or <label for="inputFile" class="link">browse</label>.</span>
+
+            <input on-change="_onFileSelected" id="inputFile" type="file" accept=".xlsm" />
+            <a id="linkDownload" hidden="true" href="[[urlDownload]]" download="[[fileName]]"></a>
+
+            <template is="dom-if" if="[[fileName]]">
+                <span id="fileName">[[fileName]]</span>
+                <paper-icon-button id="downloadFileButton" icon="taskboard-icons:download" on-tap="_downloadFile"></paper-icon-button>
+                <paper-icon-button id="clearFileButton" icon="taskboard-icons:delete" on-tap="_clearFile"></paper-icon-button>
+            </template>
+        </div>
+
+    </template>
+
+    <script>
+        (function () {
+            Polymer({
+                is: 'drag-and-drop-file',
+
+                properties: {
+                    fileName: {
+                        type: String,
+                        notify: true
+                    },
+                    fileData: {
+                        type: Object,
+                        notify: true
+                    },
+                    urlDownload: {
+                        type: String
+                    }
+                },
+
+                _handleDragOver: function(event) {
+                    event.preventDefault();
+                    this.toggleClass('dragged-class', true, this.$.area);
+                },
+
+                _handleDragLeave: function(event) {
+                    event.preventDefault();
+                    this.toggleClass('dragged-class', false, this.$.area);
+                },
+
+                _handleDrop: function(event) {
+                    event.preventDefault();
+                    this.toggleClass('dragged-class', false, this.$.area);
+                    this.set('fileData', event.dataTransfer.files[0]);
+                    if (!this.fileData)
+                        return;
+                    this.set('fileName', this.fileData.name);
+                    this._setUrlDownloadFileData();
+                },
+
+                _onFileSelected: function(event) {
+                    var FAKE_PATH = 'C:\\fakepath\\';
+                    var fileName = event.target.value;
+                    if (fileName.indexOf(FAKE_PATH) > -1)
+                        fileName = fileName.replace(FAKE_PATH, '');
+
+                    this.set('fileName', fileName);
+                    this.set('fileData', event.target.files[0]);
+                    $("#inputFile").val('');
+                    this._setUrlDownloadFileData();
+                },
+
+                _setUrlDownloadFileData: function() {
+                    var blob = new Blob([this.fileData], { type: "multipart/form-data" });
+                    var url = URL.createObjectURL(blob);
+                    this.set('urlDownload', url);
+                },
+
+                _downloadFile: function() {
+                    this.$.linkDownload.click();
+                },
+
+                _clearFile: function() {
+                    this.set('fileName', null);
+                    this.set('fileData', null);
+                    this.set('urlDownload', '');
+                }
+            });
+        })();
+    </script>
+</dom-module>

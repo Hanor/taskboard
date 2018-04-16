@@ -27,6 +27,8 @@
 
         <paper-autocomplete class="tb-autocomplete__input"
 
+                            placeholder="[[placeholder]]"
+                            always-float-label="[[alwaysFloatLabel]]"
                             no-label-float="[[noLabelFloat]]"
                             label="{{label}}"
                             source="[[_getSource(items, valueProperty, textProperty)]]"
@@ -39,13 +41,13 @@
                             highlight-first="true"
                             show-results-on-focus="true">
             <template is="dom-if" if="{{_showNotFound}}">
-                <paper-icon-button class="tb-autocomplete__icon"
+                <paper-icon-button class="tb-autocomplete__icon" title="Not found"
                                    slot="suffix" suffix icon="error"
                 ></paper-icon-button>
             </template>
             <template is="dom-if" if="{{showSearchIcon}}">
-                <paper-icon-button class="tb-autocomplete__icon"
-                                   slot="suffix" suffix icon="search"
+                <paper-icon-button class="tb-autocomplete__icon" title="Search"
+                                   slot="suffix" suffix icon="taskboard-icons:search"
                 ></paper-icon-button>
             </template>
         </paper-autocomplete>
@@ -66,13 +68,21 @@
                         type: String,
                         notify: true
                     },
+                    placeholder: {
+                        type: String,
+                        value: ''
+                    },
                     label: {
                         type: String,
                         value: ''
                     },
+                    alwaysFloatLabel: {
+                        type: Boolean,
+                        value: false
+                    },
                     noLabelFloat: {
                         type: Boolean,
-                        value: true
+                        value: false
                     },
                     valueProperty: {
                         type: String,
