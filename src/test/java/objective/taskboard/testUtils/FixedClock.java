@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import objective.taskboard.utils.Clock;
 
 @Component
-public class SystemClockMock implements Clock {
+public class FixedClock implements Clock {
 
     private Instant now = ZonedDateTime.of(2017, 6, 1, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant();
 

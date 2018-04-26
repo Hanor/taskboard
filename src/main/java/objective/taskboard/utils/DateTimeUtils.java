@@ -1,6 +1,5 @@
 package objective.taskboard.utils;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,11 +23,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Range;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.google.common.collect.Streams;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -152,24 +146,6 @@ public class DateTimeUtils {
         @Override
         public ZonedDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             return ZonedDateTime.parse(json.getAsString());
-        }
-    }
-
-    public static class LocalDateTimeStampSerializer extends com.fasterxml.jackson.databind.JsonSerializer<LocalDate> {
-        public static final LocalDateTimeStampSerializer INSTANCE = new LocalDateTimeStampSerializer();
-
-        @Override
-        public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            gen.writeString(value.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        }
-    }
-    
-    public static class LocalDateDeserializer extends com.fasterxml.jackson.databind.JsonDeserializer<LocalDate> {
-        public static final LocalDateDeserializer INSTANCE = new LocalDateDeserializer();
-        
-        @Override
-        public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-            return LocalDate.parse(p.getText(), DateTimeFormatter.ISO_LOCAL_DATE);
         }
     }
 

@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface FollowUpDataRepository {
 
-    FollowupData get(LocalDate date, ZoneId timezone, String projectKey);
+    FollowUpData get(LocalDate date, ZoneId timezone, String projectKey);
     List<LocalDate> getHistoryByProject(String projectKey);
-    void save(String projectKey, LocalDate date, FollowupData data);
+    void save(String projectKey, LocalDate date, FollowUpData data);
 
 }

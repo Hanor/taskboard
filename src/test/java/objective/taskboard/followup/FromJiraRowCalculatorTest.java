@@ -11,6 +11,7 @@ import org.junit.Test;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupClusterImpl;
 
 public class FromJiraRowCalculatorTest {
     

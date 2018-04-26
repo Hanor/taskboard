@@ -21,9 +21,9 @@
 package objective.taskboard.followup;
 
 import static java.util.Optional.empty;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_DEMAND;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_FEATURES;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_DEMAND;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_FEATURES;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 import java.io.IOException;
@@ -36,26 +36,27 @@ import java.util.Optional;
 import org.springframework.core.io.Resource;
 
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupCluster;
 import objective.taskboard.spreadsheet.Sheet;
 import objective.taskboard.spreadsheet.SheetRow;
 import objective.taskboard.spreadsheet.SpreadsheetEditor;
 import objective.taskboard.utils.DateTimeUtils;
 import objective.taskboard.utils.IOUtilities;
 
-public class FollowUpGenerator {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FollowUpGenerator.class);
+public class FollowUpReportGenerator {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FollowUpReportGenerator.class);
 
     private final SpreadsheetEditor editor;
 
-    public FollowUpGenerator(SpreadsheetEditor editor) {
+    public FollowUpReportGenerator(SpreadsheetEditor editor) {
         this.editor = editor;
     }
 
-    public Resource generate(FollowUpDataSnapshot snapshot, ZoneId timezone) throws IOException {
+    public Resource generate(FollowUpSnapshot snapshot, ZoneId timezone) throws IOException {
         try {
             editor.open();
 
-            FollowupData followupData = snapshot.getData();
+            FollowUpData followupData = snapshot.getData();
 
             updateTimelineDates(snapshot.getTimeline());
             generateFromJiraSheet(followupData);
@@ -81,7 +82,7 @@ public class FollowUpGenerator {
         sheet.save();
     }
 
-    void generateWorklogSheet(FollowupData followupData, ZoneId timezone) {
+    void generateWorklogSheet(FollowUpData followupData, ZoneId timezone) {
         Sheet sheet = editor.getOrCreateSheet("Worklogs");
         sheet.truncate();
         SheetRow rowHeader = sheet.createRow();
@@ -104,7 +105,7 @@ public class FollowUpGenerator {
         sheet.save();
     }
 
-    Sheet generateFromJiraSheet(FollowupData followupData) {
+    Sheet generateFromJiraSheet(FollowUpData followupData) {
         Sheet sheet = editor.getSheet("From Jira");
         sheet.truncate();
 
@@ -274,7 +275,7 @@ public class FollowUpGenerator {
             .findFirst();
     }
 
-    List<Sheet> generateTransitionsSheets(FollowupData followupData) {
+    List<Sheet> generateTransitionsSheets(FollowUpData followupData) {
         List<Sheet> sheets = new LinkedList<>();
         sheets.addAll(generateAnalyticTransitionsSheets(followupData.analyticsTransitionsDsList));
         sheets.addAll(generateSyntheticTransitionsSheets(followupData.syntheticsTransitionsDsList));
@@ -343,7 +344,7 @@ public class FollowUpGenerator {
         return sheet;
     }
     
-    void generateEffortHistory(FollowUpDataSnapshot snapshot) {
+    void generateEffortHistory(FollowUpSnapshot snapshot) {
         Sheet sheet = editor.getOrCreateSheet("Effort History");
         sheet.truncate();
         
@@ -365,7 +366,7 @@ public class FollowUpGenerator {
         sheet.save();
     }
 
-    void generateTShirtSizeSheet(FollowUpDataSnapshot snapshot) {
+    void generateTShirtSizeSheet(FollowUpSnapshot snapshot) {
         FollowupCluster followupCluster= snapshot.getCluster();
 
         Sheet sheet = editor.getOrCreateSheet("T-shirt Size");

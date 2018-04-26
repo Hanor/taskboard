@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -11,12 +11,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotService;
-import objective.taskboard.followup.FollowUpScopeByTypeDataItem;
-import objective.taskboard.followup.FollowUpScopeByTypeDataSet;
-import objective.taskboard.followup.FromJiraRowService;
-import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import objective.taskboard.followup.FollowUpSnapshot.SnapshotRow;
 import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 
 @Service
@@ -31,11 +26,11 @@ public class FollowUpScopeByTypeDataProvider {
     public static final String BASELINE_DONE = "Baseline Done";
     public static final String BASELINE_BACKLOG = "Baseline Backlog";
 
-    private final FollowUpDataSnapshotService snapshotService;
+    private final FollowUpSnapshotService snapshotService;
     private final FromJiraRowService rowService;
     
     @Autowired
-    public FollowUpScopeByTypeDataProvider(FollowUpDataSnapshotService snapshotService, FromJiraRowService rowService) {
+    public FollowUpScopeByTypeDataProvider(FollowUpSnapshotService snapshotService, FromJiraRowService rowService) {
         this.snapshotService = snapshotService;
         this.rowService = rowService;
     }
@@ -43,7 +38,7 @@ public class FollowUpScopeByTypeDataProvider {
     public FollowUpScopeByTypeDataSet getScopeByTypeData(String projectKey, Optional<LocalDate> date, ZoneId zoneId) 
             throws ClusterNotConfiguredException {
 
-        final FollowUpDataSnapshot snapshot = snapshotService.get(date, zoneId, projectKey);
+        final FollowUpSnapshot snapshot = snapshotService.get(date, zoneId, projectKey);
         final Map<String, Double> map = initTypes();
 
         if (!snapshot.hasClusterConfiguration())
@@ -67,7 +62,7 @@ public class FollowUpScopeByTypeDataProvider {
                 sum(map, BASELINE_DONE, effortEstimate);
             else if (rowService.isBaselineBacklog(r.rowData))
                 sum(map, BASELINE_BACKLOG, effortEstimate);
-        };
+        }
 
         return transform(map, projectKey, zoneId);
     }

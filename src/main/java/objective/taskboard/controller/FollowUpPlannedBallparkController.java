@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.PlannedVsBallparkChartData;
-import objective.taskboard.followup.PlannedVsBallparkDataAccumulator;
+import objective.taskboard.followup.PlannedVsBallparkCalculator;
 import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 import objective.taskboard.repository.PermissionRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
@@ -21,7 +21,7 @@ import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository
 public class FollowUpPlannedBallparkController {
     
     @Autowired
-    private PlannedVsBallparkDataAccumulator calculator;
+    private PlannedVsBallparkCalculator calculator;
     
     @Autowired
     private ProjectFilterConfigurationCachedRepository projects;

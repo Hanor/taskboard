@@ -18,7 +18,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import objective.taskboard.cycletime.CycleTimeProperties.Time;
 import objective.taskboard.jira.JiraProperties;
-import objective.taskboard.testUtils.SystemClockMock;
+import objective.taskboard.testUtils.FixedClock;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CycleTimeTest {
@@ -29,7 +29,7 @@ public class CycleTimeTest {
     private CycleTimeProperties cycleTimeProperties;
 
     @Mock
-    private SystemClockMock clock;
+    private FixedClock clock;
 
     @Mock
     private JiraProperties jiraProperties;

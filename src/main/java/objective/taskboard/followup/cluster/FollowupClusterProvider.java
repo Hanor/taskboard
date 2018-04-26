@@ -1,4 +1,4 @@
-package objective.taskboard.followup;
+package objective.taskboard.followup.cluster;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.cluster.FollowUpClusterItem;
-import objective.taskboard.followup.cluster.FollowUpClusterItemRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 
 @Component

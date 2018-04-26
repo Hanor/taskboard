@@ -7,21 +7,21 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import objective.taskboard.followup.FollowUpSnapshot.SnapshotRow;
 import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 
 @Component
-public class PlannedVsBallparkDataAccumulator { //TODO rename to PlannedVsBallparkCalculator
+public class PlannedVsBallparkCalculator {
 
-    private final FollowUpDataSnapshotService snapshotService;
+    private final FollowUpSnapshotService snapshotService;
     
     @Autowired
-    public PlannedVsBallparkDataAccumulator(FollowUpDataSnapshotService snapshotService) {
+    public PlannedVsBallparkCalculator(FollowUpSnapshotService snapshotService) {
         this.snapshotService = snapshotService;
     }
 
     public List<PlannedVsBallparkChartData> calculate(String projectKey) throws ClusterNotConfiguredException {
-        FollowUpDataSnapshot snapshot = snapshotService.getFromCurrentState(ZoneId.systemDefault(), projectKey);
+        FollowUpSnapshot snapshot = snapshotService.getFromCurrentState(ZoneId.systemDefault(), projectKey);
 
         if (!snapshot.hasClusterConfiguration())
             throw new ClusterNotConfiguredException();

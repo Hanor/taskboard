@@ -38,7 +38,7 @@ import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.utils.DateTimeUtils;
 
 @Repository
-public class FollowUpDataHistoryRepository implements FollowUpDataRepository {
+public class FollowUpDataRepositoryByFile implements FollowUpDataRepository {
     public static final String PATH_FOLLOWUP_HISTORY = "followup-history";
     public static final DateTimeFormatter FILE_NAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
     public static final String EXTENSION_JSON = ".json";
@@ -52,19 +52,19 @@ public class FollowUpDataHistoryRepository implements FollowUpDataRepository {
             .create();
     
     @Autowired
-    public FollowUpDataHistoryRepository(DataBaseDirectory dataBaseDirectory) {
+    public FollowUpDataRepositoryByFile(DataBaseDirectory dataBaseDirectory) {
         this.dataBaseDirectory = dataBaseDirectory;
     }
 
-    private FollowupData sanitizeData(FollowupData data) {
-        return new FollowupData(
+    private FollowUpData sanitizeData(FollowUpData data) {
+        return new FollowUpData(
                 nullIfEmpty(data.fromJiraDs), 
                 nullIfEmpty(data.analyticsTransitionsDsList),
                 headerOnly(data.syntheticsTransitionsDsList));
     }
 
     @Override
-    public FollowupData get(LocalDate date, ZoneId timezone, String projectKey) {
+    public FollowUpData get(LocalDate date, ZoneId timezone, String projectKey) {
         FollowUpDataLoader loader = new FollowUpDataLoader(gson, timezone);
         String dateString = date.format(FILE_NAME_FORMATTER);
 
@@ -149,7 +149,7 @@ public class FollowUpDataHistoryRepository implements FollowUpDataRepository {
     }
 
     @Override
-    public void save(String projectKey, LocalDate date, FollowupData data) {
+    public void save(String projectKey, LocalDate date, FollowUpData data) {
         Path pathProject = dataBaseDirectory.path(PATH_FOLLOWUP_HISTORY).resolve(projectKey);
         if (!pathProject.toFile().exists()) {
             try {

@@ -65,8 +65,9 @@ import org.xlsx4j.sml.Row;
 import org.xlsx4j.sml.Sheet;
 
 import objective.taskboard.database.directory.DataBaseDirectory;
+import objective.taskboard.followup.cluster.EmptyFollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.followup.impl.FollowUpTemplateStorage;
 import objective.taskboard.rules.CleanupDataFolderRule;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -91,7 +92,7 @@ public class FollowUpFacadeTest {
     private FollowupClusterProvider clusterProvider;
     
     @Mock
-    private FollowUpDataSnapshotService dataSnapshotService;
+    private FollowUpSnapshotService snapshotService;
 
     @Spy
     @InjectMocks
@@ -128,8 +129,8 @@ public class FollowUpFacadeTest {
     public void okTemplateGenerate() throws Exception {
         LocalDate date = LocalDate.parse("2017-10-01");
         given(templateService.getTemplate(TEMPLATE_NAME)).willReturn(template);
-        given(dataSnapshotService.get(any(), any(), Mockito.eq(PROJECT)))
-            .willReturn(new FollowUpDataSnapshot(new FollowUpTimeline(date), getDefaultFollowupData(), new EmptyFollowupCluster(), Collections.emptyList()));
+        given(snapshotService.get(any(), any(), Mockito.eq(PROJECT)))
+            .willReturn(new FollowUpSnapshot(new FollowUpTimeline(date), getDefaultFollowupData(), new EmptyFollowupCluster(), Collections.emptyList()));
 
         // when
         Resource resource = followUpFacade.generateReport(TEMPLATE_NAME, Optional.of(date), ZoneId.systemDefault(), PROJECT);

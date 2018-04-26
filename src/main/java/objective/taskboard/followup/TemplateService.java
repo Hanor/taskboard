@@ -1,5 +1,8 @@
 package objective.taskboard.followup;
 
+import java.io.IOException;
+import java.util.List;
+
 /*-
  * [LICENSE]
  * Taskboard
@@ -22,9 +25,6 @@ package objective.taskboard.followup;
  */
 
 import objective.taskboard.followup.data.Template;
-
-import java.io.IOException;
-import java.util.List;
 
 public interface TemplateService {
     void saveTemplate(String templateName, List<String> roles, String path) throws IOException;

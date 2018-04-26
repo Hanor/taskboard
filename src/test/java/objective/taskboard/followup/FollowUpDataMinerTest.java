@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * [/LICENSE]
  */
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
 import static objective.taskboard.followup.FollowUpHelper.fromJiraRowstoString;
@@ -33,10 +33,9 @@ import java.util.List;
 import org.junit.Test;
 
 import objective.taskboard.data.Worklog;
-import objective.taskboard.followup.FromJiraDataRow;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 
-public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDataProviderTest {
+public class FollowUpDataMinerTest extends FollowUpDataMinerTestBase {
 
     @Test
     public void demandWithoutChildFeatures_shouldCreateASingleBallpark() {

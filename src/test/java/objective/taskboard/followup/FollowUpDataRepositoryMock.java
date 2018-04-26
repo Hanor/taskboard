@@ -14,10 +14,10 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
 public class FollowUpDataRepositoryMock implements FollowUpDataRepository {
-    private final Map<String, Map<LocalDate, FollowupData>> values = new TreeMap<>();
+    private final Map<String, Map<LocalDate, FollowUpData>> values = new TreeMap<>();
 
     @Override
-    public FollowupData get(LocalDate date, ZoneId timezone, String projectKey) {
+    public FollowUpData get(LocalDate date, ZoneId timezone, String projectKey) {
         if (!values.containsKey(projectKey) || !values.get(projectKey).containsKey(date))
             throw new IllegalArgumentException();
         
@@ -33,7 +33,7 @@ public class FollowUpDataRepositoryMock implements FollowUpDataRepository {
     }
 
     @Override
-    public void save(String projectKey, LocalDate date, FollowupData data) {
+    public void save(String projectKey, LocalDate date, FollowUpData data) {
         if (!values.containsKey(projectKey))
             values.put(projectKey, new TreeMap<>());
         

@@ -1,16 +1,16 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static objective.taskboard.Constants.FROMJIRA_HEADERS;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.BASELINE_BACKLOG;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.BASELINE_DONE;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.INTANGIBLE_BACKLOG;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.INTANGIBLE_DONE;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.NEW_SCOPE_BACKLOG;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.NEW_SCOPE_DONE;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.REWORK_BACKLOG;
-import static objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider.REWORK_DONE;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.BASELINE_BACKLOG;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.BASELINE_DONE;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.INTANGIBLE_BACKLOG;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.INTANGIBLE_DONE;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.NEW_SCOPE_BACKLOG;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.NEW_SCOPE_DONE;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.REWORK_BACKLOG;
+import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.REWORK_DONE;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -24,18 +24,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotService;
-import objective.taskboard.followup.FollowUpScopeByTypeDataItem;
-import objective.taskboard.followup.FollowUpScopeByTypeDataSet;
-import objective.taskboard.followup.FollowUpTimeline;
-import objective.taskboard.followup.FollowupCluster;
-import objective.taskboard.followup.FollowupClusterImpl;
-import objective.taskboard.followup.FollowupData;
-import objective.taskboard.followup.FromJiraDataRow;
-import objective.taskboard.followup.FromJiraDataSet;
-import objective.taskboard.followup.FromJiraRowService;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterImpl;
 
 public class FollowUpScopeByTypeDataProviderTest {
 
@@ -44,7 +35,7 @@ public class FollowUpScopeByTypeDataProviderTest {
     private static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
     private final FromJiraRowService rowService = mock(FromJiraRowService.class);
-    private final FollowUpDataSnapshotService snapshotService = mock(FollowUpDataSnapshotService.class);
+    private final FollowUpSnapshotService snapshotService = mock(FollowUpSnapshotService.class);
     private final FollowUpScopeByTypeDataProvider subject = new FollowUpScopeByTypeDataProvider(snapshotService, rowService);
     private final FromJiraDataRow row = new FromJiraDataRow();
 
@@ -56,7 +47,7 @@ public class FollowUpScopeByTypeDataProviderTest {
         FollowupCluster fc = mock(FollowupCluster.class);
         when(fc.isEmpty()).thenReturn(false);
         
-        FollowUpDataSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), asList(row));
+        FollowUpSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), asList(row));
         when(snapshotService.get(Optional.empty(), ZONE_ID, PROJECT_KEY)).thenReturn(snapshot);
     }
 
@@ -205,7 +196,7 @@ public class FollowUpScopeByTypeDataProviderTest {
     @Test
     public void ifMultipleRows_thenSumAllRows() {
         List<FromJiraDataRow> rows = asList(row, row, row);
-        FollowUpDataSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), rows);
+        FollowUpSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), rows);
         when(rowService.isBaselineBacklog(row)).thenReturn(true);
         when(snapshotService.get(Optional.empty(), ZONE_ID, PROJECT_KEY)).thenReturn(snapshot);
 
@@ -226,7 +217,7 @@ public class FollowUpScopeByTypeDataProviderTest {
     @Test
     public void ifHasValues_thenTotalIsTheSumOfAllEffortEstimateValues() {
         List<FromJiraDataRow> rows = asList(row, row, row);
-        FollowUpDataSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), rows);
+        FollowUpSnapshot snapshot = getSnapshot(LocalDate.of(2018, 1, 1), rows);
         when(rowService.isBaselineBacklog(row)).thenReturn(true);
         when(snapshotService.get(Optional.empty(), ZONE_ID, PROJECT_KEY)).thenReturn(snapshot);
 
@@ -243,12 +234,12 @@ public class FollowUpScopeByTypeDataProviderTest {
         assertEquals(ZONE_ID.getId(), data.zoneId);
     }
 
-    private static FollowUpDataSnapshot getSnapshot(LocalDate date, List<FromJiraDataRow> rows) {
+    private static FollowUpSnapshot getSnapshot(LocalDate date, List<FromJiraDataRow> rows) {
         FromJiraDataSet dataSet = new FromJiraDataSet(FROMJIRA_HEADERS, rows);
-        FollowupData followupData = new FollowupData(dataSet, emptyList(), emptyList());
+        FollowUpData followupData = new FollowUpData(dataSet, emptyList(), emptyList());
         FollowupCluster fc = new FollowupClusterImpl(
                 asList(new FollowUpClusterItem(mock(ProjectFilterConfiguration.class), "a", "a", "a", 1.0, 1.0)));
-        return new FollowUpDataSnapshot(new FollowUpTimeline(date), followupData, fc, emptyList());
+        return new FollowUpSnapshot(new FollowUpTimeline(date), followupData, fc, emptyList());
     }
 
     private void assertEffortEstimateByType(String type, Double exceptedValue) {

@@ -2,7 +2,7 @@ package objective.taskboard.followup;
 
 import java.util.List;
 
-public class FollowupData {
+public class FollowUpData {
 
     public enum Version {
 
@@ -21,11 +21,11 @@ public class FollowupData {
     public final List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList;
     public final List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList;
 
-    public FollowupData(FromJiraDataSet fromJiraDs, List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList, List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList) {
+    public FollowUpData(FromJiraDataSet fromJiraDs, List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList, List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList) {
         this(Version.VERSION_2, fromJiraDs, analyticsTransitionsDsList, syntheticsTransitionsDsList);
     }
 
-    public FollowupData(Version version, FromJiraDataSet fromJiraDs, List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList, List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList) {
+    public FollowUpData(Version version, FromJiraDataSet fromJiraDs, List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList, List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList) {
         this.followupDataVersion = version.value;
         this.fromJiraDs = fromJiraDs;
         this.analyticsTransitionsDsList = analyticsTransitionsDsList;

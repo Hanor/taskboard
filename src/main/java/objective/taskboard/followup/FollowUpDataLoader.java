@@ -1,7 +1,7 @@
 package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.HEADER_ISSUE_TYPE_COLUMN_NAME;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.HEADER_ISSUE_TYPE_COLUMN_NAME;
 
 import java.lang.reflect.Type;
 import java.time.ZoneId;
@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import objective.taskboard.Constants;
-import objective.taskboard.followup.impl.FollowUpTransitionsDataProvider;
 
 public class FollowUpDataLoader {
     
@@ -38,7 +37,7 @@ public class FollowUpDataLoader {
         internalLoader.load(element);
     }
     
-    public FollowupData create() {
+    public FollowUpData create() {
         return internalLoader.create();
     }
 
@@ -49,8 +48,8 @@ public class FollowUpDataLoader {
         }
 
         public V2_Loader load(JsonElement element) {
-            if(matchVersion(element, FollowupData.Version.VERSION_2)) {
-                doLoad(gson.fromJson(element, FollowupData.class));
+            if(matchVersion(element, FollowUpData.Version.VERSION_2)) {
+                doLoad(gson.fromJson(element, FollowUpData.class));
             } else {
                 doLoad(new V1_Loader(timezone).load(element).upgrade());
             }
@@ -65,15 +64,15 @@ public class FollowUpDataLoader {
         }
 
         public V1_Loader load(JsonElement element) {
-            if(matchVersion(element, FollowupData.Version.VERSION_1)) {
-                doLoad(gson.fromJson(element, FollowupData.class));
+            if(matchVersion(element, FollowUpData.Version.VERSION_1)) {
+                doLoad(gson.fromJson(element, FollowUpData.class));
             } else {
                 doLoad(new V0_Loader().load(element).upgrade());
             }
             return this;
         }
 
-        private FollowupData upgrade() {
+        private FollowUpData upgrade() {
             for(String issueType : syntheticsHeaders.keySet()) {
                 syntheticsHeaders.get(issueType).add(1, HEADER_ISSUE_TYPE_COLUMN_NAME);
             }
@@ -94,7 +93,7 @@ public class FollowUpDataLoader {
             this.timezone = timezone;
         }
 
-        protected void doLoad(FollowupData data) {
+        protected void doLoad(FollowUpData data) {
             if (data.fromJiraDs != null)
                 fromJira.addAll(data.fromJiraDs.rows);
 
@@ -145,7 +144,7 @@ public class FollowUpDataLoader {
             return new AnalyticsTransitionsDataRow(row.issueKey, row.issueType, dates);
         }
 
-        public FollowupData create() {
+        public FollowUpData create() {
             FromJiraDataSet fromJiraDs = new FromJiraDataSet(Constants.FROMJIRA_HEADERS, fromJira);
             List<AnalyticsTransitionsDataSet> analyticsDsList = new LinkedList<>();
             for(String type : types) {
@@ -164,7 +163,7 @@ public class FollowUpDataLoader {
                         .collect(Collectors.toList());
                 syntheticDsList.add(FollowUpTransitionsDataProvider.getSyntheticTransitionsDs(headers, statuses, doneStatuses, dataset));
             }
-            return new FollowupData(fromJiraDs, analyticsDsList, syntheticDsList);
+            return new FollowUpData(fromJiraDs, analyticsDsList, syntheticDsList);
         }
     }
 
@@ -179,12 +178,12 @@ public class FollowUpDataLoader {
             return this;
         }
 
-        private FollowupData upgrade() {
-            return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, data), null, null);
+        private FollowUpData upgrade() {
+            return new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, data), null, null);
         }
     }
 
-    private static boolean matchVersion(JsonElement element, FollowupData.Version expectedVersion) {
+    private static boolean matchVersion(JsonElement element, FollowUpData.Version expectedVersion) {
         if(!element.isJsonObject())
             return false;
         JsonObject obj = element.getAsJsonObject();

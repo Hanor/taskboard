@@ -52,7 +52,7 @@ public class FollowUpFacade {
     private FollowUpTemplateStorageInterface followUpTemplateStorage;
 
     @Autowired
-    private FollowUpDataSnapshotService dataSnapshotService;
+    private FollowUpSnapshotService snapshotService;
 
     @Autowired
     private TemplateService templateService;
@@ -72,9 +72,9 @@ public class FollowUpFacade {
     public Resource generateReport(String templateName, Optional<LocalDate> date, ZoneId timezone, String projectKey) throws IOException {
         FollowUpTemplate template = getTemplate(templateName);
         SimpleSpreadsheetEditor spreadsheetEditor = new SimpleSpreadsheetEditor(template);
-        FollowUpDataSnapshot snapshot = dataSnapshotService.get(date, timezone, projectKey);
+        FollowUpSnapshot snapshot = snapshotService.get(date, timezone, projectKey);
 
-        return new FollowUpGenerator(spreadsheetEditor).generate(snapshot, timezone);
+        return new FollowUpReportGenerator(spreadsheetEditor).generate(snapshot, timezone);
     }
 
     public List<TemplateData> getTemplates() {
@@ -158,6 +158,6 @@ public class FollowUpFacade {
     }
 
     public List<LocalDate> getHistoryGivenProject(String projectKey) {
-        return dataSnapshotService.getAvailableHistory(projectKey);
+        return snapshotService.getAvailableHistory(projectKey);
     }
 }

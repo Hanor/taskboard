@@ -30,13 +30,13 @@ public class CumulativeFlowDiagramDataProvider {
     private ProjectFilterConfigurationCachedRepository projectRepository;
 
     @Autowired
-    private FollowUpDataSnapshotService dataSnapshotService;
+    private FollowUpSnapshotService snapshotService;
 
     public CumulativeFlowDiagramDataSet getCumulativeFlowDiagramDataSet(String project, String level) {
         if(!belongsToAnyProject(project))
             throw new IllegalArgumentException(String.format("Unknown project <%s>", project));
 
-        FollowUpDataSnapshot followupData = dataSnapshotService.getFromCurrentState(ZoneId.systemDefault(), project);
+        FollowUpSnapshot followupData = snapshotService.getFromCurrentState(ZoneId.systemDefault(), project);
         return transform(followupData, Level.valueOf(level.toUpperCase()));
     }
 
@@ -57,8 +57,8 @@ public class CumulativeFlowDiagramDataProvider {
         }
     }
 
-    private CumulativeFlowDiagramDataSet transform(FollowUpDataSnapshot followUpDataSnapshot, Level selectedLevel) {
-        FollowupData followupData = followUpDataSnapshot.getData();
+    private CumulativeFlowDiagramDataSet transform(FollowUpSnapshot followUpDataSnapshot, Level selectedLevel) {
+        FollowUpData followupData = followUpDataSnapshot.getData();
         ListMultimap<String, CumulativeFlowDiagramDataPoint> dataByStatus = LinkedListMultimap.create();
 
         for (int i = 0; i < followupData.syntheticsTransitionsDsList.size(); ++i) {

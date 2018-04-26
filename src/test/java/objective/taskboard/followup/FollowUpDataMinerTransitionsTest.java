@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
 import static objective.taskboard.utils.DateTimeUtils.parseDate;
@@ -18,13 +18,9 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Test;
 
-import objective.taskboard.followup.AnalyticsTransitionsDataSet;
-import objective.taskboard.followup.FollowupData;
-import objective.taskboard.followup.SyntheticTransitionsDataRow;
-import objective.taskboard.followup.SyntheticTransitionsDataSet;
 import objective.taskboard.jira.data.Status;
 
-public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataProviderTest {
+public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase {
 
     private static final int SUBTASK_TRANSITIONS_DATASET_INDEX = 2;
 
@@ -41,7 +37,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
     @Test
     public void checkHeaders() {
         // given
-        FollowupData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
+        FollowUpData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
         List<AnalyticsTransitionsDataSet> analytics = jiraData.analyticsTransitionsDsList;
         List<SyntheticTransitionsDataSet> synthetic = jiraData.syntheticsTransitionsDsList;
 
@@ -362,7 +358,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        FollowupData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
+        FollowUpData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
         List<AnalyticsTransitionsDataSet> analytics = jiraData.analyticsTransitionsDsList;
         List<SyntheticTransitionsDataSet> synthetic = jiraData.syntheticsTransitionsDsList;
 

@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * [/LICENSE]
  */
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static objective.taskboard.utils.ZipUtils.unzip;
 import static objective.taskboard.utils.ZipUtils.zip;
@@ -36,9 +36,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import objective.taskboard.database.directory.DataBaseDirectory;
-import objective.taskboard.followup.FollowUpTemplate;
-import objective.taskboard.followup.FollowUpTemplateStorageInterface;
-import objective.taskboard.followup.FollowUpTemplateValidator;
 import objective.taskboard.utils.IOUtilities;
 
 @Service

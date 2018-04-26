@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import objective.taskboard.auth.Authorizer;
+import objective.taskboard.followup.FollowUpScopeByTypeDataProvider;
 import objective.taskboard.followup.FollowUpScopeByTypeDataSet;
 import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
-import objective.taskboard.followup.impl.FollowUpScopeByTypeDataProvider;
 import objective.taskboard.repository.PermissionRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 

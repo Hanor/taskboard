@@ -15,30 +15,31 @@ import org.springframework.stereotype.Service;
 
 import objective.taskboard.domain.FollowupDailySynthesis;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
+import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.repository.FollowupDailySynthesisRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.utils.Clock;
 
 @Service
-public class FollowUpDataSnapshotService {
+public class FollowUpSnapshotService {
 
-    private final static Logger log = LoggerFactory.getLogger(FollowUpDataSnapshotService.class);
+    private final static Logger log = LoggerFactory.getLogger(FollowUpSnapshotService.class);
 
     private final Clock clock;
     private final FollowUpDataRepository historyRepository;
     private final ProjectFilterConfigurationCachedRepository projectRepository;
     private final FollowupDailySynthesisRepository dailySynthesisRepository;
-    private final FollowUpDataProviderFromCurrentState dataGenerator;
+    private final FollowUpDataGenerator dataGenerator;
     private final FollowupClusterProvider clusterProvider;
     
     @Autowired
-    public FollowUpDataSnapshotService(
+    public FollowUpSnapshotService(
             Clock clock,
             FollowUpDataRepository historyRepository,
             ProjectFilterConfigurationCachedRepository projectRepository,
             FollowupDailySynthesisRepository dailySynthesisRepository, 
-            FollowUpDataProviderFromCurrentState dataGenerator,
+            FollowUpDataGenerator dataGenerator,
             FollowupClusterProvider clusterProvider) {
         this.clock = clock;
         this.historyRepository = historyRepository;
@@ -48,12 +49,12 @@ public class FollowUpDataSnapshotService {
         this.clusterProvider = clusterProvider;
     }
 
-    public FollowUpDataSnapshot getFromCurrentState(ZoneId timezone, String projectKey) {
+    public FollowUpSnapshot getFromCurrentState(ZoneId timezone, String projectKey) {
         return createSnapshot(LocalDate.now(), projectKey,
                 (cluster) -> dataGenerator.generate(timezone, cluster, projectKey));
     }
 
-    public FollowUpDataSnapshot getFromHistory(LocalDate date, ZoneId timezone, String projectKey) {
+    public FollowUpSnapshot getFromHistory(LocalDate date, ZoneId timezone, String projectKey) {
         return createSnapshot(date, projectKey, 
                 (cluster) -> historyRepository.get(date, timezone, projectKey));
     }
@@ -62,40 +63,40 @@ public class FollowUpDataSnapshotService {
         return historyRepository.getHistoryByProject(projectKey);
     }
     
-    public FollowUpDataSnapshot get(Optional<LocalDate> date, ZoneId timezone, String projectKey) {
+    public FollowUpSnapshot get(Optional<LocalDate> date, ZoneId timezone, String projectKey) {
         return date.isPresent() 
                 ? getFromHistory(date.get(), timezone, projectKey) 
                 : getFromCurrentState(timezone, projectKey);
     }
 
-    private FollowUpDataSnapshot createSnapshot(LocalDate date, String projectKey, FollowupDataSupplier dataSupplier) {
+    private FollowUpSnapshot createSnapshot(LocalDate date, String projectKey, FollowupDataSupplier dataSupplier) {
         ProjectFilterConfiguration project = projectRepository.getProjectByKeyOrCry(projectKey);
         FollowUpTimeline timeline = FollowUpTimeline.getTimeline(date, Optional.of(project));
         FollowupCluster cluster = clusterProvider.getFor(project);
-        FollowupData data = dataSupplier.get(cluster);
+        FollowUpData data = dataSupplier.get(cluster);
 
         List<EffortHistoryRow> effortHistory = dailySynthesisRepository.listAllBefore(project.getId(), date).stream()
                 .map(EffortHistoryRow::from)
                 .collect(toList());
 
-        return new FollowUpDataSnapshot(timeline, data, cluster, effortHistory);
+        return new FollowUpSnapshot(timeline, data, cluster, effortHistory);
     }
     
-    public void generateHistory(ZoneId timezone) {
-        log.info("History generation started...");
+    public void storeSnapshots(ZoneId timezone) {
+        log.info("Snapshots storage started...");
         for (ProjectFilterConfiguration pf : projectRepository.getProjects()) {
             String projectKey = pf.getProjectKey();
 
-            log.info("History generation of project " + projectKey + " started...");
+            log.info("Snapshot storage of project " + projectKey + " started...");
             storeSnapshot(timezone, projectKey);
-            log.info("History generation of project " + projectKey + " completed.");
+            log.info("Snapshot storage of project " + projectKey + " completed.");
         }
-        log.info("History generation completed.");
+        log.info("Snapshots storage completed.");
     }
 
     private void storeSnapshot(ZoneId timezone, String projectKey) {
         LocalDate date = LocalDateTime.ofInstant(clock.now(), timezone).toLocalDate();
-        FollowupData data = dataGenerator.generate(timezone, projectKey);
+        FollowUpData data = dataGenerator.generate(timezone, projectKey);
 
         historyRepository.save(projectKey, date, data);
         syncSynthesis(projectKey, date, timezone, true);
@@ -126,7 +127,7 @@ public class FollowUpDataSnapshotService {
             }
         }
 
-        FollowUpDataSnapshot snapshot = getFromHistory(date, timezone, projectKey);
+        FollowUpSnapshot snapshot = getFromHistory(date, timezone, projectKey);
         EffortHistoryRow effortHistoryRow = snapshot.getEffortHistoryRow();
 
         dailySynthesisRepository.add(new FollowupDailySynthesis(
@@ -137,6 +138,6 @@ public class FollowUpDataSnapshotService {
     }
     
     private interface FollowupDataSupplier {
-        FollowupData get(FollowupCluster cluster);
+        FollowUpData get(FollowupCluster cluster);
     }
 }

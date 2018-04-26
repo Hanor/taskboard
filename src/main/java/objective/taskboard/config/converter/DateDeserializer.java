@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * [/LICENSE]
  */
-package objective.taskboard.domain.serializer;
+package objective.taskboard.config.converter;
 
 import java.io.IOException;
 import java.text.ParseException;

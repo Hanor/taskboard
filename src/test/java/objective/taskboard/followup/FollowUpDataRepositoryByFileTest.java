@@ -26,9 +26,9 @@ import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.Files.exists;
 import static java.nio.file.Files.size;
-import static objective.taskboard.followup.FollowUpDataHistoryRepository.EXTENSION_JSON;
-import static objective.taskboard.followup.FollowUpDataHistoryRepository.EXTENSION_ZIP;
-import static objective.taskboard.followup.FollowUpDataHistoryRepository.FILE_NAME_FORMATTER;
+import static objective.taskboard.followup.FollowUpDataRepositoryByFile.EXTENSION_JSON;
+import static objective.taskboard.followup.FollowUpDataRepositoryByFile.EXTENSION_ZIP;
+import static objective.taskboard.followup.FollowUpDataRepositoryByFile.FILE_NAME_FORMATTER;
 import static objective.taskboard.followup.FollowUpHelper.assertFollowUpDataV0;
 import static objective.taskboard.followup.FollowUpHelper.followupEmptyV2;
 import static objective.taskboard.followup.FollowUpHelper.followupExpectedV2;
@@ -69,7 +69,7 @@ import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.rules.TimeZoneRule;
 import objective.taskboard.utils.DateTimeUtils;
 
-public class FollowUpDataHistoryRepositoryTest {
+public class FollowUpDataRepositoryByFileTest {
     private static final ZoneId TIMEZONE = ZoneId.systemDefault();
     private static final String PROJECT_TEST = "PROJECT TEST";
     private static final String PROJECT_TEST_2 = "PROJECT TEST 2";
@@ -90,7 +90,7 @@ public class FollowUpDataHistoryRepositoryTest {
         DataBaseDirectory dataBaseDirectory = mock(DataBaseDirectory.class);
         when(dataBaseDirectory.path(anyString())).thenReturn(dataPath);
 
-        subject = new FollowUpDataHistoryRepository(dataBaseDirectory);    
+        subject = new FollowUpDataRepositoryByFile(dataBaseDirectory);    
     }
     
     @After
@@ -184,7 +184,7 @@ public class FollowUpDataHistoryRepositoryTest {
         createProjectZipV2(PROJECT_TEST);
 
         // when
-        FollowupData data = subject.get(YESTERDAY, TIMEZONE, PROJECT_TEST);
+        FollowUpData data = subject.get(YESTERDAY, TIMEZONE, PROJECT_TEST);
 
         // then
         assertThat(data).isEqualToComparingFieldByFieldRecursively(getDefaultFollowupData());
@@ -196,7 +196,7 @@ public class FollowUpDataHistoryRepositoryTest {
         createProjectZipV2(PROJECT_TEST);
 
         // when
-        FollowupData data = subject.get(YESTERDAY, TIMEZONE, PROJECT_TEST);
+        FollowUpData data = subject.get(YESTERDAY, TIMEZONE, PROJECT_TEST);
 
         // then
         assertThat(data).isEqualToComparingFieldByFieldRecursively(getDefaultFollowupData());
@@ -211,9 +211,9 @@ public class FollowUpDataHistoryRepositoryTest {
         ZoneId sydneyTZ = ZoneId.of("Australia/Sydney"); // +10:00, same day, different hours
 
         // when
-        FollowupData dataSaoPaulo = subject.get(YESTERDAY, saoPauloTZ, PROJECT_TEST);
-        FollowupData dataToronto = subject.get(YESTERDAY, torontoTZ, PROJECT_TEST);
-        FollowupData dataSydney = subject.get(YESTERDAY, sydneyTZ, PROJECT_TEST);
+        FollowUpData dataSaoPaulo = subject.get(YESTERDAY, saoPauloTZ, PROJECT_TEST);
+        FollowUpData dataToronto = subject.get(YESTERDAY, torontoTZ, PROJECT_TEST);
+        FollowUpData dataSydney = subject.get(YESTERDAY, sydneyTZ, PROJECT_TEST);
 
         // then
         List<ZonedDateTime> saoPauloAnalyticsDates = dataSaoPaulo.analyticsTransitionsDsList.get(0).rows.get(0).transitionsDates;

@@ -1,9 +1,7 @@
-package objective.taskboard.followup;
+package objective.taskboard.followup.cluster;
 
 import java.util.List;
 import java.util.Optional;
-
-import objective.taskboard.followup.cluster.FollowUpClusterItem;
 
 public class FollowupClusterImpl implements FollowupCluster {
     public final List<FollowUpClusterItem> clusterItems;

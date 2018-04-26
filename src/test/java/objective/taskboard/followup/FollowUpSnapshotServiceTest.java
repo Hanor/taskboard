@@ -16,24 +16,25 @@ import org.junit.Test;
 
 import objective.taskboard.domain.FollowupDailySynthesis;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
+import objective.taskboard.followup.cluster.EmptyFollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
-import objective.taskboard.testUtils.SystemClockMock;
+import objective.taskboard.testUtils.FixedClock;
 
-public class FollowUpDataSnapshotServiceTest {
+public class FollowUpSnapshotServiceTest {
 
-    private SystemClockMock clock = new SystemClockMock();
+    private FixedClock clock = new FixedClock();
     private FollowUpDataRepositoryMock historyRepository = new FollowUpDataRepositoryMock();
     private ProjectFilterConfigurationCachedRepository projectRepository = mock(ProjectFilterConfigurationCachedRepository.class);
     private FollowupDailySynthesisRepositoryMock dailySynthesisRepository = new FollowupDailySynthesisRepositoryMock();
-    private FollowUpDataProviderFromCurrentState dataGenerator = mock(FollowUpDataProviderFromCurrentState.class);
+    private FollowUpDataGenerator dataGenerator = mock(FollowUpDataGenerator.class);
     private FollowupClusterProvider clusterProvider = mock(FollowupClusterProvider.class);
     
     private ZoneId timezone = ZoneId.of("UTC");
     private ProjectFilterConfiguration project1 = mock(ProjectFilterConfiguration.class);
     private ProjectFilterConfiguration project2 = mock(ProjectFilterConfiguration.class);
     
-    private FollowUpDataSnapshotService subject = new FollowUpDataSnapshotService(
+    private FollowUpSnapshotService subject = new FollowUpSnapshotService(
             clock, historyRepository, projectRepository, dailySynthesisRepository, dataGenerator, clusterProvider);
     
     @Before
@@ -56,10 +57,10 @@ public class FollowUpDataSnapshotServiceTest {
     @Test
     public void shouldGenerateHistory() {
         clock.setNow("2018-04-10T12:00:00.00Z");
-        subject.generateHistory(timezone);
+        subject.storeSnapshots(timezone);
         
         clock.setNow("2018-04-11T12:00:00.00Z");
-        subject.generateHistory(timezone);
+        subject.storeSnapshots(timezone);
         
         historyRepository.assertValues(
                 "PROJ1",
@@ -85,7 +86,7 @@ public class FollowUpDataSnapshotServiceTest {
         when(projectRepository.getProjects()).thenReturn(asList(project1));
         
         clock.setNow("2018-04-10T12:00:00.00Z");
-        subject.generateHistory(timezone);
+        subject.storeSnapshots(timezone);
         
         historyRepository.assertValues(
                 "PROJ1",

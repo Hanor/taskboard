@@ -14,8 +14,10 @@ import org.junit.Test;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterImpl;
 
-public class FollowUpDataSnapshotTest {
+public class FollowUpSnapshotTest {
 
     @Test
     public void shouldReturnEffortHistory() {
@@ -26,7 +28,7 @@ public class FollowUpDataSnapshotTest {
                 new EffortHistoryRow(LocalDate.parse("2018-04-03"), 2d, 8d),
                 new EffortHistoryRow(LocalDate.parse("2018-04-04"), 3d, 7d));
         
-        FollowupData data = getFollowupData(
+        FollowUpData data = getFollowupData(
                 dataRow("UX", "Open", "M"),
                 dataRow("UX", "Open", "S"),
                 dataRow("UX", "Done", "S"));
@@ -35,7 +37,7 @@ public class FollowUpDataSnapshotTest {
                 new FollowUpClusterItem(project, "UX", "na", "S", 1.0, 0.0),
                 new FollowUpClusterItem(project, "UX", "na", "M", 2.0, 0.0)));
         
-        FollowUpDataSnapshot subject = new FollowUpDataSnapshot(timeline, data, cluster, effortHistory);
+        FollowUpSnapshot subject = new FollowUpSnapshot(timeline, data, cluster, effortHistory);
         
         assertEffortHistory(subject.getEffortHistory(), 
                 "2018-04-03 | 2.0 | 8.0",

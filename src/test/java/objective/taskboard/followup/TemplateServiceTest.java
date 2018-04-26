@@ -39,7 +39,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.followup.impl.DefaultTemplateService;
 import objective.taskboard.repository.TemplateRepository;
 
 @RunWith(SpringRunner.class)

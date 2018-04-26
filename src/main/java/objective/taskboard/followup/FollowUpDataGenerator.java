@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
 
@@ -17,22 +17,16 @@ import org.springframework.util.StringUtils;
 
 import objective.taskboard.Constants;
 import objective.taskboard.data.Issue;
-import objective.taskboard.followup.AnalyticsTransitionsDataSet;
-import objective.taskboard.followup.FollowupCluster;
-import objective.taskboard.followup.FollowupClusterProvider;
-import objective.taskboard.followup.FollowupData;
-import objective.taskboard.followup.FromJiraDataRow;
-import objective.taskboard.followup.FromJiraDataSet;
-import objective.taskboard.followup.FromJiraRowCalculator;
-import objective.taskboard.followup.SyntheticTransitionsDataSet;
 import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
+import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.BallparkMapping;
 import objective.taskboard.jira.MetadataService;
 
 @Component
-public class FollowUpDataProviderFromCurrentState {
+public class FollowUpDataGenerator {
 
     private final JiraProperties jiraProperties;
     private final MetadataService metadataService;
@@ -40,7 +34,7 @@ public class FollowUpDataProviderFromCurrentState {
     private final FollowupClusterProvider clusterProvider;
     
     @Autowired
-    public FollowUpDataProviderFromCurrentState(
+    public FollowUpDataGenerator(
             JiraProperties jiraProperties, 
             MetadataService metadataService, 
             IssueBufferService issueBufferService,
@@ -51,12 +45,12 @@ public class FollowUpDataProviderFromCurrentState {
         this.clusterProvider = clusterProvider;
     }
 
-    public FollowupData generate(ZoneId timezone, FollowupCluster cluster, String projectKey) {
+    public FollowUpData generate(ZoneId timezone, FollowupCluster cluster, String projectKey) {
         return new CurrentStateSnapshot(timezone, cluster, projectKey).execute();
     }
     
 
-    public FollowupData generate(ZoneId timezone, String projectKey) {
+    public FollowUpData generate(ZoneId timezone, String projectKey) {
         FollowupCluster cluster = clusterProvider.getForProject(projectKey);
         return generate(timezone, cluster, projectKey);
     }
@@ -79,7 +73,7 @@ public class FollowUpDataProviderFromCurrentState {
             this.fromJiraRowCalculator = new FromJiraRowCalculator(cluster); 
         }
 
-        public FollowupData execute() {
+        public FollowUpData execute() {
             List<Issue> issuesVisibleToUser = issueBufferService.getAllIssues().stream()
                     .filter(issue -> projectKey.equals(issue.getProjectKey()))
                     .filter(issue -> isAllowedStatus(issue.getStatus()))
@@ -91,7 +85,7 @@ public class FollowUpDataProviderFromCurrentState {
             List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList = transitions.getAnalyticsTransitionsDsList(issuesVisibleToUser, timezone);
             List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList = transitions.getSyntheticTransitionsDsList(analyticsTransitionsDsList);
 
-            return new FollowupData(fromJiraDs, analyticsTransitionsDsList, syntheticsTransitionsDsList);
+            return new FollowUpData(fromJiraDs, analyticsTransitionsDsList, syntheticsTransitionsDsList);
         }
 
         private FromJiraDataSet getFromJiraDs(List<Issue> issuesVisibleToUser, ZoneId timezone) {

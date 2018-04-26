@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
@@ -50,11 +50,10 @@ import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.domain.converter.IssueCoAssignee;
 import objective.taskboard.domain.converter.IssueTeamService;
-import objective.taskboard.followup.EmptyFollowupCluster;
-import objective.taskboard.followup.FollowupCluster;
-import objective.taskboard.followup.FollowupClusterProvider;
-import objective.taskboard.followup.FromJiraDataRow;
+import objective.taskboard.followup.cluster.EmptyFollowupCluster;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.BallparkMapping;
@@ -73,7 +72,7 @@ import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository
 import objective.taskboard.utils.Clock;
 
 @RunWith(MockitoJUnitRunner.class)
-public abstract class AbstractFollowUpDataProviderTest {
+public abstract class FollowUpDataMinerTestBase {
 
     @Mock
     protected JiraProperties jiraProperties;
@@ -112,7 +111,7 @@ public abstract class AbstractFollowUpDataProviderTest {
     protected ProjectFilterConfiguration projectConfiguration;
 
     @InjectMocks
-    protected FollowUpDataProviderFromCurrentState subject;
+    protected FollowUpDataGenerator subject;
 
     protected static final long demandIssueType   = 13;
     protected static final long taskIssueType     = 12;

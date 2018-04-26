@@ -48,9 +48,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.FollowUpFacade;
+import objective.taskboard.followup.FollowUpHistoryKeeper;
 import objective.taskboard.followup.TemplateService;
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.followup.impl.FollowUpDataHistoryGeneratorJSONFiles;
 
 @RestController
 @RequestMapping("/ws/followup")
@@ -71,7 +71,7 @@ public class FollowUpController {
     private FollowUpFacade followUpFacade;
 
     @Autowired
-    private FollowUpDataHistoryGeneratorJSONFiles followUpDataHistoryGenerator;
+    private FollowUpHistoryKeeper historyKeeper;
 
     @Autowired
     private Authorizer authorizer;
@@ -139,7 +139,7 @@ public class FollowUpController {
 
     @RequestMapping("generate-history")
     public String generateHistory() {
-        followUpDataHistoryGenerator.scheduledGenerate();
+        historyKeeper.generate();
         return "HISTORY GENERATOR STARTED";
     }
 }

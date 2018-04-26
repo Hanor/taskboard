@@ -15,8 +15,8 @@ import java.util.Optional;
 import org.junit.Test;
 
 import objective.taskboard.followup.EffortHistoryRow;
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotService;
+import objective.taskboard.followup.FollowUpSnapshot;
+import objective.taskboard.followup.FollowUpSnapshotService;
 import objective.taskboard.followup.FollowUpTimeline;
 
 public class FollowupProgressCalculatorTest {
@@ -24,7 +24,7 @@ public class FollowupProgressCalculatorTest {
     private static final String PROJECT = "PX";
     private static final ZoneId TIMEZONE = ZoneId.of("UTC");
 
-    private FollowUpDataSnapshotService snapshotService = mock(FollowUpDataSnapshotService.class);
+    private FollowUpSnapshotService snapshotService = mock(FollowUpSnapshotService.class);
     private FollowupProgressCalculator subject = new FollowupProgressCalculator(snapshotService);
 
     @Test
@@ -185,7 +185,7 @@ public class FollowupProgressCalculatorTest {
     }
     
     private void currentSnapshot(LocalDate startDate, LocalDate endDate, EffortHistoryRow... history) {
-        FollowUpDataSnapshot snapshot = mock(FollowUpDataSnapshot.class);
+        FollowUpSnapshot snapshot = mock(FollowUpSnapshot.class);
         when(snapshot.getTimeline()).thenReturn(new FollowUpTimeline(LocalDate.of(2019, 1, 1), Optional.of(startDate), Optional.of(endDate)));
         when(snapshot.getEffortHistory()).thenReturn(asList(history));
         when(snapshot.hasClusterConfiguration()).thenReturn(true);

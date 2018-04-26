@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
+import objective.taskboard.followup.cluster.FollowupCluster;
 
 public class FromJiraRowCalculator {
 

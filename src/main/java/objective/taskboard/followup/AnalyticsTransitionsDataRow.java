@@ -1,11 +1,11 @@
 package objective.taskboard.followup;
 
-import objective.taskboard.utils.DateTimeUtils;
-
 import java.time.ZonedDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import objective.taskboard.utils.DateTimeUtils;
 
 public class AnalyticsTransitionsDataRow implements TransitionDataRow {
     public final String issueKey;

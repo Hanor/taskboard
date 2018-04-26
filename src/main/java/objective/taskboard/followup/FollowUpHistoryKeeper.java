@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import java.time.ZoneId;
 
@@ -8,34 +8,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import objective.taskboard.followup.FollowUpDataSnapshotService;
-
 @Component
-public class FollowUpDataHistoryGeneratorJSONFiles {
+public class FollowUpHistoryKeeper {
 
-    private final FollowUpDataSnapshotService dataSnapshotService;
+    private final FollowUpSnapshotService snapshotService;
     private boolean isExecutingDataHistoryGenerate = false;
 
     @Autowired
-    public FollowUpDataHistoryGeneratorJSONFiles(FollowUpDataSnapshotService dataSnapshotSerice) {
-        this.dataSnapshotService = dataSnapshotSerice;
+    public FollowUpHistoryKeeper(FollowUpSnapshotService snapshotSerice) {
+        this.snapshotService = snapshotSerice;
     }
 
     @PostConstruct
     public void initialize() {
-        dataSnapshotService.syncSynthesis(ZoneId.systemDefault());
-        scheduledGenerate();
+        snapshotService.syncSynthesis(ZoneId.systemDefault());
+        generate();
     }
 
     @Scheduled(cron = "${jira.followup.executionDataHistoryGenerator.cron}", zone = "${jira.followup.executionDataHistoryGenerator.timezone}")
-    public synchronized void scheduledGenerate() {
+    public synchronized void generate() {
         if (isExecutingDataHistoryGenerate)
             return;
 
         isExecutingDataHistoryGenerate = true;
         Thread thread = new Thread(() -> {
             try {
-                dataSnapshotService.generateHistory(ZoneId.systemDefault());
+                snapshotService.storeSnapshots(ZoneId.systemDefault());
             } finally {
                 isExecutingDataHistoryGenerate = false;
             }

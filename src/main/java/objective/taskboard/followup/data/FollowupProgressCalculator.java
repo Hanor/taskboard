@@ -18,24 +18,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import objective.taskboard.followup.EffortHistoryRow;
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotService;
+import objective.taskboard.followup.FollowUpSnapshot;
+import objective.taskboard.followup.FollowUpSnapshotService;
 import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 
 @Component
 public class FollowupProgressCalculator {
 
-    private final FollowUpDataSnapshotService snapshotService;
+    private final FollowUpSnapshotService snapshotService;
     
     @Autowired
-    public FollowupProgressCalculator(FollowUpDataSnapshotService snapshotService) {
+    public FollowupProgressCalculator(FollowUpSnapshotService snapshotService) {
         this.snapshotService = snapshotService;
     }
 
     public ProgressData calculate(ZoneId timezone, String projectKey, int projectionSampleSize) 
             throws ClusterNotConfiguredException, ProjectDatesNotConfiguredException {
 
-        FollowUpDataSnapshot snapshot = snapshotService.getFromCurrentState(timezone, projectKey);
+        FollowUpSnapshot snapshot = snapshotService.getFromCurrentState(timezone, projectKey);
         if (!snapshot.hasClusterConfiguration())
             throw new ClusterNotConfiguredException();
         

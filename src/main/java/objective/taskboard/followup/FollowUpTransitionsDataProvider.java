@@ -1,4 +1,4 @@
-package objective.taskboard.followup.impl;
+package objective.taskboard.followup;
 
 import static org.apache.commons.lang.ArrayUtils.INDEX_NOT_FOUND;
 
@@ -26,10 +26,6 @@ import com.google.common.primitives.Ints;
 
 import objective.taskboard.data.Changelog;
 import objective.taskboard.data.Issue;
-import objective.taskboard.followup.AnalyticsTransitionsDataRow;
-import objective.taskboard.followup.AnalyticsTransitionsDataSet;
-import objective.taskboard.followup.SyntheticTransitionsDataRow;
-import objective.taskboard.followup.SyntheticTransitionsDataSet;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.MetadataService;
 import objective.taskboard.utils.DateTimeUtils;

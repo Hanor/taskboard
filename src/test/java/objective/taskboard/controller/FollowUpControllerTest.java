@@ -25,9 +25,9 @@ import org.springframework.http.ResponseEntity;
 
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.FollowUpFacade;
+import objective.taskboard.followup.FollowUpHistoryKeeper;
 import objective.taskboard.followup.TemplateService;
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.followup.impl.FollowUpDataHistoryGeneratorJSONFiles;
 import objective.taskboard.utils.IOUtilities;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,7 +47,7 @@ public class FollowUpControllerTest {
     private FollowUpFacade followUpFacade;
 
     @Mock
-    private FollowUpDataHistoryGeneratorJSONFiles followUpDataHistoryGenerator;
+    private FollowUpHistoryKeeper historyKeeper;
 
     @Mock
     private Authorizer authorizer;
@@ -79,10 +79,10 @@ public class FollowUpControllerTest {
 
     @Test
     public void download_projectProjectParamMustExists() throws IOException {
-        String projectNotExistsMessage = "You must provide a list of projects separated by comma";
+        String projectNotExistsMessage = "You must provide the project";
 
         ResponseEntity<Object> responseEmpty = subject.download("", TEMPLATE_NAME, Optional.empty(), ZONE_ID);
-        assertResponse(BAD_REQUEST, projectNotExistsMessage, responseEmpty);
+        assertResponse(HttpStatus.BAD_REQUEST, projectNotExistsMessage, responseEmpty);
 
         ResponseEntity<Object> responseNull = subject.download(null, TEMPLATE_NAME, Optional.empty(), ZONE_ID);
         assertResponse(BAD_REQUEST, projectNotExistsMessage, responseNull);
@@ -101,13 +101,13 @@ public class FollowUpControllerTest {
 
     @Test
     public void download_shouldCheckTemplateRolesWithAllProjects() throws IOException {
-        String matchTemplateRolesWithProjectsMessage = "Template or some project does not exist";
+        String matchTemplateRolesWithProjectsMessage = "Template or project doesn't exist";
 
         ResponseEntity<Object> responseTemplateNonExistent = subject.download(ALLOWED_PROJECT_KEY, TEMPLATE_NAME_NONEXISTENT, Optional.empty(), ZONE_ID);
-        assertResponse(BAD_REQUEST, matchTemplateRolesWithProjectsMessage, responseTemplateNonExistent);
+        assertResponse(HttpStatus.NOT_FOUND, matchTemplateRolesWithProjectsMessage, responseTemplateNonExistent);
 
         ResponseEntity<Object> responseDisallowed = subject.download(DISALLOWED_PROJECT_KEY, TEMPLATE_NAME, Optional.empty(), ZONE_ID);
-        assertResponse(BAD_REQUEST, matchTemplateRolesWithProjectsMessage, responseDisallowed);
+        assertResponse(HttpStatus.NOT_FOUND, matchTemplateRolesWithProjectsMessage, responseDisallowed);
     }
 
     @Test

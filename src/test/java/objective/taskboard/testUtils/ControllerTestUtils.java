@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import objective.taskboard.domain.serializer.TaskboardJacksonModule;
+import objective.taskboard.config.converter.TaskboardJacksonModule;
 
 public class ControllerTestUtils {
 

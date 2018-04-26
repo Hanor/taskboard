@@ -14,14 +14,14 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import objective.taskboard.followup.FollowUpSnapshot.SnapshotRow;
 import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 
-public class PlannedVsBallparkDataAccumulatorTest {
+public class PlannedVsBallparkCalculatorTest {
     
-    private FollowUpDataSnapshot snapshot = mock(FollowUpDataSnapshot.class);
-    private FollowUpDataSnapshotService snapshotService = mock(FollowUpDataSnapshotService.class);
-    private PlannedVsBallparkDataAccumulator subject = new PlannedVsBallparkDataAccumulator(snapshotService);
+    private FollowUpSnapshot snapshot = mock(FollowUpSnapshot.class);
+    private FollowUpSnapshotService snapshotService = mock(FollowUpSnapshotService.class);
+    private PlannedVsBallparkCalculator subject = new PlannedVsBallparkCalculator(snapshotService);
     
     @Before
     public void setup() {
@@ -85,7 +85,7 @@ public class PlannedVsBallparkDataAccumulatorTest {
         return snapshotRows;
     }
     
-    private PlannedVsBallparkChartData getDataFromAccumulatorWithType(PlannedVsBallparkDataAccumulator accumulator, String type) {
+    private PlannedVsBallparkChartData getDataFromAccumulatorWithType(PlannedVsBallparkCalculator accumulator, String type) {
         return accumulator.calculate("PX").stream().filter(data -> data.type.equals(type)).findFirst().get();
     }
 }

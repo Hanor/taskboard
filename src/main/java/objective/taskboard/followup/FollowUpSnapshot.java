@@ -8,15 +8,16 @@ import java.util.Collections;
 import java.util.List;
 
 import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
+import objective.taskboard.followup.cluster.FollowupCluster;
 
-public class FollowUpDataSnapshot {
+public class FollowUpSnapshot {
     private final FollowUpTimeline timeline;
-    private final FollowupData followupData;
+    private final FollowUpData followupData;
     private final FollowupCluster followupCluster;
     private final List<EffortHistoryRow> effortHistory;
     private final FromJiraRowCalculator rowCalculator;
 
-    public FollowUpDataSnapshot(FollowUpTimeline timeline, FollowupData followupData, FollowupCluster followupCluster, List<EffortHistoryRow> effortHistory) {
+    public FollowUpSnapshot(FollowUpTimeline timeline, FollowUpData followupData, FollowupCluster followupCluster, List<EffortHistoryRow> effortHistory) {
         this.timeline = timeline;
         this.followupData = followupData;
         this.followupCluster = followupCluster;
@@ -28,7 +29,7 @@ public class FollowUpDataSnapshot {
         return timeline;
     }
 
-    public FollowupData getData() {
+    public FollowUpData getData() {
         return followupData;
     }
 

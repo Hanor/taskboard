@@ -23,9 +23,9 @@ package objective.taskboard.followup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_DEMAND;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_FEATURES;
-import static objective.taskboard.followup.impl.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_DEMAND;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_FEATURES;
+import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
 import static objective.taskboard.utils.DateTimeUtils.parseDateList;
 import static objective.taskboard.utils.IOUtilities.resourceToString;
 import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
@@ -52,7 +52,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import objective.taskboard.Constants;
-import objective.taskboard.followup.impl.FollowUpTransitionsDataProvider;
 import objective.taskboard.utils.DateTimeUtils;
 import objective.taskboard.utils.DateTimeUtils.ZonedDateTimeAdapter;
 
@@ -148,39 +147,39 @@ public class FollowUpHelper {
         return followUpData;
     }
 
-    public static FollowupData getDefaultFollowupData() {
-        return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, getDefaultFromJiraDataRowList()),
+    public static FollowUpData getDefaultFollowupData() {
+        return new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, getDefaultFromJiraDataRowList()),
                 getDefaultAnalyticsTransitionsDataSet(), getDefaultSyntheticTransitionsDataSet());
     }
 
-    public static FollowupData getBiggerFollowupData() {
-        return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, getDefaultFromJiraDataRowList()),
+    public static FollowUpData getBiggerFollowupData() {
+        return new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, getDefaultFromJiraDataRowList()),
                 getBiggerAnalyticsTransitionsDataSet(), getBiggerSyntheticTransitionsDataSet());
     }
 
-    public static FollowupData getEmptyFollowupData() {
-        return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, emptyList()), emptyList(), emptyList());
+    public static FollowUpData getEmptyFollowupData() {
+        return new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, emptyList()), emptyList(), emptyList());
     }
 
-    public static FollowupData getFollowupData(FromJiraDataRow... rows) {
-        return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, asList(rows)), emptyList(), emptyList());
+    public static FollowUpData getFollowupData(FromJiraDataRow... rows) {
+        return new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, asList(rows)), emptyList(), emptyList());
     }
 
     public static List<FromJiraDataRow> getDefaultFromJiraDataRowList() {
         return singletonList(getDefaultFromJiraDataRow());
     }
 
-    public static FollowupData getFromFile() {
+    public static FollowUpData getFromFile() {
         Gson gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter()).create();
 
         try(InputStream file = FollowUpHelper.class.getResourceAsStream("jiradata.json")) {
-            return gson.fromJson(new InputStreamReader(file), FollowupData.class);
+            return gson.fromJson(new InputStreamReader(file), FollowUpData.class);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    public static void toJsonFile(FollowupData data, File file) {
+    public static void toJsonFile(FollowUpData data, File file) {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter())
                 .setPrettyPrinting()
