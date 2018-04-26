@@ -110,6 +110,15 @@ public abstract class AbstractUiFragment {
             }
         });
     }
+    
+    protected void waitUntilElementsShowsUpCountTimes(By by, int count) {
+        waitUntil(new ExpectedCondition<Boolean>() {
+            @Override
+            public Boolean apply(WebDriver element) {
+                return element.findElements(by).size() == count;
+            }
+        });
+    }
 
     protected void waitUntilElementNotExists(By by) {
         waitUntil(new ExpectedCondition<Boolean>() {

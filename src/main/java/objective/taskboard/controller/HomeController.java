@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -26,7 +27,6 @@ import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.StatusPriorityOrder;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.client.JiraFieldDataDto;
-import objective.taskboard.repository.TeamCachedRepository;
 
 @Controller
 public class HomeController {
@@ -52,9 +52,6 @@ public class HomeController {
     @Autowired
     private FieldMetadataService fieldMetadataService;
 
-    @Autowired
-    private TeamCachedRepository teamRepo;
-    
     @Autowired
     private UserTeamService userTeamService;
 
@@ -92,11 +89,9 @@ public class HomeController {
         statusOrderByIssueType.put("subtasks", subtasks);
         model.addAttribute("statusOrderByIssueType", serialize(statusOrderByIssueType));
 
-        List<Team> teams = teamRepo.getCache();
-        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        Set<Team> teamsVisibleToUser = userTeamService.getTeamsVisibleToLoggedInUser();
         model.addAttribute("teams", serialize(
-                teams.stream()
-                    .filter(t->teamsVisibleToUser.contains(t.getId()))
+                teamsVisibleToUser.stream()
                     .map(t->new TeamControllerData(t))
                     .sorted((a,b)->a.teamName.compareTo(b.teamName))
                     .collect(Collectors.toList())));

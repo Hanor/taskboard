@@ -63,8 +63,8 @@ public class AssigneeIT extends AuthenticatedIntegrationTest {
         issue
             .click()
             .issueDetails()
-            .addAssignee("camila")
-            .assertAssignees("gtakeuchi","camila")
+            .addAssignee("lohandus")
+            .assertAssignees("gtakeuchi","lohandus.ribeiro")
             .closeDialog();
 
         issue.assertHasFirstAssignee();

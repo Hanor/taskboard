@@ -6,7 +6,6 @@ public class CardTeamsIT extends AuthenticatedIntegrationTest {
     @Test
     public void whenIssueIsOpenWithouTeam_ShouldHaveDefaultTeam(){
         MainPage mainPage = MainPage.produce(webDriver);
-        mainPage.errorToast().close();
         TestIssue issue = mainPage.issue("TASKB-625");
         issue
             .click()
@@ -17,7 +16,6 @@ public class CardTeamsIT extends AuthenticatedIntegrationTest {
     @Test
     public void whenAddTeam_ShouldUpdateIssueImmediatlyWithNewTeam(){
         MainPage mainPage = MainPage.produce(webDriver);
-        mainPage.errorToast().close();
         TestIssue issue = mainPage.issue("TASKB-647");
         issue
             .click()
@@ -29,7 +27,6 @@ public class CardTeamsIT extends AuthenticatedIntegrationTest {
     @Test
     public void whenTeamIsReplaced_ShouldUpdateIssueImmediatlyWithNewTeam(){
         MainPage mainPage = MainPage.produce(webDriver);
-        mainPage.errorToast().close();
         TestIssue issue = mainPage.issue("TASKB-625");
         issue
             .click()
@@ -41,7 +38,6 @@ public class CardTeamsIT extends AuthenticatedIntegrationTest {
     @Test
     public void whenRemovingTeam_ShouldUpdateIssueImmediatlyWithNewTeam(){
         MainPage mainPage = MainPage.produce(webDriver);
-        mainPage.errorToast().close();
         TestIssue issue = mainPage.issue("TASKB-647");
         issue
             .click()

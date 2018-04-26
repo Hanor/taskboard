@@ -35,7 +35,7 @@ public class JiraUser {
         return avatarUrls.get(S48_48);
     }
 
-    public static class JiraUserAutocomple {
+    public static class JiraUserAutocomplete {
         public String name;
         public String displayName;
         public String emailAddress;
@@ -49,6 +49,6 @@ public class JiraUser {
         JiraUser myself();
 
         @GET("/rest/projectbuilder/1.0/users")
-        List<JiraUserAutocomple> findUsers(@Query("q") String name);
+        List<JiraUserAutocomplete> findUsers(@Query("q") String name);
     }
 }

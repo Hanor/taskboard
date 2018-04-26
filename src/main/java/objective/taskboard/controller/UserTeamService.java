@@ -1,6 +1,7 @@
 package objective.taskboard.controller;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,33 @@ public class UserTeamService {
     @Autowired
     private TeamFilterConfigurationService teamFilterConfigurationService;
 
-    public List<Long> getTeamsVisibleToUser() {
-        List<UserTeam> userTeam = userTeamRepo.findByUserName(loggedUser.getUsername());
-        List<Long> idsOfVisibleTeams = userTeam.stream().map(ut->teamRepo.findByName(ut.getTeam()).getId()).collect(Collectors.toList());
+    public List<Long> getIdsOfTeamsVisibleToUser() {
+        return getTeamsVisibleToUser(loggedUser.getUsername()).stream().map(ut->ut.getId()).collect(Collectors.toList());
+    }
+    
+    public Set<Team> getTeamsVisibleToLoggedInUser() {
+        return getTeamsVisibleToUser(loggedUser.getUsername());
+    }
+    
+    public boolean isUserVisible(String username) {
+        Set<Team> teams = getTeamsVisibleToLoggedInUser();
+        for (Team team : teams) {
+            List<UserTeam> members = team.getMembers();
+            for (UserTeam userTeam : members) {
+                if (userTeam.getUserName().equals(username))
+                    return true;
+            }
+        }
+        return false;
+    }
+    
+    private Set<Team> getTeamsVisibleToUser(String username) {
+        List<UserTeam> userTeam = userTeamRepo.findByUserName(username);
+        Set<Team> userTeams = userTeam.stream().map(ut->teamRepo.findByName(ut.getTeam())).filter(t->t!=null).distinct().collect(Collectors.toSet());
 
-        List<Team> teamsVisibleToUser = teamFilterConfigurationService.getDefaultTeamsInProjectsVisibleToUser();
-        teamsVisibleToUser.stream().forEach(t->idsOfVisibleTeams.add(t.getId()));
+        List<Team> teamsInProjectsVisibleToUser = teamFilterConfigurationService.getDefaultTeamsInProjectsVisibleToUser();
+        teamsInProjectsVisibleToUser.stream().forEach(t->userTeams.add(t));
 
-        return idsOfVisibleTeams;
+        return userTeams;
     }
 }

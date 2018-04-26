@@ -53,7 +53,7 @@ import objective.taskboard.data.User;
 import objective.taskboard.jira.client.JiraIssueDto;
 import objective.taskboard.jira.data.JiraIssue;
 import objective.taskboard.jira.data.JiraUser;
-import objective.taskboard.jira.data.JiraUser.JiraUserAutocomple;
+import objective.taskboard.jira.data.JiraUser.JiraUserAutocomplete;
 import objective.taskboard.jira.data.Transition;
 import objective.taskboard.jira.data.Transitions;
 import objective.taskboard.jira.data.Transitions.DoTransitionRequestBody;
@@ -148,9 +148,9 @@ public class JiraService {
      * @param namePart
      * @return
      */
-    public List<JiraUserAutocomple> findUsers(String namePart) {
+    public List<JiraUserAutocomplete> findUsers(String namePart) {
         log.debug("⬣⬣⬣⬣⬣  getUsersThatNameStartsWith");
-        Iterable<JiraUserAutocomple> response = jiraEndpointAsUser.request(JiraUser.Service.class).findUsers(namePart);
+        Iterable<JiraUserAutocomplete> response = jiraEndpointAsUser.request(JiraUser.Service.class).findUsers(namePart);
         return ImmutableList.copyOf(response);
     }
 

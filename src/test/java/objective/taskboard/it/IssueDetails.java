@@ -27,7 +27,6 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -98,10 +97,8 @@ class IssueDetails extends AbstractUiFragment {
         waitVisibilityOfElement(pickerInput);
         waitForClick(pickerInput);
         pickerInput.sendKeys(valueToSelect);
-        pickerInput.sendKeys(Keys.SPACE);
-        pickerInput.sendKeys(Keys.SPACE);
-        pickerInput.sendKeys(Keys.SPACE);
 
+        waitUntilElementsShowsUpCountTimes(By.cssSelector(pickerSelector + " #suggestionsWrapper paper-item"), 1);
         waitUntilElementExists(By.cssSelector(pickerSelector + " #suggestionsWrapper paper-item.active"));
 
         WebElement item = pickerForAddTeam.findElement(By.cssSelector(pickerSelector +" #suggestionsWrapper paper-item.active"));

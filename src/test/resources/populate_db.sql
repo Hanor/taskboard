@@ -115,11 +115,6 @@ Insert into project_filter_configuration (ID,PROJECT_KEY,DEFAULT_TEAM,RISK_PERCE
 Insert into project_filter_configuration (ID,PROJECT_KEY,DEFAULT_TEAM,RISK_PERCENTAGE,IS_ARCHIVED) values (165,'PROJ7',521,0.0,0);
 Insert into project_filter_configuration (ID,PROJECT_KEY,DEFAULT_TEAM,RISK_PERCENTAGE,IS_ARCHIVED) values (166,'PROJ8',521,0.0,0);
 
-
--- INSERTING into project_team
-Insert into project_team (PROJECT_KEY,TEAM_ID) values ('TASKB',521);
-Insert into project_team (PROJECT_KEY,TEAM_ID) values ('TASKB',522);
-
 -- INSERTING into user_team
 Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (1342,PARSEDATETIME('01-08-14','DD-MM-yy'),null,0,'MARCELO REZENDE',PARSEDATETIME('24-08-15','DD-MM-yy'),'evaldo.bratti');
 Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (1344,PARSEDATETIME('01-08-14','DD-MM-yy'),PARSEDATETIME('13-01-17','DD-MM-yy'),0,'ANDERSON',PARSEDATETIME('18-01-17','DD-MM-yy'),'gabriel.hps');
@@ -655,6 +650,7 @@ Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,U
 Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (3249,PARSEDATETIME('16-09-15','DD-MM-yy'),null,0,'TASKBOARD 1',PARSEDATETIME('27-10-16','DD-MM-yy'),'foo');
 Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (3250,PARSEDATETIME('16-09-15','DD-MM-yy'),null,0,'FFC',PARSEDATETIME('27-10-16','DD-MM-yy'),'foo');
 Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (3251,PARSEDATETIME('31-03-14','DD-MM-yy'),null,0,'OITV-RJ',PARSEDATETIME('31-03-14','DD-MM-yy'),'gabriel.takeuchi');
+Insert into user_team (ID,CREATED_AT,END_DATE,IS_ESPECIFICADOR,TEAM,UPDATED_AT,USER_NAME) values (3252,PARSEDATETIME('16-09-15','DD-MM-yy'),null,0,'TASKBOARD 2',PARSEDATETIME('27-10-16','DD-MM-yy'),'lohandus.ribeiro');
 
 -- INSERTING into holiday
 -- delete from holiday;

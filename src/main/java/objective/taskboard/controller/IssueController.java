@@ -233,12 +233,12 @@ public class IssueController
     }
 
     private CardDto toCardDto(Issue issue) {
-        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        List<Long> teamsVisibleToUser = userTeamService.getIdsOfTeamsVisibleToUser();
         return CardDto.fromIssue(issue, teamsVisibleToUser);
     }
 
     private List<CardDto> toCardDto(List<Issue> issues) {
-        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        List<Long> teamsVisibleToUser = userTeamService.getIdsOfTeamsVisibleToUser();
         return issues.stream()
                 .map(i->CardDto.fromIssue(i, teamsVisibleToUser))
                 .collect(Collectors.toList());
