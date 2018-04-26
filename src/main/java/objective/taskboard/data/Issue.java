@@ -74,8 +74,6 @@ public class Issue extends IssueScratch implements Serializable {
 
     private transient ProjectService projectService;
 
-    private transient IssueStateHashCalculator issueStateHashCalculator;
-
     private transient IssueColorService issueColorService;
 
     private transient CycleTime cycleTime;
@@ -90,7 +88,6 @@ public class Issue extends IssueScratch implements Serializable {
             CycleTime cycleTime,
             CardVisibilityEvalService cardVisibilityEvalService,
             ProjectService projectService,
-            IssueStateHashCalculator issueStateHashCalculator,
             IssueColorService issueColorService,
             IssuePriorityService issuePriorityService) {
         this.id = scratch.id;
@@ -130,7 +127,6 @@ public class Issue extends IssueScratch implements Serializable {
         this.cycleTime = cycleTime;
         this.cardVisibilityEvalService = cardVisibilityEvalService;
         this.projectService = projectService;
-        this.issueStateHashCalculator = issueStateHashCalculator;
         this.issueColorService = issueColorService;
         this.issuePriorityService = issuePriorityService;
         this.worklogs = scratch.worklogs;
@@ -145,7 +141,6 @@ public class Issue extends IssueScratch implements Serializable {
         cycleTime = SpringContextBridge.getBean(CycleTime.class);
         cardVisibilityEvalService = SpringContextBridge.getBean(CardVisibilityEvalService.class);
         projectService = SpringContextBridge.getBean(ProjectService.class);
-        issueStateHashCalculator = SpringContextBridge.getBean(IssueStateHashCalculator.class);
         issueColorService = SpringContextBridge.getBean(IssueColorService.class);
         issuePriorityService = SpringContextBridge.getBean(IssuePriorityService.class);
     }
@@ -205,10 +200,6 @@ public class Issue extends IssueScratch implements Serializable {
         return issueTeamService.getMismatchingUsers(this);
     }
 
-    public Set<String> getTeamNames() {
-        return getTeams().stream().map(t->t.name).collect(Collectors.toSet());
-    }
-    
     public Set<CardTeam> getTeams() {
         Set<CardTeam> issueTeams = new LinkedHashSet<>();
         issueTeams.addAll(issueTeamService.getTeamsForIds(getRawAssignedTeamsIds()));
@@ -689,7 +680,7 @@ public class Issue extends IssueScratch implements Serializable {
     }
 
     public int getStateHash() {
-        return issueStateHashCalculator.calculateHash(this);
+        return new IssueStateHashCalculator().calculateHash(this);
     }
     
     public List<Worklog> getWorklogs() {
@@ -709,7 +700,6 @@ public class Issue extends IssueScratch implements Serializable {
             CycleTime cycleTime,
             CardVisibilityEvalService cardVisibilityEvalService,
             ProjectService projectService,
-            IssueStateHashCalculator issueStateHashCalculator,
             IssueColorService issueColorService,
             IssuePriorityService issuePriorityService) {
         this.jiraProperties = jiraProperties;
@@ -719,7 +709,6 @@ public class Issue extends IssueScratch implements Serializable {
         this.cycleTime = cycleTime;
         this.cardVisibilityEvalService = cardVisibilityEvalService;
         this.projectService = projectService;
-        this.issueStateHashCalculator = issueStateHashCalculator;
         this.issueColorService = issueColorService;
         this.issuePriorityService = issuePriorityService;
     }
@@ -748,7 +737,8 @@ public class Issue extends IssueScratch implements Serializable {
         if (isUsingParentTeam())
             assignedTeamsIds.addAll(parentCard.getRawAssignedTeamsIds());
 
-        assignedTeamsIds.add(teamToAdd.getId());
+        if (!assignedTeamsIds.contains(teamToAdd.getId()))
+            assignedTeamsIds.add(teamToAdd.getId());
     }
 
     public void removeTeam(Team teamToRemove) {
@@ -799,7 +789,6 @@ public class Issue extends IssueScratch implements Serializable {
                 cycleTime,
                 cardVisibilityEvalService,
                 projectService,
-                issueStateHashCalculator,
                 issueColorService,
                 issuePriorityService);
 

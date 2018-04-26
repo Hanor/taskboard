@@ -57,9 +57,7 @@ function SearchFilter() {
         }
         if (matchByAttribute(issue.issueKey, searchUpperCase))
             return true;
-        else if (matchByAttribute(issue.assignee.name, searchUpperCase))
-            return true;
-        else if (matchByAttribute(issue.coAssignees.map(function(s){return s.name}), searchUpperCase))
+        else if (matchByAttribute(issue.assignees.map(function(s){return s.name}), searchUpperCase))
             return true;
         else if (matchByAttribute(issue.summary, searchUpperCase))
             return true;

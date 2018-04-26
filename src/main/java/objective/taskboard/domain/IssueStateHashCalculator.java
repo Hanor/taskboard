@@ -1,12 +1,9 @@
 package objective.taskboard.domain;
 
-import org.springframework.stereotype.Service;
-
 import com.google.common.base.Objects;
 
 import objective.taskboard.data.Issue;
 
-@Service
 public class IssueStateHashCalculator {
 
     public int calculateHash(Issue issue) {
@@ -18,13 +15,11 @@ public class IssueStateHashCalculator {
                 , issue.getProjectKey()
                 , issue.getProject()
                 , issue.getType()
-                , issue.getTypeIconUri()
                 , issue.getSummary()
                 , issue.getStatus()
                 , issue.getStartDateStepMillis()
                 , issue.getParent()
                 , issue.getParentType()
-                , issue.getParentTypeIconUri()
                 , issue.getDependencies()
                 , issue.getCoAssignees()
                 , issue.getAssignee()
@@ -40,11 +35,9 @@ public class IssueStateHashCalculator {
                 , issue.getTimeTracking()
                 , issue.getRemoteIssueUpdatedDate()
                 , issue.getPriorityUpdatedDate()
-                , issue.isVisible()
                 , issue.getSubtaskCards()
                 , issue.getSubtasks()
                 , issue.getReleaseId()
-                , issue.getRelease()
                 , issue.getClassOfServiceValue()
                 , issue.getAdditionalEstimatedHours()
                 , issue.isCancelled()

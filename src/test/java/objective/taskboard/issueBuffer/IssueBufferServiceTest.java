@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,12 +36,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import objective.taskboard.data.Issue;
 import objective.taskboard.data.Team;
 import objective.taskboard.data.User;
+import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.domain.converter.IssueTeamService;
 import objective.taskboard.domain.converter.JiraIssueToIssueConverter;
 import objective.taskboard.domain.converter.JiraIssueToIssueConverterMockFactory;
 import objective.taskboard.jira.JiraIssueService;
+import objective.taskboard.jira.JiraProperties;
+import objective.taskboard.jira.JiraProperties.CustomField;
+import objective.taskboard.jira.JiraProperties.CustomField.ClassOfServiceDetails;
+import objective.taskboard.jira.JiraProperties.CustomField.TShirtSize;
 import objective.taskboard.jira.JiraService;
 import objective.taskboard.jira.MetadataService;
 import objective.taskboard.jira.client.JiraIssueDto;
@@ -57,7 +63,12 @@ public class IssueBufferServiceTest {
     public static class Configuration {
         @Bean
         private FactoryBean<JiraIssueToIssueConverter> jiraIssueToIssueConverter() {
-            return new JiraIssueToIssueConverterMockFactory(issueTeamService, metaDataService(), colorService());
+            return new JiraIssueToIssueConverterMockFactory(
+                    issueTeamService, 
+                    metaDataService(), 
+                    colorService(), 
+                    getJiraProperties(), 
+                    getIssuePriorityService());
         }
 
         @MockBean
@@ -90,6 +101,21 @@ public class IssueBufferServiceTest {
         
         public IssueColorService colorService() {
             return mock(IssueColorService.class);
+        }
+        
+        private JiraProperties getJiraProperties() {
+            JiraProperties jiraProperties = mock(JiraProperties.class);
+            CustomField cf = mock(CustomField.class);
+            when(cf.getClassOfService()).thenReturn(new ClassOfServiceDetails());
+            TShirtSize ts = mock(TShirtSize.class);
+            when(ts.getIds()).thenReturn(Arrays.asList());
+            when(cf.getTShirtSize()).thenReturn(ts);
+            when(jiraProperties.getCustomfield()).thenReturn(cf );
+            return jiraProperties;
+        }
+        
+        private IssuePriorityService getIssuePriorityService() {
+            return mock(IssuePriorityService.class,Mockito.RETURNS_DEEP_STUBS);
         }
         
         @Bean

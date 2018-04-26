@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class IssueScratch implements Serializable {
     private static final long serialVersionUID = -8643342601909365442L;
     
-    protected Long id;
+    protected Long id = 0L;
     protected String issueKey;
     protected String projectKey;
     protected String project;

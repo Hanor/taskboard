@@ -6,6 +6,8 @@ public interface LoggedUserDetails {
 
     List<Role> getUserRoles();
 
+    public String getUsername();
+
     public static class Role {
         public Long id;
         public String name;

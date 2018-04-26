@@ -23,6 +23,7 @@ public class CardRepo  {
     private Map<String, Issue> cardByKey = new ConcurrentHashMap<>();
     private Set<String> unsavedCards = new HashSet<>();
     private Set<String> currentProjects = new HashSet<>();
+    private Map<Long, String> keyById = new ConcurrentHashMap<>();
        
     public CardRepo(CardStorage repodb) {
         this.db = repodb;
@@ -38,6 +39,10 @@ public class CardRepo  {
 
     public Issue get(String key) {
         return cardByKey.get(key);
+    }
+
+    public Issue getById(Long id) {
+        return cardByKey.get(keyById.get(id));
     }
     
     public synchronized boolean putOnlyIfNewer(Issue newValue) {
@@ -79,6 +84,8 @@ public class CardRepo  {
             });
 
         unsavedCards.add(key);
+        if (value.getIssueKey() != null)
+            keyById.put(value.getId(), value.getIssueKey());
         addProject(value.getProjectKey());
     }
     

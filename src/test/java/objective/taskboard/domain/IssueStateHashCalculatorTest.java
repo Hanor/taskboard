@@ -91,6 +91,10 @@ public class IssueStateHashCalculatorTest {
         ignoredMethods.add("getTshirtSizes");
         ignoredMethods.add("isUsingDefaultTeam");
         ignoredMethods.add("isUsingParentTeam");
+        ignoredMethods.add("getParentTypeIconUri");
+        ignoredMethods.add("getRelease");
+        ignoredMethods.add("getTypeIconUri");
+        ignoredMethods.add("isVisible");
         
         ignoredMethods.add("getStateHash");
         ignoredMethods.add("getClass");

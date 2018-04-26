@@ -71,7 +71,7 @@ public class TeamFilterConfigurationService {
     }
 
     @Cacheable(cacheNames = CacheConfiguration.TEAMS_VISIBLE_TO_USER, keyGenerator = LoggedInUserKeyGenerator.NAME)
-    public List<Team> getTeamsVisibleToUser() {
+    public List<Team> getDefaultTeamsInProjectsVisibleToUser() {
         Set<Long> visibleTeamsIds = projectService.getNonArchivedJiraProjectsForUser()
                 .stream()
                 .flatMap(p -> p.getTeamsIds().stream())

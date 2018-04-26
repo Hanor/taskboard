@@ -26,7 +26,7 @@ public class IssueTest {
     public void ensureAllScratchFieldsAreCopied() throws IllegalArgumentException, IllegalAccessException {
         IssueScratch issueScratch = makeIssueScratch();
 
-        Issue subject = new Issue(issueScratch, null, null, null, null, null, null, null, null, null, null);
+        Issue subject = new Issue(issueScratch, null, null, null, null, null, null, null, null, null);
 
         Field[] declaredFields = IssueScratch.class.getDeclaredFields();
         for (Field field : declaredFields) {
@@ -72,7 +72,7 @@ public class IssueTest {
                 assignedTeamsIds
                 );
 
-        Issue subject = new Issue(issueScratch, null, null, null, null, null, null, null, null, null, null);
+        Issue subject = new Issue(issueScratch, null, null, null, null, null, null, null, null, null);
 
         Field[] declaredFields = IssueScratch.class.getDeclaredFields();
         for (Field field : declaredFields) {
@@ -91,7 +91,7 @@ public class IssueTest {
     public void addTeam_IfAddingATeamThatIsNotTheDefault_MakeSureTheDefaultIsIncludedInTheNextResult() {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         Mockito.when(is.getDefaultTeamId(Mockito.any())).thenReturn(1L);
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
         Team teamToAdd = new Team();
         teamToAdd.setId(13L);
         subject.addTeam(teamToAdd );
@@ -102,8 +102,8 @@ public class IssueTest {
     public void addTeam_IfAddingATeamThatIsNotTheDefault_MakeSureTheParentTeamIsIncludedInTheNextResult() {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         Mockito.when(is.getDefaultTeamId(Mockito.any())).thenReturn(1L);
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
-        Issue parent = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
+        Issue parent = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null);
         subject.setParentCard(parent);
         Team teamToAdd = new Team();
         teamToAdd.setId(13L);
@@ -115,7 +115,7 @@ public class IssueTest {
     public void replaceTeam_ShouldReplaceAnExistingTeamByAnother() {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         Mockito.when(is.getDefaultTeamId(Mockito.any())).thenReturn(1L);
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
         Team replacementTeam = new Team();
         replacementTeam.setId(13L);
         Team teamToReplace = new Team();
@@ -129,7 +129,7 @@ public class IssueTest {
     public void addTeamThatIsNotTheDefault_ShouldNotReaddTheDefaul() {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         Mockito.when(is.getDefaultTeamId(Mockito.any())).thenReturn(1L);
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
         Team replacementTeam = new Team();
         replacementTeam.setId(13L);
         Team teamToReplace = new Team();
@@ -148,7 +148,7 @@ public class IssueTest {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         when(is.getTeamsForIds(Arrays.asList(37L))).thenReturn(Sets.newSet(new CardTeam("bravo1337", 37L)));
 
-        Issue subject = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null);
 
         List<String> issueTeams = toStringSet(subject.getTeams());
         assertEquals("bravo1337", StringUtils.join(issueTeams));
@@ -158,7 +158,7 @@ public class IssueTest {
     public void whenIssueHasNoTeamAndNoParent_ShouldReturnDefaultProjectTeam(){
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         when(is.getDefaultTeam(Mockito.any())).thenReturn(new CardTeam("default project team", 1l));
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
 
         List<String> issueTeams = toStringSet(subject.getTeams());
         assertEquals("default project team", StringUtils.join(issueTeams));
@@ -169,8 +169,8 @@ public class IssueTest {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         when(is.getTeamsForIds(Arrays.asList(37L))).thenReturn(Sets.newSet(new CardTeam("bravo1337", 37L)));
 
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
-        Issue parent = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
+        Issue parent = new Issue(makeIssueScratch(37L), null, null, is, null, null, null, null, null, null);
         subject.setParentCard(parent);
 
         List<String> issueTeams = toStringSet(subject.getTeams());
@@ -182,8 +182,8 @@ public class IssueTest {
         IssueTeamService is = Mockito.mock(IssueTeamService.class);
         when(is.getDefaultTeam(Mockito.any())).thenReturn(new CardTeam("default project team", 1l));
 
-        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
-        Issue parent = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null, null);
+        Issue subject = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
+        Issue parent = new Issue(makeIssueScratch(), null, null, is, null, null, null, null, null, null);
         subject.setParentCard(parent);
 
         List<String> issueTeams = toStringSet(subject.getTeams());

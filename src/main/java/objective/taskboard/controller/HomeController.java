@@ -54,6 +54,9 @@ public class HomeController {
 
     @Autowired
     private TeamCachedRepository teamRepo;
+    
+    @Autowired
+    private UserTeamService userTeamService;
 
     @RequestMapping("/")
     public String home(Model model) {
@@ -89,8 +92,14 @@ public class HomeController {
         statusOrderByIssueType.put("subtasks", subtasks);
         model.addAttribute("statusOrderByIssueType", serialize(statusOrderByIssueType));
 
-        List<Team> teams= teamRepo.getCache();
-        model.addAttribute("teams", serialize(teams.stream().map(t->new TeamControllerData(t)).collect(Collectors.toList())));
+        List<Team> teams = teamRepo.getCache();
+        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        model.addAttribute("teams", serialize(
+                teams.stream()
+                    .filter(t->teamsVisibleToUser.contains(t.getId()))
+                    .map(t->new TeamControllerData(t))
+                    .sorted((a,b)->a.teamName.compareTo(b.teamName))
+                    .collect(Collectors.toList())));
 
         return "index";
     }

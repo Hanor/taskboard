@@ -27,10 +27,18 @@ import objective.taskboard.data.Issue;
 public class IssueUpdate implements Serializable {
     private static final long serialVersionUID = -4585168887857725892L;
     
-    public final Issue target;
+    public final Long issueId;
+    public final int stateHash;
     public final IssueUpdateType updateType;
     public IssueUpdate(Issue target, IssueUpdateType updateType) {
-        this.target = target;
+        if (target != null) {
+            this.issueId = target.getId();
+            this.stateHash = target.getStateHash();
+        }
+        else {
+            this.issueId = -1L;
+            this.stateHash = -1;
+        }
         this.updateType = updateType;
     }
 }

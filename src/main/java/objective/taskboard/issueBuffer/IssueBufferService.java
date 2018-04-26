@@ -266,9 +266,21 @@ public class IssueBufferService {
 
     public synchronized List<Issue> getIssues() {
         return cardsRepo.values().stream()
-                .filter(t -> projectService.isNonArchivedAndUserHasAccess(t.getProjectKey()))
-                .filter(t -> t.isVisible())
-                .collect(toList());
+                .filter(this::isAccessible)
+                .collect(Collectors.toList());
+    }
+
+    public synchronized List<Issue> getIssuesByIds(List<Long> issuesIds) {
+        return issuesIds.stream()
+                .map(id->cardsRepo.getById(id))
+                .filter(this::isAccessible)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isAccessible(Issue t) {
+        if (t == null)
+            return false;
+        return projectService.isNonArchivedAndUserHasAccess(t.getProjectKey()) && t.isVisible();
     }
     
     public synchronized List<Issue> getAllIssues() {

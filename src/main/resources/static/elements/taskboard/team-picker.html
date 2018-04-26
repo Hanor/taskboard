@@ -32,7 +32,7 @@
                             return t.teamName.toLowerCase().indexOf(query.toLowerCase()) !== -1;
                         });
                         if (suggestions.length === 0)
-                            return [{"text":"No matches"}];
+                            return [{"teamName":"No matches"}];
 
                         return suggestions;
                     }.bind(this));
@@ -46,6 +46,7 @@
                 
                 focus: function() {
                     this.$$("tag-picker").focus();
+                    this.$$("tag-picker").suggestions(this.availableTeams);
                 },
                 
                 _onSelect: function(e) {

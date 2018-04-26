@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,9 @@ import org.springframework.beans.factory.FactoryBean;
 import objective.taskboard.data.IssueScratch;
 import objective.taskboard.data.TaskboardTimeTracking;
 import objective.taskboard.data.User;
+import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
+import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.MetadataService;
 import objective.taskboard.jira.client.JiraIssueDto;
 
@@ -30,11 +33,15 @@ public class JiraIssueToIssueConverterMockFactory implements FactoryBean<JiraIss
     private IssueTeamService issueTeamService;
     private MetadataService metadataService;
     private IssueColorService issueColorService;
+    private JiraProperties jiraProperties;
+    private IssuePriorityService issuePriorityService;
 
-    public JiraIssueToIssueConverterMockFactory(IssueTeamService issueTeamService, MetadataService metadataService, IssueColorService issueColorService) {
+    public JiraIssueToIssueConverterMockFactory(IssueTeamService issueTeamService, MetadataService metadataService, IssueColorService issueColorService, JiraProperties jiraProperties, IssuePriorityService issuePriorityService) {
         this.issueTeamService = issueTeamService;
         this.metadataService = metadataService;
         this.issueColorService = issueColorService;
+        this.jiraProperties = jiraProperties;
+        this.issuePriorityService = issuePriorityService;
     }
 
     @Override
@@ -73,7 +80,7 @@ public class JiraIssueToIssueConverterMockFactory implements FactoryBean<JiraIss
                     extractComponents(jiraIssue),
                     false,
                     null,
-                    null,
+                    new LinkedHashMap<>(),
                     null,
                     TaskboardTimeTracking.fromJira(jiraIssue.getTimeTracking()),
                     jiraIssue.getReporter() != null ? jiraIssue.getReporter().getName() : null,
@@ -88,6 +95,8 @@ public class JiraIssueToIssueConverterMockFactory implements FactoryBean<JiraIss
         when(jiraIssueToIssueConverter.getIssueTeamService()).thenReturn(issueTeamService);
         when(jiraIssueToIssueConverter.getMetadataService()).thenReturn(metadataService);
         when(jiraIssueToIssueConverter.getIssueColorService()).thenReturn(issueColorService);
+        when(jiraIssueToIssueConverter.getJiraProperties()).thenReturn(jiraProperties);
+        when(jiraIssueToIssueConverter.getIssuePriorityService()).thenReturn(issuePriorityService);
         willCallRealMethod().given(jiraIssueToIssueConverter).createIssueFromScratch(any(), any());
 
         return jiraIssueToIssueConverter;

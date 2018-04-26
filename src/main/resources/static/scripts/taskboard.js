@@ -95,8 +95,6 @@ function Taskboard() {
     }
 
     this.getIssueStep = function(issue) {
-        if (!issue.visible) return null;
-
         var steps = self.getAllSteps()
         for (var s in steps) {
             var step = steps[s]
@@ -115,10 +113,6 @@ function Taskboard() {
     this.getIssuesByStep = function(stepId) {
         if (issuesBySteps)
             return issuesBySteps[stepId];
-    };
-
-    this.getIssues = function() {
-        return this.issues;
     };
 
     this.getIssueByKey = function(issueKey) {
@@ -335,8 +329,8 @@ function Taskboard() {
             console.log(message);
         };
         stompClient.connect({}, function () {
-            stompClient.subscribe('/topic/issues/updates', function (issues) {
-                handleIssueUpdate(taskboardHome, issues)
+            stompClient.subscribe('/topic/issues/updates', function (response) {
+                handleIssueUpdates(taskboardHome, response)
             });
 
             stompClient.subscribe('/user/topic/sizing-import/status', function(status) {
@@ -357,15 +351,58 @@ function Taskboard() {
         });
     }
 
-    function handleIssueUpdate(taskboardHome, response) {
-        var updateEvents = JSON.parse(response.body)
+    function handleIssueUpdates(taskboardHome, response) {
+        var issueUpdateData = JSON.parse(response.body)
+        var relevantEvents = issueUpdateData.filter(function(event) {
+            if (event.updateType === 'DELETED')
+                return true;
+
+            var previousInstance = getPreviousIssueInstanceById(event.issueId);
+            if (!previousInstance)
+                return true;
+
+            return previousInstance.issue.stateHash != event.stateHash
+        })
+
+        var ids = relevantEvents.map(function(i) { return i.issueId})
+
+        $.post({
+            url:"/ws/issues/byids", 
+            contentType: 'application/json', 
+            data: JSON.stringify(ids)
+        })
+        .done(function(issues) {
+            var issueById = {};
+            issues.forEach(function(i){
+                issueById[i.id] = i;
+            })
+            var issueUpdateEvents = []
+            relevantEvents.forEach(function(event){
+                var issueData = issueById[event.issueId];
+                if (!issueData)
+                    event.updateType = 'DELETED'
+
+                if (event.updateType === 'DELETED') {
+                    var previous = getPreviousIssueInstanceById(event.issueId);
+                    if (!previous)
+                        return;
+                    event.target = getPreviousIssueInstanceById(event.issueId).issue;
+                }
+                else {
+                    event.target = issueData;
+                }
+                issueUpdateEvents.push(event);
+            })
+
+            updateIssuesByEvents(taskboardHome, issueUpdateEvents)
+        })
+    }
+
+    function updateIssuesByEvents(taskboardHome, updateEvents) {
         var updatedIssueKeys = []
         var updateByStep = {};
         updateEvents.forEach(function(anEvent) {
-            var previousInstance = getPreviousIssueInstance(anEvent.target.issueKey);
-            if (anEvent.updateType !== 'DELETED' && previousInstance !== null && previousInstance.issue.stateHash === anEvent.target.stateHash)
-                return;
-
+            var previousInstance = getPreviousIssueInstanceById(anEvent.target.id);
             if (anEvent.updateType === 'DELETED' && previousInstance !== null) {
                 self.issues.splice(previousInstance.index, 1);
                 updatedIssueKeys.push(anEvent.target.issueKey);
@@ -373,7 +410,7 @@ function Taskboard() {
                 return;
             }
 
-            var converted = anEvent.target;
+            var converted = self.resolveIssueFields(anEvent.target);
             if (previousInstance === null)
                 self.issues.push(converted);
             else
@@ -418,9 +455,9 @@ function Taskboard() {
         }});
     }
 
-    function getPreviousIssueInstance(key) {
+    function getPreviousIssueInstanceById(id) {
         var previousInstance = null;
-        var piIndex = findIndexInArray(self.issues, function(i) { return i.issueKey === key });
+        var piIndex = findIndexInArray(self.issues, function(i) { return i.id === id });
         if (piIndex > -1)
             previousInstance = {issue: self.issues[piIndex], index: piIndex};
         return previousInstance;
@@ -452,7 +489,7 @@ function Taskboard() {
     this.convertAndRegisterIssue = function(issue) {
         var converted = this.resolveIssueFields(issue);
         
-        var previousInstance = getPreviousIssueInstance(issue.issueKey);
+        var previousInstance = getPreviousIssueInstanceById(issue.id);
         if (previousInstance === null)
             self.issues.push(converted)
         else
@@ -464,6 +501,7 @@ function Taskboard() {
         var converted = issue;
         if (issue.additionalEstimatedHoursField)
             issue.additionalEstimatedHoursField.name = this.getFieldName(issue.additionalEstimatedHoursField);
+
         issue.subtasksTshirtSizes.forEach(function(ts) {
             ts.name = this.getFieldName(ts);
         }.bind(this))

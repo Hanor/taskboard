@@ -30,47 +30,6 @@ public class WebhookUpdateRefreshDialogIT extends AuthenticatedIntegrationTest {
     private static final String FIXED_DATE_COLOR = "rgb(254, 229, 188)";
 
     @Test
-    public void whenUpdateHappensViaWebHook_RefreshToastShouldShowUPDuring5Seconds() {
-        MainPage mainPage = MainPage.produce(webDriver);
-        mainPage.issue("TASKB-625")
-            .assertHasFirstAssignee();
-
-        emulateUpdateIssue("TASKB-625", "{\"assignee\":{\"name\":\"foo\"}},\"properties\":[]");
-
-        String[] updatedIssues = {"TASKB-625"};
-        mainPage.assertUpdatedIssues(updatedIssues)
-            .errorToast().close();
-        mainPage.refreshToast()
-            .assertVisibleDuringMilliseconds(4500L)
-            .assertNotVisible();
-        mainPage.assertUpdatedIssues(new String[0]);
-
-        emulateUpdateIssue("TASKB-625", "{\"assignee\":{\"name\":\"foo\"}},\"properties\":[]");
-
-        mainPage.refreshToast().assertVisible();
-        mainPage.typeSearch("TASKB-61")
-            .assertVisibleIssues("TASKB-611", "TASKB-612", "TASKB-613", "TASKB-610", "TASKB-614")
-            .refreshToast().showOnlyUpdated()
-            .assertVisibleDuringMilliseconds(5500L);
-        mainPage.assertVisibleIssues("TASKB-625")
-            .issue("TASKB-625")
-            .assertHasFirstAssignee()
-            .assertHasSecondAssignee();
-
-        mainPage.refreshToast().dismiss()
-            .assertNotVisible();
-        mainPage.assertVisibleIssues("TASKB-611", "TASKB-612", "TASKB-613", "TASKB-610", "TASKB-614")
-            .clearSearch();
-
-        emulateUpdateIssue("TASKB-625", "{\"assignee\":{\"name\":\"foo\"}},\"properties\":[]");
-
-        mainPage.assertUpdatedIssues(updatedIssues);
-        mainPage.refreshToast()
-            .assertVisibleDuringMilliseconds(4500L)
-            .assertNotVisible();
-    }
-
-    @Test
     public void whenUpdateHappensViaWebHookAndUpdatedIssueIsOpen_ShouldWarnUser() {
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.errorToast().close();
@@ -140,7 +99,6 @@ public class WebhookUpdateRefreshDialogIT extends AuthenticatedIntegrationTest {
     @Test
     public void givenIssuesWithChildren_whenParentChangeTheClassOfService_thenAllChildrenShouldUpdate() {
         MainPage mainPage = MainPage.produce(webDriver);
-        //TODO FIX
 
         mainPage.issue("TASKB-606").assertCardColor(STANDARD_COLOR).click().issueDetails()
             .assertClassOfService("Standard")

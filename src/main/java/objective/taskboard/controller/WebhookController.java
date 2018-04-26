@@ -20,6 +20,8 @@
  */
 package objective.taskboard.controller;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import objective.taskboard.jira.data.WebHookBody;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
@@ -51,14 +52,16 @@ public class WebhookController {
     private IssueEventProcessScheduler webhookSchedule;
 
     @Autowired
-    private ObjectMapper mapper;
-
-    @Autowired
     private List<JiraEventProcessorFactory> jiraEventProcessorFactories;
 
     @RequestMapping(value = "{projectKey}", method = RequestMethod.POST)
     public void webhook(@RequestBody WebHookBody body, @PathVariable("projectKey") String projectKey) throws JsonProcessingException {
-        log.debug("WEBHOOK REQUEST BODY: " + mapper.writeValueAsString(body));
+        log.debug("Incoming Webhook request: type " + 
+                body.webhookEvent.typeName +
+                " / timestamp " + body.timestamp +
+                " / issue: " +   ofNullable(body.issue).map(i->i.get("key")).orElse("N/A") +
+                " / version: " + ofNullable(body.version).map(t->t.name).orElse("N/A") +
+                " / user: " +    ofNullable(body.user).map(u->u.get("name")).orElse("N/A"));
 
         if(body.webhookEvent == null)
             return;

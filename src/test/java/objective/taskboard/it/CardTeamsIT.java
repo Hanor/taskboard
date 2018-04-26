@@ -30,11 +30,11 @@ public class CardTeamsIT extends AuthenticatedIntegrationTest {
     public void whenTeamIsReplaced_ShouldUpdateIssueImmediatlyWithNewTeam(){
         MainPage mainPage = MainPage.produce(webDriver);
         mainPage.errorToast().close();
-        TestIssue issue = mainPage.issue("TASKB-647");
+        TestIssue issue = mainPage.issue("TASKB-625");
         issue
             .click()
             .issueDetails()
-            .replaceTeam("TASKBOARD 2", "FFC")
+            .replaceTeam("TASKBOARD 1", "FFC")
             .assertTeams("FFC");
     }
 

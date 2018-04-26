@@ -45,8 +45,7 @@ public class IssueBufferServiceSearchVisitor implements SearchIssueVisitor {
     public void processIssue(JiraIssueDto jiraIssue) {
         String currentIssueKey = jiraIssue.getKey();
         try {
-            if (!issueBufferService.updateIssue(issueConverter.convertSingleIssue(jiraIssue, provider)))
-                log.debug("Issue key " + currentIssueKey + " fetched, but current copy is newer. Ignoring.");
+            issueBufferService.updateIssue(issueConverter.convertSingleIssue(jiraIssue, provider));
             processedCount++;
         }catch(IncompleteIssueException e) {//NOSONAR - this is expected and correctly handled
             String parentKey = e.getMissingParentKey();

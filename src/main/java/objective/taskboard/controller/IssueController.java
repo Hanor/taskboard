@@ -28,12 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.codehaus.jettison.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -91,60 +91,64 @@ public class IssueController
     @Autowired
     private UserPreferencesService userPreferencesService;
 
-    @Value("${spring.datasource.username}")
-    private String datasourceUserName;
-
     @Autowired
     private JiraProperties jiraProperties;
 
     @Autowired
     private LinkGraphProperties linkGraphProperties;
+    
+    @Autowired
+    private UserTeamService userTeamService;
 
     @RequestMapping(path = "/", method = RequestMethod.POST)
-    public List<Issue> issues() {
-        List<Issue> issues = issueBufferService.getIssues();
-        return issues;
+    public List<CardDto> issues() {
+        return toCardDto(issueBufferService.getIssues());
+    }
+    
+    @RequestMapping(path = "/byids", method = RequestMethod.POST)
+    public List<CardDto> byids(@RequestBody List<Long> issuesIds) {
+        return toCardDto(issueBufferService.getIssuesByIds(issuesIds));
     }
 
     @RequestMapping(path = "addMeAsAssignee", method = RequestMethod.POST)
-    public Issue addMeAsAssignee(@RequestBody String issueKey) {
-        return issueBufferService.addMeAsAssignee(issueKey);
+    public CardDto addMeAsAssignee(@RequestBody String issueKey) {
+        return toCardDto(issueBufferService.addMeAsAssignee(issueKey));
     }
 
     @RequestMapping(path = "addAssigneeToIssue/{issue}", method = RequestMethod.POST)
-    public Issue addAssigneeToIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
-        return issueBufferService.addAssigneeToIssue(issueKey, user.username);
+    public CardDto addAssigneeToIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
+        return toCardDto(issueBufferService.addAssigneeToIssue(issueKey, user.username));
     }
 
     @RequestMapping(path = "removeAssigneeFromIssue/{issue}", method = RequestMethod.POST)
-    public Issue removeAssigneeFromIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
-        return issueBufferService.removeAssigneeFromIssue(issueKey, user.username);
+    public CardDto removeAssigneeFromIssue(@PathVariable("issue") String issueKey, @RequestBody UserRequestDTO user) {
+        return toCardDto(issueBufferService.removeAssigneeFromIssue(issueKey, user.username));
     }
 
     @RequestMapping(path = "addTeamToIssue/{issue}", method = RequestMethod.POST)
-    public Issue addTeamToIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
-        return issueBufferService.addTeamToIssue(issueKey, team.id);
+    public CardDto addTeamToIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
+        return toCardDto(issueBufferService.addTeamToIssue(issueKey, team.id));
     }
 
     @RequestMapping(path = "replaceTeamInIssue/{issue}", method = RequestMethod.POST)
-    public Issue replaceTeamInIssue(@PathVariable("issue") String issueKey, @RequestBody ReplaceTeamRequestDTO replaceTeamRequest) {
-        return issueBufferService.replaceTeamInIssue(
+    public CardDto replaceTeamInIssue(@PathVariable("issue") String issueKey, @RequestBody ReplaceTeamRequestDTO replaceTeamRequest) {
+        return toCardDto(issueBufferService.replaceTeamInIssue(
                 issueKey,
                 replaceTeamRequest.teamToReplace,
-                replaceTeamRequest.replacementTeam);
+                replaceTeamRequest.replacementTeam));
     }
 
     @RequestMapping(path = "removeTeamFromIssue/{issue}", method = RequestMethod.POST)
-    public Issue removeTeamFromIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
-        return issueBufferService.removeTeamFromIssue(
+    public CardDto removeTeamFromIssue(@PathVariable("issue") String issueKey, @RequestBody TeamRequestDTO team) {
+        return toCardDto(issueBufferService.removeTeamFromIssue(
                 issueKey,
-                team.id);
+                team.id));
     }
 
     @RequestMapping(path = "transition", method = RequestMethod.POST)
-    public Issue transition(@RequestBody TransitionRequestDTO tr) throws JSONException {
+    public CardDto transition(@RequestBody TransitionRequestDTO tr) throws JSONException {
         Map<String, Object> fields = tr.fields == null ? Collections.emptyMap() : tr.fields;
-        return issueBufferService.doTransition(tr.issueKey, tr.transitionId, fields);
+        return toCardDto(issueBufferService.doTransition(tr.issueKey, tr.transitionId, fields));
     }
 
     @RequestMapping(path = "transitions", method = RequestMethod.POST)
@@ -207,25 +211,37 @@ public class IssueController
     }
 
     @RequestMapping(path = "block-task/{issue}", method = RequestMethod.POST)
-    public Issue blockTask(@PathVariable("issue") String issue, @RequestBody String lastBlockReason) {
+    public CardDto blockTask(@PathVariable("issue") String issue, @RequestBody String lastBlockReason) {
         jiraBean.block(issue, lastBlockReason);
-        return issueBufferService.updateIssueBuffer(issue);
+        return toCardDto(issueBufferService.updateIssueBuffer(issue));
     }
 
     @RequestMapping(path = "unblock-task/{issue}", method = RequestMethod.POST)
-    public Issue unblockTask(@PathVariable("issue") String issue) {
+    public CardDto unblockTask(@PathVariable("issue") String issue) {
         jiraBean.unblock(issue);
-        return issueBufferService.updateIssueBuffer(issue);
+        return toCardDto(issueBufferService.updateIssueBuffer(issue));
     }
     
     @RequestMapping("reorder")
-    public List<Issue> reorder(@RequestBody String [] issues) {
-        return issueBufferService.reorder(issues);
+    public List<CardDto> reorder(@RequestBody String [] issues) {
+        return toCardDto(issueBufferService.reorder(issues));
     }
 
     @RequestMapping("issue-buffer-state")
     public String getState() {
         return issueBufferService.getState().name();
+    }
+
+    private CardDto toCardDto(Issue issue) {
+        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        return CardDto.fromIssue(issue, teamsVisibleToUser);
+    }
+
+    private List<CardDto> toCardDto(List<Issue> issues) {
+        List<Long> teamsVisibleToUser = userTeamService.getTeamsVisibleToUser();
+        return issues.stream()
+                .map(i->CardDto.fromIssue(i, teamsVisibleToUser))
+                .collect(Collectors.toList());
     }
 
     private List<AspectItemFilter> getDefaultFieldFilterList() throws InterruptedException, ExecutionException {
@@ -250,7 +266,7 @@ public class IssueController
     }
 
     private List<AspectSubitemFilter> getProjectFilterItems() {
-        List<Team> teamsVisibleToUser = teamFilterConfigurationService.getTeamsVisibleToUser();
+        List<Team> teamsVisibleToUser = teamFilterConfigurationService.getDefaultTeamsInProjectsVisibleToUser();
         return projectService.getNonArchivedJiraProjectsForUser().stream()
                 .map(p -> AspectSubitemFilter.from(p.getName(), p.getKey(), true,
                                                    teamsVisibleToUser.stream()
@@ -263,7 +279,8 @@ public class IssueController
     }
 
     private List<AspectSubitemFilter> getTeamFilterItems() {
-        List<AspectSubitemFilter> teamsFilter = teamFilterConfigurationService.getTeamsVisibleToUser().stream()
+        List<AspectSubitemFilter> teamsFilter = 
+                teamFilterConfigurationService.getDefaultTeamsInProjectsVisibleToUser().stream()
                 .map(t -> AspectSubitemFilter.from(t.getName(), t.getName(), true))
                 .sorted(this::compareFilter)
                 .collect(toList());

@@ -55,7 +55,6 @@ import objective.taskboard.data.TaskboardTimeTracking;
 import objective.taskboard.data.User;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.domain.IssueColorService;
-import objective.taskboard.domain.IssueStateHashCalculator;
 import objective.taskboard.domain.ParentIssueLink;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.MetadataService;
@@ -98,9 +97,6 @@ public class JiraIssueToIssueConverter {
 
     @Autowired
     private ProjectService projectService;
-
-    @Autowired
-    private IssueStateHashCalculator issueStateHashCalculator;
 
     private List<String> parentIssueLinks = new ArrayList<>();
     
@@ -163,16 +159,15 @@ public class JiraIssueToIssueConverter {
 
     public Issue createIssueFromScratch(IssueScratch scratch, ParentProvider provider) {
         Issue converted = new Issue(scratch, 
-                jiraProperties, 
+                getJiraProperties(), 
                 getMetadataService(), 
                 getIssueTeamService(), 
                 filterRepository,
                 cycleTime,
                 cardVisibilityEvalService,
                 projectService,
-                issueStateHashCalculator,
                 getIssueColorService(),
-                priorityService);
+                getIssuePriorityService());
         
     	if (!isEmpty(converted.getParent())) {
     	    Optional<Issue> parentCard = provider.get(converted.getParent());
@@ -181,6 +176,10 @@ public class JiraIssueToIssueConverter {
         }
 
         return converted;
+    }
+
+    public JiraProperties getJiraProperties() {
+        return jiraProperties;
     }
 
     public MetadataService getMetadataService() {
@@ -200,5 +199,9 @@ public class JiraIssueToIssueConverter {
 
     public IssueColorService getIssueColorService() {
         return issueColorService;
+    }
+
+    public IssuePriorityService getIssuePriorityService() {
+        return priorityService;
     }
 }

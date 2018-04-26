@@ -473,7 +473,7 @@ public abstract class AbstractFollowUpDataProviderTest {
                     Arrays.asList()
                     );
 
-            Issue issue = new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, cycleTime, null, projectService, null, null, issuePriorityService);
+            Issue issue = new Issue(scratch, jiraProperties, metadataService, issueTeamService, null, cycleTime, null, projectService, null, issuePriorityService);
             doReturn(priorityOrder).when(issuePriorityService).determinePriority(issue);
             doReturn(priorityUpdatedDate).when(issuePriorityService).priorityUpdateDate(issue);
             return issue;

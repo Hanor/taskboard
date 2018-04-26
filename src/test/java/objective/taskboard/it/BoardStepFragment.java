@@ -33,6 +33,8 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import com.atlassian.util.concurrent.atomic.AtomicReference;
+
 public class BoardStepFragment extends AbstractUiFragment {
 
     private WebElement boardStepRoot;
@@ -45,10 +47,14 @@ public class BoardStepFragment extends AbstractUiFragment {
     }
 
     public void assertIssueList(String ...expectedIssueKeyList) {
+        AtomicReference<String> s = new AtomicReference<>();
         try {
-            waitUntil((w) -> join(issueList(),"\n").equals(join(expectedIssueKeyList,"\n")));
+            waitUntil((w) -> {
+                s.set(join(issueList(),"\n"));
+                return s.get().equals(join(expectedIssueKeyList,"\n"));
+            });
         }catch(TimeoutException e) {
-            assertEquals(join(expectedIssueKeyList,"\n"), join(issueList(),"\n"));
+            assertEquals(join(expectedIssueKeyList,"\n"), s.get());
         }
     }
 
@@ -61,7 +67,7 @@ public class BoardStepFragment extends AbstractUiFragment {
             List<WebElement> findElements = boardStepRoot.findElements(By.cssSelector("paper-material.issue"));
             ArrayList<String> actualIssueKeyList = new ArrayList<String>(); 
             for (WebElement webElement : findElements) 
-                actualIssueKeyList.add( webElement.findElement(By.cssSelector(".key.issue-item")).getText().trim());
+                actualIssueKeyList.add( webElement.findElement(By.cssSelector(".key.issue-item")).getAttribute("data-issue-key").trim());
             
             return actualIssueKeyList;
         }catch(StaleElementReferenceException ex) {

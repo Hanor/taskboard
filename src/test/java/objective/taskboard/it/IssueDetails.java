@@ -69,13 +69,13 @@ class IssueDetails extends AbstractUiFragment {
         WebElement assignButton = issueDetailRoot.findElement(By.id("addTeamButton"));
         waitForClick(assignButton);
 
-        String pickerSelector = "#newTeamSelector";
+        String pickerSelector = "#teamSelector";
         return selectStringInPicker(teamName, pickerSelector);
     }
 
     public IssueDetails replaceTeam(String teamToReplace, String replacement) {
         assertIsOpened();
-        String pickerSelector = "team-picker[data-team='"+teamToReplace+"']";
+        String pickerSelector = "#teamSelector";
 
         WebElement teamTag = issueDetailRoot.findElement(By.cssSelector(".teams paper-material[data-team='"+teamToReplace+"'] span"));
         waitForClick(teamTag);

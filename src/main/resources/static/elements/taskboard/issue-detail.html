@@ -110,6 +110,7 @@
                 margin: 0px;
                 padding: 0px;
                 font-weight: normal;
+                display: inline !important;
             }
 
             .issue-key-link {
@@ -494,9 +495,7 @@
                 white-space: nowrap;
                 height: 2em;
             }
-            .team {
-                cursor: pointer;
-            }
+
             .invalid-assignee {
                 background-color: #E2AE33;
             }
@@ -543,12 +542,13 @@
                 color: #8E8E8E;
                 margin-top: auto;
                 margin-bottom: auto;
-                margin-left: 2px;
+                margin-left: 5px;
                 margin-right: 2px;
             }
 
             .default-team {
                 background-color: #8e8e8e !important;
+                cursor: pointer;
             }
 
             .default-team iron-icon {
@@ -741,6 +741,9 @@
                 padding-right: 5px;
                 width: min-content;
                 white-space: nowrap;
+            }
+            .hidden-section {
+                display: none;
             }
         </style>
         <style is="custom-property">
@@ -994,38 +997,36 @@
                     <div class="rightPanel">
                         <div class="subtitle">People</div>
                         
-                        <div class="subsubtitle">Team:</div>
-                        <div class="detailsRow teams">
-                            <template is="dom-repeat" items="{{item.teams}}" as="team" index-as="teamIndex">
-                                <paper-material class$="{{teamClasses(team)}} tag team labelForTeam_{{teamIndex}}" 
-                                    title="{{titleForDefaultTeam(team)}}" data-team$="{{team.name}}">
-                                    <span on-tap="_showReplaceTeamPicker"
-                                          data-picker$="pickerForTeam_{{teamIndex}}">{{team.name}}</span>
-                                    <iron-icon class="icon-tiny assignee-button" icon="taskboard-icons:change-team"
-                                        on-tap="_showReplaceTeamPicker"
-                                        data-picker$="pickerForTeam_{{teamIndex}}" 
-                                        title="Replace {{team.name}} by another team">
-                                    </iron-icon>
+                        <div id="teamSection" class$="people-section {{determineTeamSectionClass(item)}}">
+                            <div class="subsubtitle">Team:</div>
+                            <div class="detailsRow teams">
+                                <template is="dom-repeat" items="{{item.teams}}" as="team" index-as="teamIndex">
+                                    <paper-material class$="{{teamClasses(team)}} tag team labelForTeam_{{teamIndex}}"
+                                        title="{{titleForDefaultTeam(team)}}" data-team$="{{team.name}}">
+                                        <span on-tap="_showReplaceTeamPicker"
+                                            data-picker$="teamSelector">{{team.name}}</span>
 
-                                    <template is="dom-if" if="{{showRemoveAction(item.teams)}}">
-                                        <iron-icon class="remove-button assignee-button" icon="taskboard-icons:remove" 
-                                            on-tap="removeTeam" 
-                                            title="Remove {{team.name}} from this issue">
-                                        </iron-icon>
-                                    </template>
-                                </paper-material>
-                                <team-picker
-                                    data-team$="{{team.name}}"
-                                    class$="pickerForTeam_{{teamIndex}}"
-                                    data-label$="labelForTeam_{{teamIndex}}" 
-                                    on-selected-team="_replaceTeam"
-                                    on-close-clicked="_closePicker"></team-picker>
-                            </template>
-                            <team-picker id="newTeamSelector" on-selected-team="_addTeam" on-close-clicked="_closePicker"></team-picker>
-                            
-                            <div id="addTeamButton" class="add-team-link" on-tap="_showAddTeamPicker" title="Add a new team to this issue">
-                                <iron-icon class="add-assignee-icon" icon="taskboard-icons:add-team"></iron-icon>
-                                <span>Team</span>
+                                        <template is="dom-if" if="{{showReplaceAction(item.teams)}}">
+                                            <iron-icon class="icon-tiny assignee-button" icon="taskboard-icons:change-team"
+                                                on-tap="_showReplaceTeamPicker"
+                                                title="Replace {{team.name}} by another team">
+                                            </iron-icon>
+                                        </template>
+
+                                        <template is="dom-if" if="{{showRemoveAction(item.teams)}}">
+                                            <iron-icon class="remove-button assignee-button" icon="taskboard-icons:remove"
+                                                on-tap="removeTeam"
+                                                title="Remove {{team.name}} from this issue">
+                                            </iron-icon>
+                                        </template>
+                                    </paper-material>
+                                </template>
+                                <team-picker id="teamSelector" on-selected-team="_addOrReplaceTeam" on-close-clicked="_closePicker"></team-picker>
+
+                                <div id="addTeamButton" class="add-team-link" on-tap="_showAddTeamPicker" title="Add a new team to this issue">
+                                    <iron-icon class="add-assignee-icon" icon="taskboard-icons:add-team"></iron-icon>
+                                    <span>Team</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -1283,6 +1284,11 @@
                     }).observe(Polymer.dom(this).node, {subtree: true, childList: true, characterData: true});
 
                     this.set('_modalStatus', this._modalStatuses.CLOSED);
+                    this._setupPickers();
+                },
+
+                showReplaceAction: function() {
+                    return this.item.usingDefaultTeam;
                 },
                 
                 showRemoveAction: function() {
@@ -1316,7 +1322,20 @@
 
                 _showAddTeamPicker: function() {
                     this._closeAllPickers();
-                    this.$.newTeamSelector.open();
+                    this.$.teamSelector.open(this.$.addTeamButton);
+                },
+
+                _showReplaceTeamPicker: function(e) {
+                    if (!this.item.usingDefaultTeam)
+                        return;
+
+                    this._closeAllPickers();
+
+                    var team = e.model.get("team");
+                    var teamIndex = e.model.get("teamIndex");
+                    var label = this.$$(".labelForTeam_0");
+                    $(this.$.teamSelector).css("width", $(label).width()+40)
+                    this.$.teamSelector.open(label, team.id);
                 },
                
                 pickerForAddAssignee: function() {
@@ -1324,7 +1343,7 @@
                     this.$.pickerForAddAssignee.open();  
                 },
                 
-                _addTeam: function(e) {
+                _addOrReplaceTeam: function(e) {
                     var teamPicker = e.target;
                     var selectedTeamId = teamPicker.selected;
                     
@@ -1332,15 +1351,19 @@
                         teamPicker.close();
                         return;
                     }
-                    this._issueAction('addTeamToIssue', 'add team to issue', {id: selectedTeamId})
-                        .always(function() {
-                            teamPicker.close();
-                        })
-                },
-                
-                _showReplaceTeamPicker: function(e) {
-                    this._closeAllPickers();
-                    this.$$("."+e.target.getAttribute("data-picker")).open();
+
+                    var action;
+                    if (teamPicker.idOfteamToReplace) // replace
+                        action = this._issueAction(
+                            'replaceTeamInIssue',
+                            'replace team in issue',
+                            {teamToReplace: teamPicker.idOfteamToReplace, replacementTeam: selectedTeamId})
+                    else //add
+                        action = this._issueAction('addTeamToIssue', 'add team to issue', {id: selectedTeamId})
+
+                    action.always(function() {
+                        teamPicker.close();
+                    })
                 },
                 
                 _addAssignee: function(e) {
@@ -1360,39 +1383,25 @@
                 _setupPickers: function() {
                     // setup replacement pickers
                     var self = this;
-                    var teamPickers = Polymer.dom(this.root).querySelectorAll("team-picker");
-                    teamPickers.forEach(function(teamPicker) {
-                        var label = self.$$("."+teamPicker.getAttribute("data-label"));
-                        if (!label) return;
-                        
-                        teamPicker.open = function() {
-                            $(teamPicker).css("width", $(label).width()+40)
-                            $(teamPicker).show();
-                            teamPicker.focus()
-                            $(label).hide();
-                        }
-                        teamPicker.close = function() {
-                            $(teamPicker).hide();
-                            $(label).show();
-                        }
-                    });
                     // setup add new team picker
-                    var label = $(this.$.addTeamButton);
-                    var teamPicker = this.$.newTeamSelector;
-                    teamPicker.open = function() {
+                    var teamPicker = this.$.teamSelector;
+                    teamPicker.open = function(label, id) {
+                        teamPicker.clear()
                         $(teamPicker).show();
                         teamPicker.focus()
-                        label.hide();
-                        
+                        teamPicker.label = $(label);
+                        teamPicker.label.hide();
+                        teamPicker.idOfteamToReplace = id;
                     }
                     teamPicker.close = function() {
                         $(teamPicker).hide();
-                        label.show();
+                        if (teamPicker.label)
+                            teamPicker.label.show();
+                        teamPicker.idOfteamToReplace = null;
                     }
                     
                     // setup the assignee picker
                     var userPicker = self.$.pickerForAddAssignee;
-                    
                     userPicker.open = function() {
                         userPicker.clear();
                         $(userPicker).show();
@@ -1409,36 +1418,17 @@
                     }
 	            },
                 
-                _replaceTeam: function(e) {
-                    var team = e.model.get("team");
-                    var teamIndex = e.model.get("teamIndex");
-                    var idOfteamToReplace = team.id;
-                    var teamPicker = e.target;
-                    var selectedTeamId = teamPicker.selected;
-                    var self = this;
-                    
-                    if (!selectedTeamId) {
-                        teamPicker.close();
-                        return;
-                    }
-                    
-                    this._issueAction(
-                        'replaceTeamInIssue', 
-                        'replace team in issue', 
-                        {teamToReplace: idOfteamToReplace, replacementTeam: selectedTeamId})
-                    .always(function() {
-                        teamPicker.close();
-                    })
-                },
-                
                 _closePicker: function(e) {
 					e.target.close();
                 },
                 
                 _closeAllPickers: function() {
-                    this._setupPickers();
                     var teamPickers = Polymer.dom(this.root).querySelectorAll("team-picker");
                     teamPickers.forEach(function(tp) {
+                        tp.close();
+                    });
+                    var userPickers = Polymer.dom(this.root).querySelectorAll("user-picker");
+                    userPickers.forEach(function(tp) {
                         tp.close();
                     });
                 },
@@ -1777,6 +1767,10 @@
                 
                 hasAssignees: function(item) {
                     return item.assignees.length > 0;
+                },
+
+                determineTeamSectionClass: function(item) {
+                    return item.teams.length > 0?"":"hidden-section";
                 },
 
                 getTitleIconInvalidTeam: function(item) {

@@ -13,7 +13,6 @@ import objective.taskboard.cycletime.CycleTime;
 import objective.taskboard.database.IssuePriorityService;
 import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.domain.IssueColorService;
-import objective.taskboard.domain.IssueStateHashCalculator;
 import objective.taskboard.domain.converter.CardVisibilityEvalService;
 import objective.taskboard.domain.converter.IssueTeamService;
 import objective.taskboard.jira.JiraProperties;
@@ -51,9 +50,6 @@ public class CardRepoServiceImpl implements CardRepoService {
     private ProjectService projectService;
 
     @Autowired
-    private IssueStateHashCalculator issueStateHashCalculator;
-
-    @Autowired
     private IssueColorService issueColorService;
 
     @Autowired
@@ -81,7 +77,6 @@ public class CardRepoServiceImpl implements CardRepoService {
                     cycleTime,
                     cardVisibilityEvalService,
                     projectService,
-                    issueStateHashCalculator,
                     issueColorService,
                     issuePriorityService);
         });

@@ -100,11 +100,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     @RequestScope
     public LoggedUserDetails getLoggedUserDetails() {
-        List<LoggedUserDetails.Role> roles = jiraService.getUserRoles(CredentialsHolder.username()).stream()
+        String username = CredentialsHolder.username();
+        List<LoggedUserDetails.Role> roles = jiraService.getUserRoles(username).stream()
             .map(r -> new LoggedUserDetails.Role(r.id, r.name, r.projectKey))
             .collect(toList());
 
         return new LoggedUserDetails() {
+            @Override
+            public String getUsername() {
+                return username;
+            }
+
             @Override
             public List<Role> getUserRoles() {
                 return roles;
