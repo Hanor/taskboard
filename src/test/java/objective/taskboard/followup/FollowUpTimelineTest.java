@@ -32,12 +32,9 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
 
-@RunWith(MockitoJUnitRunner.class)
 public class FollowUpTimelineTest {
 
     @Test

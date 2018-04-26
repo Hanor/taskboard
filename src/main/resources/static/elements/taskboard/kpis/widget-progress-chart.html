@@ -150,7 +150,7 @@
                             function plotCallback(type) {
                                 return function(d, index) {
                                     graphData.push({
-                                        date   : new Date(d.date),
+                                        date   : getDateFromIso(d.date),
                                         value  : d.progress * 100,
                                         type   : type
                                     })}
@@ -169,8 +169,8 @@
                                 return d.value
                             });
 
-                            var startDate = new Date(data.startingDate);
-                            var endDate = new Date(data.endingDate);
+                            var startDate = getDateFromIso(data.startingDate);
+                            var endDate = getDateFromIso(data.endingDate);
 
                             var chart = self.createChart(startDate, endDate);
 

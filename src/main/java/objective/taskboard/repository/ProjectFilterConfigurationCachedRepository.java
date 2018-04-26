@@ -61,11 +61,12 @@ public class ProjectFilterConfigurationCachedRepository {
     }
 
     public synchronized Optional<ProjectFilterConfiguration> getProjectByKey(String projectKey) {
-        for (ProjectFilterConfiguration projectFilterConfiguration : cache) {
-            if (projectFilterConfiguration.getProjectKey().equals(projectKey))
-                return Optional.of(projectFilterConfiguration);
-        }
-        return Optional.empty();
+        return cache.stream().filter(p -> p.getProjectKey().equals(projectKey)).findFirst();
+    }
+    
+    public synchronized ProjectFilterConfiguration getProjectByKeyOrCry(String projectKey) {
+        return getProjectByKey(projectKey)
+                .orElseThrow(() -> new IllegalArgumentException("Project with key '" + projectKey + "' not found"));
     }
 
     public synchronized boolean exists(String projectKey) {

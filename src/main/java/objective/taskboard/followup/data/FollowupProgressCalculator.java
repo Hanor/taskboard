@@ -5,6 +5,7 @@ import static objective.taskboard.utils.NumberUtils.linearInterpolation;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,26 +14,42 @@ import java.util.OptionalDouble;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import objective.taskboard.followup.EffortHistoryRow;
 import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotHistory;
+import objective.taskboard.followup.FollowUpDataSnapshotService;
+import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 
+@Component
 public class FollowupProgressCalculator {
 
-    public static final int DEFAULT_PROJECTION_SAMPLE_SIZE = 20;
-
-    public ProgressData calculate(FollowUpDataSnapshot followupData, LocalDate projectStartDate, LocalDate projectDeliveryDate) {
-        return calculate(followupData, projectStartDate, projectDeliveryDate, DEFAULT_PROJECTION_SAMPLE_SIZE);
+    private final FollowUpDataSnapshotService snapshotService;
+    
+    @Autowired
+    public FollowupProgressCalculator(FollowUpDataSnapshotService snapshotService) {
+        this.snapshotService = snapshotService;
     }
 
-    public ProgressData calculate(FollowUpDataSnapshot followupData, LocalDate projectStartDate, LocalDate projectDeliveryDate, int projectionSampleSize) {
+    public ProgressData calculate(ZoneId timezone, String projectKey, int projectionSampleSize) 
+            throws ClusterNotConfiguredException, ProjectDatesNotConfiguredException {
+
+        FollowUpDataSnapshot snapshot = snapshotService.getFromCurrentState(timezone, projectKey);
+        if (!snapshot.hasClusterConfiguration())
+            throw new ClusterNotConfiguredException();
+        
+        Optional<LocalDate> optionalProjectStartDate = snapshot.getTimeline().getStart();
+        Optional<LocalDate> optionalProjectDeliveryDate = snapshot.getTimeline().getEnd();
+        
+        if (!optionalProjectStartDate.isPresent() || !optionalProjectDeliveryDate.isPresent())
+            throw new ProjectDatesNotConfiguredException();
+        
+        LocalDate projectStartDate = optionalProjectStartDate.get();
+        LocalDate projectDeliveryDate = optionalProjectDeliveryDate.get(); 
+        List<EffortHistoryRow> historyRows = snapshot.getEffortHistory();
         ProgressData progressData = new ProgressData();
 
-        Optional<FollowUpDataSnapshotHistory> optHistory = followupData.getHistory();
-        if (!optHistory.isPresent())
-            return progressData;
-
-        List<EffortHistoryRow> historyRows = getSortedHistory(optHistory.get());
         if (historyRows.isEmpty()) 
             return progressData;
 
@@ -140,12 +157,6 @@ public class FollowupProgressCalculator {
         progressData.actual = interpolated;
     }
 
-    private List<EffortHistoryRow> getSortedHistory(FollowUpDataSnapshotHistory effortHistory) {
-        List<EffortHistoryRow> historyRows = effortHistory.getHistoryRows();
-        historyRows.sort((a, b) -> a.date.compareTo(b.date));
-        return historyRows;
-    }
-
     private static class CalculateFactors {
         private final List<EffortHistoryRow> historyRows;
         private final int progressSampleSize;
@@ -177,5 +188,9 @@ public class FollowupProgressCalculator {
                     .mapToDouble(i -> deltaFunction.applyAsDouble(historyRows.get(i)) - deltaFunction.applyAsDouble(historyRows.get(i - 1)))
                     .average();
         }
+    }
+    
+    public static class ProjectDatesNotConfiguredException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
     }
 }

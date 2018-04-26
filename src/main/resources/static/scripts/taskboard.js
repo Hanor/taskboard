@@ -25,6 +25,10 @@ function Taskboard() {
     var aspectFilters;
     var issuesBySteps;
     var laneConfiguration;
+    
+    this.init = function() {
+        moment.locale(this.getLocaleFromBrowser());
+    }
 
     this.getLoggedUser = function() {
         return window.user;
@@ -535,7 +539,8 @@ function Taskboard() {
             .flatten()
             .value();
     }
-
+    
+    this.init();
 }
 
 var taskboard = new Taskboard();

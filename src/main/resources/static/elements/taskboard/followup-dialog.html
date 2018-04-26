@@ -290,7 +290,7 @@
 
                 filterDates: function() {
                     var selectedProject = this.getSelectedProject();
-                    this.availableDates = selectedProject ? selectedProject.followUpDataHistory : [];
+                    this.availableDates = selectedProject ? selectedProject.followUpDataHistory.slice(0).reverse() : [];
 
                     this.showDateSelect = this.availableDates.length > 0;
                     this.clearSelectedDate();
@@ -319,8 +319,8 @@
                         this.clearSelectedDate();
                 },
 
-                getLocaleDate: function(item) {
-                    return getDateFromYYYYMMDD(item).toLocaleDateString();
+                getLocaleDate: function(isoDate) {
+                    return moment(isoDate, 'YYYY-MM-DD').format('L');
                 },
 
                 showErrorMessage: function(msg) {
@@ -344,7 +344,7 @@
 
                     var url = "ws/followup";
                     var query = {};
-                    query.projects = selectedProject.projectKey;
+                    query.project = selectedProject.projectKey;
                     query.template = this.getTemplateById(this.selectedTemplate).name;
                     query.timezone = taskboard.getTimeZoneIdFromBrowser();
                     if(this.selectedIndexDate > 0)

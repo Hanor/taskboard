@@ -45,26 +45,23 @@ import objective.taskboard.utils.IOUtilities;
 public class FollowUpGenerator {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FollowUpGenerator.class);
 
-    private final FollowupDataProvider provider;
     private final SpreadsheetEditor editor;
 
-    public FollowUpGenerator(FollowupDataProvider provider, SpreadsheetEditor editor) {
-        this.provider = provider;
+    public FollowUpGenerator(SpreadsheetEditor editor) {
         this.editor = editor;
     }
 
-    public Resource generate(String [] includedProjects, ZoneId timezone) throws IOException {
+    public Resource generate(FollowUpDataSnapshot snapshot, ZoneId timezone) throws IOException {
         try {
             editor.open();
 
-            FollowUpDataSnapshot followupDataEntry = provider.getJiraData(includedProjects, timezone);
-            FollowupData followupData = followupDataEntry.getData();
+            FollowupData followupData = snapshot.getData();
 
-            updateTimelineDates(followupDataEntry.getTimeline());
+            updateTimelineDates(snapshot.getTimeline());
             generateFromJiraSheet(followupData);
             generateTransitionsSheets(followupData);
-            generateEffortHistory(followupDataEntry);
-            generateTShirtSizeSheet(followupDataEntry);
+            generateEffortHistory(snapshot);
+            generateTShirtSizeSheet(snapshot);
             generateWorklogSheet(followupData, timezone);
 
             return IOUtilities.asResource(editor.toBytes());
@@ -346,7 +343,7 @@ public class FollowUpGenerator {
         return sheet;
     }
     
-    void generateEffortHistory(FollowUpDataSnapshot followUpDataEntry) {
+    void generateEffortHistory(FollowUpDataSnapshot snapshot) {
         Sheet sheet = editor.getOrCreateSheet("Effort History");
         sheet.truncate();
         
@@ -355,15 +352,10 @@ public class FollowUpGenerator {
         rowHeader.addColumn("SumEffortDone");
         rowHeader.addColumn("SumEffortBacklog");
         
-        if (!followUpDataEntry.hasClusterConfiguration())
+        if (!snapshot.hasClusterConfiguration())
             return;
-        
-        Optional<FollowUpDataSnapshotHistory> history = followUpDataEntry.getHistory();
-        
-        if (!history.isPresent())
-            return;
-               
-        for (EffortHistoryRow historyRow : history.get().getHistoryRows()) {
+
+        for (EffortHistoryRow historyRow : snapshot.getEffortHistory()) {
             SheetRow row = sheet.createRow();
             row.addColumn(historyRow.date);
             row.addColumn(historyRow.sumEffortDone);
@@ -373,8 +365,8 @@ public class FollowUpGenerator {
         sheet.save();
     }
 
-    void generateTShirtSizeSheet(FollowUpDataSnapshot followupDataEntry) {
-        FollowupCluster followupCluster= followupDataEntry.getCluster();
+    void generateTShirtSizeSheet(FollowUpDataSnapshot snapshot) {
+        FollowupCluster followupCluster= snapshot.getCluster();
 
         Sheet sheet = editor.getOrCreateSheet("T-shirt Size");
         sheet.truncate();
@@ -387,7 +379,7 @@ public class FollowUpGenerator {
         rowHeader.addColumn("Cycle");
         rowHeader.addColumn("Project");
         
-        if (followupDataEntry.hasClusterConfiguration())
+        if (snapshot.hasClusterConfiguration())
             for (FollowUpClusterItem cluster : followupCluster.getClusterItems()) {
                 SheetRow row = sheet.createRow();
                 row.addColumn(cluster.getSubtaskTypeName());

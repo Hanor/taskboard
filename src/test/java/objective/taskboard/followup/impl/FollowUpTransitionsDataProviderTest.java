@@ -41,7 +41,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
     @Test
     public void checkHeaders() {
         // given
-        FollowupData jiraData = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData();
+        FollowupData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
         List<AnalyticsTransitionsDataSet> analytics = jiraData.analyticsTransitionsDsList;
         List<SyntheticTransitionsDataSet> synthetic = jiraData.syntheticsTransitionsDsList;
 
@@ -70,7 +70,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<AnalyticsTransitionsDataSet> dataList = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().analyticsTransitionsDsList;
+        List<AnalyticsTransitionsDataSet> dataList = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).analyticsTransitionsDsList;
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
@@ -102,7 +102,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<AnalyticsTransitionsDataSet> dataList = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().analyticsTransitionsDsList;
+        List<AnalyticsTransitionsDataSet> dataList = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).analyticsTransitionsDsList;
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
@@ -129,7 +129,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<AnalyticsTransitionsDataSet> dataList = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().analyticsTransitionsDsList;
+        List<AnalyticsTransitionsDataSet> dataList = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).analyticsTransitionsDsList;
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
@@ -157,7 +157,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<AnalyticsTransitionsDataSet> dataList = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().analyticsTransitionsDsList;
+        List<AnalyticsTransitionsDataSet> dataList = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).analyticsTransitionsDsList;
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
@@ -180,7 +180,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<AnalyticsTransitionsDataSet> dataList = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().analyticsTransitionsDsList;
+        List<AnalyticsTransitionsDataSet> dataList = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).analyticsTransitionsDsList;
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
@@ -202,7 +202,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<SyntheticTransitionsDataSet> sets = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().syntheticsTransitionsDsList;
+        List<SyntheticTransitionsDataSet> sets = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).syntheticsTransitionsDsList;
 
         // then
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
@@ -223,7 +223,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<SyntheticTransitionsDataSet> sets = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().syntheticsTransitionsDsList;
+        List<SyntheticTransitionsDataSet> sets = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).syntheticsTransitionsDsList;
 
         // then
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
@@ -269,7 +269,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<SyntheticTransitionsDataSet> sets = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().syntheticsTransitionsDsList;
+        List<SyntheticTransitionsDataSet> sets = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).syntheticsTransitionsDsList;
 
         // then
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
@@ -296,7 +296,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<SyntheticTransitionsDataSet> sets = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().syntheticsTransitionsDsList;
+        List<SyntheticTransitionsDataSet> sets = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).syntheticsTransitionsDsList;
 
         // then
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
@@ -324,7 +324,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        List<SyntheticTransitionsDataSet> sets = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().syntheticsTransitionsDsList;
+        List<SyntheticTransitionsDataSet> sets = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).syntheticsTransitionsDsList;
 
         // then
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
@@ -362,7 +362,7 @@ public class FollowUpTransitionsDataProviderTest extends AbstractFollowUpDataPro
         );
 
         // when
-        FollowupData jiraData = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData();
+        FollowupData jiraData = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
         List<AnalyticsTransitionsDataSet> analytics = jiraData.analyticsTransitionsDsList;
         List<SyntheticTransitionsDataSet> synthetic = jiraData.syntheticsTransitionsDsList;
 

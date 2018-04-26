@@ -4,11 +4,24 @@ import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "followup_daily_synthesis")
-public class FollowupDailySynthesis extends TaskboardEntity{
+@NamedQueries({
+        @NamedQuery(
+                name="FollowupDailySynthesis.count", 
+                query="SELECT count(s) FROM FollowupDailySynthesis s WHERE s.projectId = :projectId AND s.followupDate = :date"),
+        @NamedQuery(
+                name="FollowupDailySynthesis.findByMaxDate", 
+                query="SELECT s FROM FollowupDailySynthesis s WHERE s.projectId = :projectId AND s.followupDate < :maxDate ORDER BY s.followupDate"),
+        @NamedQuery(
+                name="FollowupDailySynthesis.delete", 
+                query="DELETE FROM FollowupDailySynthesis s WHERE s.projectId = :projectId AND s.followupDate = :date")
+})
+public class FollowupDailySynthesis extends TaskboardEntity {
     @Column
     private Integer projectId;
 

@@ -65,6 +65,10 @@ function getDateFromYYYYMMDD(yyyymmdd) {
     return new Date(year, month, day);
 }
 
+function getDateFromIso(isoString) {
+    return moment(isoString, 'YYYY-MM-DD').toDate();
+}
+
 function addDaysToDate(date, days) {
     var newDate = new Date(date.valueOf());
     newDate.setDate(newDate.getDate() + days);

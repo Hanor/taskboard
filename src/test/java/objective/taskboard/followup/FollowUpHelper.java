@@ -53,7 +53,6 @@ import com.google.gson.GsonBuilder;
 
 import objective.taskboard.Constants;
 import objective.taskboard.followup.impl.FollowUpTransitionsDataProvider;
-import objective.taskboard.followup.impl.FollowUpDataHistoryGeneratorJSONFilesTest;
 import objective.taskboard.utils.DateTimeUtils;
 import objective.taskboard.utils.DateTimeUtils.ZonedDateTimeAdapter;
 
@@ -161,6 +160,10 @@ public class FollowUpHelper {
 
     public static FollowupData getEmptyFollowupData() {
         return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, emptyList()), emptyList(), emptyList());
+    }
+
+    public static FollowupData getFollowupData(FromJiraDataRow... rows) {
+        return new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, asList(rows)), emptyList(), emptyList());
     }
 
     public static List<FromJiraDataRow> getDefaultFromJiraDataRowList() {
@@ -545,19 +548,19 @@ public class FollowUpHelper {
         return "[]";
     }
     public static String followupExpectedV0() {
-        return resourceToString(FollowUpDataHistoryGeneratorJSONFilesTest.class, "V0_followUpDataHistoryExpected.json");
+        return resourceToString(FollowUpFacadeTest.class, "impl/V0_followUpDataHistoryExpected.json");
     }
     public static String followupEmptyV1() {
-        return resourceToString(FollowUpDataHistoryGeneratorJSONFilesTest.class, "V1_followupDataHistory_empty.json");
+        return resourceToString(FollowUpHelper.class, "impl/V1_followupDataHistory_empty.json");
     }
     public static String followupExpectedV1() {
-        return resourceToString(FollowUpDataHistoryGeneratorJSONFilesTest.class, "V1_followUpDataHistoryExpected.json");
+        return resourceToString(FollowUpHelper.class, "impl/V1_followUpDataHistoryExpected.json");
     }
     public static String followupEmptyV2() {
-        return resourceToString(FollowUpDataHistoryGeneratorJSONFilesTest.class, "V2_followupDataHistory_empty.json");
+        return resourceToString(FollowUpHelper.class, "impl/V2_followupDataHistory_empty.json");
     }
     public static String followupExpectedV2() {
-        return resourceToString(FollowUpDataHistoryGeneratorJSONFilesTest.class, "V2_followUpDataHistoryExpected.json");
+        return resourceToString(FollowUpHelper.class, "impl/V2_followUpDataHistoryExpected.json");
     }
 
     public static String fromJiraRowstoString(List<FromJiraDataRow> rows, String separation) {

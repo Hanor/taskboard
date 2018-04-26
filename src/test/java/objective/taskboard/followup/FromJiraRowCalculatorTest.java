@@ -20,11 +20,7 @@ public class FromJiraRowCalculatorTest {
             new FollowUpClusterItem(project, "Alpha Test",   "unused", "S", 1d, 1.5d),
             new FollowUpClusterItem(project, "Alpha Test",   "unused", "M", 2d, 2.5d),
             new FollowUpClusterItem(project, "Alpha Test",   "unused", "L", 3d, 3.5d),
-            
-            new FollowUpClusterItem(project, "Alpha Test",   "unused",    "S", 2d, 2.5d),
-            new FollowUpClusterItem(project, "Alpha Test",   "unused",    "M", 3d, 3.5d),
-            new FollowUpClusterItem(project, "Alpha Test",   "unused",    "L", 4d, 4.5d),
-            
+
             new FollowUpClusterItem(project, "Backend Dev",  "unused", "S", 5d, 5.5d),
             new FollowUpClusterItem(project, "Backend Dev",  "unused", "M", 6d, 6.5d),
             new FollowUpClusterItem(project, "Backend Dev",  "unused", "L", 7d, 7.5d));
@@ -134,5 +130,32 @@ public class FromJiraRowCalculatorTest {
         row.tshirtSize = "M";
 
         assertEquals(2d, subject.calculate(row).getEffortOnBacklog(), 0d);
+    }
+    
+    @Test
+    public void summarize() {
+        FromJiraDataRow row1 = new FromJiraDataRow();
+        row1.queryType     = "SUBTASK PLAN";
+        row1.subtaskType   = "Alpha Test";
+        row1.subtaskStatus = "Open";
+        row1.tshirtSize    = "M"; //effort: 2
+        
+        FromJiraDataRow row2 = new FromJiraDataRow();
+        row2.queryType     = "SUBTASK PLAN";
+        row2.subtaskType   = "Alpha Test";
+        row2.subtaskStatus = "Open";
+        row2.tshirtSize    = "L"; //effort: 3
+        
+        FromJiraDataRow row3 = new FromJiraDataRow();
+        row3.queryType     = "SUBTASK PLAN";
+        row3.subtaskType   = "Alpha Test";
+        row3.subtaskStatus = "Done";
+        row3.tshirtSize    = "L"; //effort: 3
+
+        FromJiraRowCalculation summary = subject.summarize(asList(row1, row2, row3));
+        
+        assertEquals(8d, summary.getEffortEstimate(), 0d);
+        assertEquals(3d, summary.getEffortDone(), 0d);
+        assertEquals(5d, summary.getEffortOnBacklog(), 0d);
     }
 }

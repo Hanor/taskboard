@@ -252,8 +252,9 @@ public class ProjectController {
         ProjectData projectData = new ProjectData();
         projectData.projectKey = projectFilterConfiguration.getProjectKey();
         projectData.teams.addAll(getTeams(projectFilterConfiguration));
-        projectData.followUpDataHistory = followUpFacade.getHistoryGivenProjects(projectData.projectKey);
+        projectData.followUpDataHistory = followUpFacade.getHistoryGivenProject(projectData.projectKey);
         projectData.roles = authorizer.getRolesForProject(projectFilterConfiguration.getProjectKey());
+       
         return projectData;
     }
 

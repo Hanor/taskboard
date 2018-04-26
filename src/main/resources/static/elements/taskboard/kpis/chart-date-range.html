@@ -119,7 +119,9 @@
                             return;
                         }
 
-                        var dateValueList = this._generateDateValues(new Date(data.startDate), new Date(data.deliveryDate));
+                        var startDate = getDateFromIso(data.startDate);
+                        var deliveryDate = getDateFromIso(data.deliveryDate);
+                        var dateValueList = this._generateDateValues(startDate, deliveryDate);
 
                         var chart = dc.barChart(this._dateRangeSVGElContainer);
 
@@ -133,9 +135,9 @@
                             .margins({top: 0, right: 20, bottom: 20, left: 20})
                             .dimension(chartDimension)
                             .group(chartGroup)
-                            .x(d3.time.scale().domain([data.startDate, data.deliveryDate]));
+                            .x(d3.time.scale().domain([startDate.getTime(), deliveryDate.getTime()]));
 
-                        dcUtils.setupChartDateTicks(chart, new Date(data.startDate), new Date(data.deliveryDate), 14);
+                        dcUtils.setupChartDateTicks(chart, startDate, deliveryDate, 14);
 
                         this._updateSVGToDateRangeStyle(chart);
 

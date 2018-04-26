@@ -3,7 +3,10 @@ package objective.taskboard.controller;
 import static objective.taskboard.config.CacheConfiguration.DASHBOARD_PROGRESS_DATA;
 import static objective.taskboard.repository.PermissionRepository.DASHBOARD_TACTICAL;
 import static objective.taskboard.utils.DateTimeUtils.determineTimeZoneId;
-import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -11,7 +14,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.Before;
@@ -26,11 +28,10 @@ import org.springframework.cache.guava.GuavaCacheManager;
 
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.EffortHistoryRow;
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotHistory;
+import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
+import objective.taskboard.followup.data.FollowupProgressCalculator;
+import objective.taskboard.followup.data.FollowupProgressCalculator.ProjectDatesNotConfiguredException;
 import objective.taskboard.followup.data.ProgressData;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.testUtils.ControllerTestUtils.AssertResponse;
 
@@ -42,9 +43,6 @@ public class FollowUpProgressControllerTest {
     private static final LocalDate END_DATE = LocalDate.of(2017, 12, 31);
     private static final Integer PROJECT_PROJECTION_TIMESPAN = 12;
     private static final String ZONE_ID = "America/Sao_Paulo";
-
-    @Mock
-    private FollowUpDataProviderFromCurrentState providerFromCurrentState;
 
     @Mock
     private ProjectFilterConfigurationCachedRepository projects;
@@ -59,10 +57,7 @@ public class FollowUpProgressControllerTest {
     private FollowUpProgressController subject;
 
     @Mock
-    private FollowUpDataSnapshot snapshot;
-
-    @Mock
-    private FollowUpDataSnapshotHistory snapshotHistory;
+    private FollowupProgressCalculator calculator;
 
     private ProjectFilterConfiguration project;
 
@@ -74,10 +69,7 @@ public class FollowUpProgressControllerTest {
         when(authorizer.hasPermissionInProject(DASHBOARD_TACTICAL, PROJECT_KEY)).thenReturn(true);
         when(cacheManager.getCache(DASHBOARD_PROGRESS_DATA)).thenReturn(new GuavaCacheManager(DASHBOARD_PROGRESS_DATA).getCache(DASHBOARD_PROGRESS_DATA));
         when(projects.getProjectByKey(PROJECT_KEY)).thenReturn(Optional.of(project));
-        when(snapshotHistory.getHistoryRows()).thenReturn(Arrays.asList(new EffortHistoryRow(LocalDate.now())));
-        when(snapshot.hasClusterConfiguration()).thenReturn(true);
-        when(snapshot.getHistory()).thenReturn(Optional.of(snapshotHistory));
-        when(providerFromCurrentState.getJiraData(new String[]{PROJECT_KEY}, determineTimeZoneId(ZONE_ID))).thenReturn(snapshot);
+        when(calculator.calculate(eq(determineTimeZoneId(ZONE_ID)), eq(PROJECT_KEY), anyInt())).thenReturn(new ProgressData());
 
         subject.initCache();
     }
@@ -93,22 +85,20 @@ public class FollowUpProgressControllerTest {
     public void ifAllValidationsWereSuccessful_returnOkAndTheCorrectValue() {
         final Integer projectionTimespan = 20;
 
-        ProgressData responseBody = (ProgressData) AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.of(projectionTimespan)))
+        AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.of(projectionTimespan)))
                 .httpStatus(OK)
-                .bodyClass(ProgressData.class)
-                .getResponse().getBody();
+                .bodyClass(ProgressData.class);
 
-        assertEquals(projectionTimespan, responseBody.projectionTimespan);
+        verify(calculator).calculate(determineTimeZoneId(ZONE_ID), PROJECT_KEY, projectionTimespan);
     }
 
     @Test
     public void ifProjectionParameterWasNotPassed_returnOkAndTheCorrectValueWithDefaultProjectProjection() {
-        ProgressData responseBody = (ProgressData) AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
+        AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
                 .httpStatus(OK)
-                .bodyClass(ProgressData.class)
-                .getResponse().getBody();
-
-        assertEquals(PROJECT_PROJECTION_TIMESPAN, responseBody.projectionTimespan);
+                .bodyClass(ProgressData.class);
+        
+        verify(calculator).calculate(determineTimeZoneId(ZONE_ID), PROJECT_KEY, PROJECT_PROJECTION_TIMESPAN);
     }
 
     @Test
@@ -150,39 +140,21 @@ public class FollowUpProgressControllerTest {
     }
 
     @Test
-    public void ifProjectDeliveryDateIsNull_returnInternalServerError() throws Exception {
-        project.setDeliveryDate(null);
+    public void ifProjectDatesIsNotConfigured_returnInternalServerError() throws Exception {
+        when(calculator.calculate(any(), any(), anyInt())).thenThrow(new ProjectDatesNotConfiguredException());
 
         AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
                 .httpStatus(INTERNAL_SERVER_ERROR)
-                .bodyAsString("The project "+ PROJECT_KEY +" has no delivery date.");
-    }
-
-    @Test
-    public void ifProjectStartDateIsNull_returnInternalServerError() throws Exception {
-        project.setStartDate(null);
-
-        AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
-                .httpStatus(INTERNAL_SERVER_ERROR)
-                .bodyAsString("The project "+ PROJECT_KEY +" has no start date.");
+                .bodyAsString("The project "+ PROJECT_KEY +" has no start or delivery date.");
     }
 
     @Test
     public void ifSnapshotHasNoClusterConfiguration_returnInternalServerError() throws Exception {
-        when(snapshot.hasClusterConfiguration()).thenReturn(false);
-
+        when(calculator.calculate(any(), any(), anyInt())).thenThrow(new ClusterNotConfiguredException());
+        
         AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
                 .httpStatus(INTERNAL_SERVER_ERROR)
                 .bodyAsString("No cluster configuration found for project "+ PROJECT_KEY +".");
-    }
-
-    @Test
-    public void ifSnapshotHasNoProgressHistory_returnInternalServerError() throws Exception {
-        when(snapshot.getHistory()).thenReturn(Optional.empty());
-
-        AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
-                .httpStatus(INTERNAL_SERVER_ERROR)
-                .bodyAsString("No progress history found for project "+ PROJECT_KEY +".");
     }
 
 }

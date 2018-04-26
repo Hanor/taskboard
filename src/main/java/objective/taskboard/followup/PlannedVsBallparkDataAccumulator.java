@@ -1,29 +1,43 @@
 package objective.taskboard.followup;
 
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
-import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class PlannedVsBallparkDataAccumulator {
-    private PlannedVsBallparkChartData plannedChartData;
-    private PlannedVsBallparkChartData ballparkChartData;
+import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
+
+@Component
+public class PlannedVsBallparkDataAccumulator { //TODO rename to PlannedVsBallparkCalculator
+
+    private final FollowUpDataSnapshotService snapshotService;
     
-    public PlannedVsBallparkDataAccumulator() {
-        this.plannedChartData = new PlannedVsBallparkChartData("Planned", 0);
-        this.ballparkChartData = new PlannedVsBallparkChartData("Ballpark", 0);
-    }        
-    
-    public void accumulate(SnapshotRow snapshotRow) {
-        double effortEstimate = snapshotRow.calcutatedData.getEffortEstimate();
-        if (FromJiraDataRow.QUERY_TYPE_SUBTASK_PLAN.equals(snapshotRow.rowData.queryType)) {
-            plannedChartData.totalEffort += effortEstimate;
-        } else {
-            ballparkChartData.totalEffort += effortEstimate;
-        }
+    @Autowired
+    public PlannedVsBallparkDataAccumulator(FollowUpDataSnapshotService snapshotService) {
+        this.snapshotService = snapshotService;
     }
-    
-    public List<PlannedVsBallparkChartData> getData() {
+
+    public List<PlannedVsBallparkChartData> calculate(String projectKey) throws ClusterNotConfiguredException {
+        FollowUpDataSnapshot snapshot = snapshotService.getFromCurrentState(ZoneId.systemDefault(), projectKey);
+
+        if (!snapshot.hasClusterConfiguration())
+            throw new ClusterNotConfiguredException();
+
+        PlannedVsBallparkChartData plannedChartData = new PlannedVsBallparkChartData("Planned", 0);
+        PlannedVsBallparkChartData ballparkChartData = new PlannedVsBallparkChartData("Ballpark", 0);
+
+        for (SnapshotRow snapshotRow : snapshot.getSnapshotRows()) {
+            double effortEstimate = snapshotRow.calcutatedData.getEffortEstimate();
+            if (FromJiraDataRow.QUERY_TYPE_SUBTASK_PLAN.equals(snapshotRow.rowData.queryType)) {
+                plannedChartData.totalEffort += effortEstimate;
+            } else {
+                ballparkChartData.totalEffort += effortEstimate;
+            }
+        }
+
         return Arrays.asList(plannedChartData, ballparkChartData);
     }
 }

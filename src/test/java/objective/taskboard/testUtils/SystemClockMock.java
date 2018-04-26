@@ -17,5 +17,13 @@ public class SystemClockMock implements Clock {
     public Instant now() {
         return now;
     }
+    
+    public void setNow(Instant now) {
+        this.now = now;
+    }
+    
+    public void setNow(String nowIso) {
+        setNow(Instant.parse(nowIso));
+    }
 
 }

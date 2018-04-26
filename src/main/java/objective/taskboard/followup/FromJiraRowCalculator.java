@@ -2,6 +2,7 @@ package objective.taskboard.followup;
 
 import static objective.taskboard.followup.FromJiraDataRow.QUERY_TYPE_SUBTASK_PLAN;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
@@ -24,6 +25,20 @@ public class FromJiraRowCalculator {
         fillEffortOnBacklog(result);
 
         return result;
+    }
+    
+    public FromJiraRowCalculation summarize(Collection<FromJiraDataRow> rows) {
+        FromJiraRowCalculation sumResult = new FromJiraRowCalculation();
+        
+        for (FromJiraDataRow row : rows) {
+            FromJiraRowCalculation rowResult = calculate(row);
+            
+            sumResult.effortEstimate   += rowResult.effortEstimate;
+            sumResult.effortDone       += rowResult.effortDone;
+            sumResult.effortOnBacklog  += rowResult.effortOnBacklog;
+        }
+        
+        return sumResult;
     }
 
     private void fillEffortEstimate(FromJiraDataRow row, Optional<FollowUpClusterItem> clusterItem, FromJiraRowCalculation result) {

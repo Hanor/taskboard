@@ -23,6 +23,8 @@ package objective.taskboard.followup;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,8 +39,6 @@ import objective.taskboard.controller.TemplateData;
 import objective.taskboard.database.directory.DataBaseDirectory;
 import objective.taskboard.domain.Project;
 import objective.taskboard.followup.data.Template;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromHistory;
 import objective.taskboard.jira.ProjectService;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor;
 import objective.taskboard.utils.IOUtilities;
@@ -52,7 +52,7 @@ public class FollowUpFacade {
     private FollowUpTemplateStorageInterface followUpTemplateStorage;
 
     @Autowired
-    private FollowUpDataProviderFromCurrentState providerFromCurrentState;
+    private FollowUpDataSnapshotService dataSnapshotService;
 
     @Autowired
     private TemplateService templateService;
@@ -67,24 +67,14 @@ public class FollowUpFacade {
     private DataBaseDirectory dataBaseDirectory;
     
     @Autowired
-    private FollowUpDataHistoryRepository historyRepository;
-
-    @Autowired
     private Authorizer authorizer;
 
-    public FollowUpGenerator getGenerator(String templateName, Optional<String> date) {
-        Template followUpConfiguration = templateService.getTemplate(templateName);
-
-        FollowUpTemplate template = followUpTemplateStorage.getTemplate(followUpConfiguration.getPath());
+    public Resource generateReport(String templateName, Optional<LocalDate> date, ZoneId timezone, String projectKey) throws IOException {
+        FollowUpTemplate template = getTemplate(templateName);
         SimpleSpreadsheetEditor spreadsheetEditor = new SimpleSpreadsheetEditor(template);
+        FollowUpDataSnapshot snapshot = dataSnapshotService.get(date, timezone, projectKey);
 
-        return new FollowUpGenerator(getProvider(date), spreadsheetEditor);
-    }
-
-    public FollowupDataProvider getProvider(Optional<String> date) {
-        if (!date.isPresent() || date.get().isEmpty())
-            return providerFromCurrentState;
-        return new FollowUpDataProviderFromHistory(date.get(), historyRepository);
+        return new FollowUpGenerator(spreadsheetEditor).generate(snapshot, timezone);
     }
 
     public List<TemplateData> getTemplates() {
@@ -158,13 +148,16 @@ public class FollowUpFacade {
         return IOUtilities.asResource(dataBaseDirectory.path(SAMPLE_FOLLOWUP_TEMPLATE_PATH));
     }
 
-    public Resource getSavedTemplate(String templateName) {
+    private FollowUpTemplate getTemplate(String templateName) {
         Template followUpConfiguration = templateService.getTemplate(templateName);
-        FollowUpTemplate template = followUpTemplateStorage.getTemplate(followUpConfiguration.getPath());
-        return template.getPathFollowupTemplateXLSM();
+        return followUpTemplateStorage.getTemplate(followUpConfiguration.getPath());
     }
 
-    public List<String> getHistoryGivenProjects(String... projectsKey) {
-        return historyRepository.getHistoryGivenProjects(projectsKey);
+    public Resource getTemplateResource(String templateName) {
+        return getTemplate(templateName).getPathFollowupTemplateXLSM();
+    }
+
+    public List<LocalDate> getHistoryGivenProject(String projectKey) {
+        return dataSnapshotService.getAvailableHistory(projectKey);
     }
 }

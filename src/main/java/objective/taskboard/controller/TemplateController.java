@@ -88,7 +88,7 @@ public class TemplateController {
                 return new ResponseEntity<>("Template not found.", NOT_FOUND);
 
             String templateName = template.get().name;
-            Resource resource = followUpFacade.getSavedTemplate(templateName);
+            Resource resource = followUpFacade.getTemplateResource(templateName);
             return ResponseEntity.ok()
                       .contentLength(resource.contentLength())
                       .header("Content-Disposition","attachment; filename=" + templateName + "-followup-template.xlsm")

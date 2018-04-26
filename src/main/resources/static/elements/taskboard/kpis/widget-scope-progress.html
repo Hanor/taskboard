@@ -151,7 +151,7 @@
                             self.set('tempProjectionTimespan', data.projectionTimespan);
 
                         self.setData(data);
-                        self.createChart(new Date(data.startingDate), new Date(data.endingDate));
+                        self.createChart(getDateFromIso(data.startingDate), getDateFromIso(data.endingDate));
                         self.updateChart();
 
                         self.set('isReady', true);
@@ -195,7 +195,7 @@
 
                     this.chartData = {
                         types: ["Actual", "Projection"]
-                        , dateRange: [new Date(data.startingDate), new Date(data.endingDate)]
+                        , dateRange: [getDateFromIso(data.startingDate), getDateFromIso(data.endingDate)]
                         , data: []
                     };
 
@@ -207,7 +207,7 @@
                         series[i].forEach(function(d, index) {
                             self.chartData.data.push({
                                 type         : i,
-                                date         : new Date(d.date),
+                                date         : getDateFromIso(d.date),
                                 value        : d.progress * 100,
                                 sumDone      : d.sumEffortDone,
                                 sumBacklog   : d.sumEffortBacklog

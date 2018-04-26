@@ -1,31 +1,8 @@
-/*-
- * [LICENSE]
- * Taskboard
- * ---
- * Copyright (C) 2015 - 2017 Objective Solutions
- * ---
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * [/LICENSE]
- */
-
 package objective.taskboard.followup.impl;
 
 import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
 
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -35,61 +12,58 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import objective.taskboard.Constants;
 import objective.taskboard.data.Issue;
 import objective.taskboard.followup.AnalyticsTransitionsDataSet;
-import objective.taskboard.followup.FollowUpDataHistoryRepository;
-import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpDataSnapshotHistory;
-import objective.taskboard.followup.FollowUpTimeline;
 import objective.taskboard.followup.FollowupCluster;
 import objective.taskboard.followup.FollowupClusterProvider;
 import objective.taskboard.followup.FollowupData;
-import objective.taskboard.followup.FollowupDataProvider;
 import objective.taskboard.followup.FromJiraDataRow;
 import objective.taskboard.followup.FromJiraDataSet;
 import objective.taskboard.followup.FromJiraRowCalculator;
-import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 import objective.taskboard.followup.SyntheticTransitionsDataSet;
+import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 import objective.taskboard.issueBuffer.IssueBufferService;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraProperties.BallparkMapping;
 import objective.taskboard.jira.MetadataService;
-import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 
-@Service
-public class FollowUpDataProviderFromCurrentState implements FollowupDataProvider {
+@Component
+public class FollowUpDataProviderFromCurrentState {
 
+    private final JiraProperties jiraProperties;
+    private final MetadataService metadataService;
+    private final IssueBufferService issueBufferService;
+    private final FollowupClusterProvider clusterProvider;
+    
     @Autowired
-    private JiraProperties jiraProperties;
+    public FollowUpDataProviderFromCurrentState(
+            JiraProperties jiraProperties, 
+            MetadataService metadataService, 
+            IssueBufferService issueBufferService,
+            FollowupClusterProvider clusterProvider) {
+        this.jiraProperties = jiraProperties;
+        this.metadataService = metadataService;
+        this.issueBufferService = issueBufferService;
+        this.clusterProvider = clusterProvider;
+    }
 
-    @Autowired
-    private MetadataService metadataService;
+    public FollowupData generate(ZoneId timezone, FollowupCluster cluster, String projectKey) {
+        return new CurrentStateSnapshot(timezone, cluster, projectKey).execute();
+    }
+    
 
-    @Autowired
-    private IssueBufferService issueBufferService;
-
-    @Autowired
-    private FollowUpDataHistoryRepository historyRepository;
-
-    @Autowired
-    private FollowupClusterProvider clusterProvider;
-
-    @Autowired
-    private ProjectFilterConfigurationCachedRepository projectRepository;
-
-    @Override
-    public FollowUpDataSnapshot getJiraData(String[] includeProjects, ZoneId timezone) {
-        CurrentStateSnapshot currentStateSnapshot = new CurrentStateSnapshot(includeProjects, timezone);
-        return currentStateSnapshot.getJiraData();
+    public FollowupData generate(ZoneId timezone, String projectKey) {
+        FollowupCluster cluster = clusterProvider.getForProject(projectKey);
+        return generate(timezone, cluster, projectKey);
     }
 
     private class CurrentStateSnapshot {
 
-        private final String[] includeProjects;
+        private final String projectKey;
         private final ZoneId timezone;
         private final FollowupCluster cluster;
         private final FromJiraRowCalculator fromJiraRowCalculator;
@@ -98,20 +72,17 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
         private Map<String, Issue> featuresByKey;
         private Map<String, FromJiraDataRow> followUpBallparks;
 
-        private CurrentStateSnapshot(String[] includeProjects, ZoneId timezone) {
-            this.includeProjects = includeProjects;
+        private CurrentStateSnapshot(ZoneId timezone, FollowupCluster cluster, String projectKey) {
+            this.projectKey = projectKey;
             this.timezone = timezone;
-            this.cluster = clusterProvider.getForProject(includeProjects[0]);
+            this.cluster = cluster;
             this.fromJiraRowCalculator = new FromJiraRowCalculator(cluster); 
         }
 
-        public FollowUpDataSnapshot getJiraData() {
-            LocalDate date = LocalDate.now();
-            List<String> i = Arrays.asList(includeProjects);
-
+        public FollowupData execute() {
             List<Issue> issuesVisibleToUser = issueBufferService.getAllIssues().stream()
+                    .filter(issue -> projectKey.equals(issue.getProjectKey()))
                     .filter(issue -> isAllowedStatus(issue.getStatus()))
-                    .filter(issue -> i.contains(issue.getProjectKey()))
                     .collect(Collectors.toList());
 
             FromJiraDataSet fromJiraDs = getFromJiraDs(issuesVisibleToUser, timezone);
@@ -119,15 +90,8 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
             FollowUpTransitionsDataProvider transitions = new FollowUpTransitionsDataProvider(jiraProperties, metadataService);
             List<AnalyticsTransitionsDataSet> analyticsTransitionsDsList = transitions.getAnalyticsTransitionsDsList(issuesVisibleToUser, timezone);
             List<SyntheticTransitionsDataSet> syntheticsTransitionsDsList = transitions.getSyntheticTransitionsDsList(analyticsTransitionsDsList);
-            FollowupData followupData = new FollowupData(fromJiraDs, analyticsTransitionsDsList, syntheticsTransitionsDsList);
 
-            FollowUpTimeline timeline = FollowUpTimeline.getTimeline(date, projectRepository.getProjectByKey(i.get(0)));
-            FollowUpDataSnapshot followUpDataEntry = new FollowUpDataSnapshot(timeline, followupData, cluster);
-            followUpDataEntry.setFollowUpDataEntryHistory(new FollowUpDataSnapshotHistory(
-                    historyRepository,
-                    includeProjects,
-                    followUpDataEntry));
-            return followUpDataEntry;
+            return new FollowupData(fromJiraDs, analyticsTransitionsDsList, syntheticsTransitionsDsList);
         }
 
         private FromJiraDataSet getFromJiraDs(List<Issue> issuesVisibleToUser, ZoneId timezone) {
@@ -497,4 +461,5 @@ public class FollowUpDataProviderFromCurrentState implements FollowupDataProvide
     private static String featureBallparkKey(Issue feature, BallparkMapping mapping) {
         return feature.getIssueKey() + mapping.getTshirtCustomFieldId();
     }
+
 }

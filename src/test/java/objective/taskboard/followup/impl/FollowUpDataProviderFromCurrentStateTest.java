@@ -1612,7 +1612,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
         );
 
         try {
-            subject.getJiraData(defaultProjects(),ZoneId.systemDefault());
+            subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
             fail("Should fail when trying to generate ballbark without mapping for given issue type");
         } catch(IllegalStateException e) {
             assertEquals("Ballpark mapping for issue type 'Task' (id 12) missing in configuration", e.getMessage());
@@ -2488,7 +2488,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
                 .issueStatus(statusOpen)
         );
 
-        subject.getJiraData(defaultProjects(),ZoneId.systemDefault());
+        subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
     }
 
     @Test
@@ -2509,7 +2509,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             demand().id(2).key("PROJ-2").summary("Smry 2").timeSpentInHours(0).originalEstimateInHours(null)
         );
 
-        subject.getJiraData(defaultProjects(),ZoneId.systemDefault());
+        subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT);
     }
 
     @Test
@@ -2833,7 +2833,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
                 .priorityOrder(1l)
         );
 
-        List<FromJiraDataRow> rows = subject.getJiraData(defaultProjects(),ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> rows = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         assertEquals((Double)11.0, rows.get(0).wrongWorklog);
         assertEquals((Double)11.0, rows.get(1).wrongWorklog);
     }
@@ -2865,7 +2865,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l).originalEstimateInHours(7)
         );
 
-        List<FromJiraDataRow> rows = subject.getJiraData(defaultProjects(),ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> rows = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         assertEquals((Double)3.0, rows.get(0).wrongWorklog);
     }
     
@@ -2896,7 +2896,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
             subtask().id(4).key("PROJ-4").summary("Smry 4").timeSpentInHours(5).parent("PROJ-3").issueType(devIssueType).tshirtSize("XL").priorityOrder(1l).originalEstimateInHours(7)
         );
 
-        List<FromJiraDataRow> rows = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> rows = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         assertEquals((Double)7.0, rows.get(0).wrongWorklog);
     }
 
@@ -2919,7 +2919,7 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
                 subtask().id(4).key("PROJ-4").parent("PROJ-3").worklog("john", "2018-11-27", 300).issueType(devIssueType)
             );
 
-        List<FromJiraDataRow> rows = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> rows = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         Worklog worklog = rows.get(0).worklogs.get(0);
 
         assertEquals("john", worklog.author);
@@ -2938,12 +2938,12 @@ public class FollowUpDataProviderFromCurrentStateTest extends AbstractFollowUpDa
     }
 
     private void assertFollowupsForIssuesEqualsOrdered(String expectedFollowupList) {
-        List<FromJiraDataRow> actual = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> actual = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         assertEquals(expectedFollowupList, fromJiraRowstoString(actual, "\n\n"));
     }
 
     private void assertFollowupsForIssuesEquals(String expectedFollowupList) {
-        List<FromJiraDataRow> actual = sortJiraDataByIssuesKeys(subject.getJiraData(defaultProjects(),ZoneId.systemDefault()).getData().fromJiraDs.rows);
+        List<FromJiraDataRow> actual = sortJiraDataByIssuesKeys(subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows);
 
         assertEquals(
             expectedFollowupList,

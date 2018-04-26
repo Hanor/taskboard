@@ -22,14 +22,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.Range;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.google.common.collect.Streams;
 import com.google.gson.JsonDeserializationContext;
@@ -158,25 +156,20 @@ public class DateTimeUtils {
     }
 
     public static class LocalDateTimeStampSerializer extends com.fasterxml.jackson.databind.JsonSerializer<LocalDate> {
-
         public static final LocalDateTimeStampSerializer INSTANCE = new LocalDateTimeStampSerializer();
-
-        protected LocalDateTimeStampSerializer(){}
-
-        private static ZoneId getTimezone() {
-            RequestAttributes ra = RequestContextHolder.getRequestAttributes();
-            if (ra instanceof ServletRequestAttributes) {
-                HttpServletRequest request = ((ServletRequestAttributes)ra).getRequest();
-                String zoneId = request.getParameter("timezone");
-                if(zoneId != null)
-                    return determineTimeZoneId(zoneId);
-            }
-            return ZoneId.systemDefault();
-        }
 
         @Override
         public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            gen.writeNumber(value.atStartOfDay().atZone(getTimezone()).toInstant().toEpochMilli());
+            gen.writeString(value.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+    }
+    
+    public static class LocalDateDeserializer extends com.fasterxml.jackson.databind.JsonDeserializer<LocalDate> {
+        public static final LocalDateDeserializer INSTANCE = new LocalDateDeserializer();
+        
+        @Override
+        public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            return LocalDate.parse(p.getText(), DateTimeFormatter.ISO_LOCAL_DATE);
         }
     }
 

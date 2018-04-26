@@ -1,30 +1,39 @@
 package objective.taskboard.followup;
 
-import org.junit.Before;
-import org.junit.Test;
+import static java.util.Collections.emptyList;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
 import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 
-import static org.junit.Assert.assertEquals;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
-
 public class PlannedVsBallparkDataAccumulatorTest {
     
-    PlannedVsBallparkDataAccumulator subject;
+    private FollowUpDataSnapshot snapshot = mock(FollowUpDataSnapshot.class);
+    private FollowUpDataSnapshotService snapshotService = mock(FollowUpDataSnapshotService.class);
+    private PlannedVsBallparkDataAccumulator subject = new PlannedVsBallparkDataAccumulator(snapshotService);
     
     @Before
     public void setup() {
-        subject = new PlannedVsBallparkDataAccumulator();
+        when(snapshot.getSnapshotRows()).thenReturn(emptyList());
+        when(snapshot.hasClusterConfiguration()).thenReturn(true);
+        
+        when(snapshotService.getFromCurrentState(any(), any())).thenReturn(snapshot);
     }
-    
+
     @Test
     public void givenAnAccumulator_whenInvokeGetData_thenShouldReturnTwoItens() {
-        List<PlannedVsBallparkChartData> result = subject.getData();
+        List<PlannedVsBallparkChartData> result = subject.calculate("PX");
         assertThat(result, hasSize(2));
     }
     
@@ -44,20 +53,16 @@ public class PlannedVsBallparkDataAccumulatorTest {
     
     @Test
     public void givenSomeSnapshotRows_whenAccumulate_thenShouldSumEffortEstimateOfPlannedRows() {
-        List<SnapshotRow> snapshotRows = getSnapshotRows();
-        
-        snapshotRows.forEach(subject::accumulate);
-        
+        when(snapshot.getSnapshotRows()).thenReturn(getSnapshotRows());
+
         PlannedVsBallparkChartData plannedData = getDataFromAccumulatorWithType(subject, "Planned");        
         assertEquals(25d, plannedData.totalEffort, 0d);                
     }
     
     @Test
     public void givenSomeSnapshotRows_whenAccumulate_thenShouldSumEffortEstimateOfBallparkRows() {
-        List<SnapshotRow> snapshotRows = getSnapshotRows();
-        
-        snapshotRows.forEach(subject::accumulate);
-        
+        when(snapshot.getSnapshotRows()).thenReturn(getSnapshotRows());
+
         PlannedVsBallparkChartData ballparkData = getDataFromAccumulatorWithType(subject, "Ballpark");        
         assertEquals(45d, ballparkData.totalEffort, 0d);                
     }
@@ -81,6 +86,6 @@ public class PlannedVsBallparkDataAccumulatorTest {
     }
     
     private PlannedVsBallparkChartData getDataFromAccumulatorWithType(PlannedVsBallparkDataAccumulator accumulator, String type) {
-        return accumulator.getData().stream().filter(data -> data.type.equals(type)).findFirst().get();
+        return accumulator.calculate("PX").stream().filter(data -> data.type.equals(type)).findFirst().get();
     }
 }

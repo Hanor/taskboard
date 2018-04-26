@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -27,10 +28,10 @@ import com.google.common.base.Objects;
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.config.CacheConfiguration;
 import objective.taskboard.domain.ProjectFilterConfiguration;
-import objective.taskboard.followup.FollowUpDataSnapshot;
+import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 import objective.taskboard.followup.data.FollowupProgressCalculator;
+import objective.taskboard.followup.data.FollowupProgressCalculator.ProjectDatesNotConfiguredException;
 import objective.taskboard.followup.data.ProgressData;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
 import objective.taskboard.repository.PermissionRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 
@@ -40,7 +41,7 @@ public class FollowUpProgressController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FollowUpProgressController.class);
 
     @Autowired
-    private FollowUpDataProviderFromCurrentState providerFromCurrentState;
+    private FollowupProgressCalculator calculator;
 
     @Autowired
     private ProjectFilterConfigurationCachedRepository projects;
@@ -78,38 +79,30 @@ public class FollowUpProgressController {
     }
 
     private ResponseEntity<Object> load(Key key) throws Exception {
-        Optional<ProjectFilterConfiguration> projectOpt = projects.getProjectByKey(key.projectKey);
+        String projectKey = key.projectKey;
+        ZoneId timezone = determineTimeZoneId(key.zoneId);
+        Optional<ProjectFilterConfiguration> projectOpt = projects.getProjectByKey(projectKey);
 
         if (!projectOpt.isPresent())
-            return new ResponseEntity<>("Project not found: " + key.projectKey + ".", NOT_FOUND);
+            return new ResponseEntity<>("Project not found: " + projectKey + ".", NOT_FOUND);
 
         ProjectFilterConfiguration project = projectOpt.get();
 
-        final Integer projectionTimespan;
-
-        projectionTimespan = key.projectionTimespan.orElseGet(project::getProjectionTimespan);
+        Integer projectionTimespan = key.projectionTimespan.orElseGet(project::getProjectionTimespan);
 
         if (projectionTimespan <= 0)
             return new ResponseEntity<>("The projection timespan should be a positive number.", BAD_REQUEST);
 
-        if (project.getDeliveryDate() == null)
-            return new ResponseEntity<>("The project " + key.projectKey + " has no delivery date.", INTERNAL_SERVER_ERROR);
+        try {
+            ProgressData progressData = calculator.calculate(timezone, projectKey, projectionTimespan);
+            return ResponseEntity.ok().body(progressData);
+            
+        } catch (ClusterNotConfiguredException e) {//NOSONAR
+            return new ResponseEntity<>("No cluster configuration found for project " + projectKey + ".", HttpStatus.INTERNAL_SERVER_ERROR);
 
-        if (project.getStartDate() == null)
-            return new ResponseEntity<>("The project " + key.projectKey + " has no start date.", INTERNAL_SERVER_ERROR);
-
-        FollowUpDataSnapshot snapshot = providerFromCurrentState.getJiraData(new String[]{key.projectKey}, determineTimeZoneId(key.zoneId));
-        if (!snapshot.hasClusterConfiguration())
-            return new ResponseEntity<>("No cluster configuration found for project " + key.projectKey + ".", INTERNAL_SERVER_ERROR);
-
-        if (!snapshot.getHistory().isPresent())
-            return new ResponseEntity<>("No progress history found for project " + key.projectKey + ".", INTERNAL_SERVER_ERROR);
-
-        FollowupProgressCalculator calculator = new FollowupProgressCalculator();
-
-        ProgressData progressData = calculator.calculate(snapshot, project.getStartDate(), project.getDeliveryDate(), projectionTimespan);
-        return ResponseEntity.ok().body(progressData);
-
+        } catch (ProjectDatesNotConfiguredException e) {//NOSONAR
+            return new ResponseEntity<>("The project " + projectKey + " has no start or delivery date.", INTERNAL_SERVER_ERROR);
+        }
     }
 
     private static class Key {

@@ -7,7 +7,6 @@ public class FollowUpScopeByTypeDataSet {
 
     public Double total;
     public String projectKey;
-    public String date;
     public String zoneId;
 
     public List<FollowUpScopeByTypeDataItem> values = new ArrayList<>();

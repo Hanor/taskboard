@@ -1,10 +1,12 @@
 package objective.taskboard.domain.serializer;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import objective.taskboard.utils.DateTimeUtils;
+import java.time.LocalDate;
+
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import objective.taskboard.utils.DateTimeUtils;
 
 @Component
 public class TaskboardJacksonModule extends SimpleModule {
@@ -15,5 +17,6 @@ public class TaskboardJacksonModule extends SimpleModule {
         super(TaskboardJacksonModule.class.getName());
 
         addSerializer(LocalDate.class, DateTimeUtils.LocalDateTimeStampSerializer.INSTANCE);
+        addDeserializer(LocalDate.class, DateTimeUtils.LocalDateDeserializer.INSTANCE);
     }
 }

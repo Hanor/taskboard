@@ -129,7 +129,6 @@
                 },
 
                 open: function(projectConfiguration) {
-                    moment.locale(taskboard.getLocaleFromBrowser());
                     this.set('dateFormatPlaceholder', moment.localeData().longDateFormat("L").toLowerCase());
                     this.set('errorMessage', '');
                     this._setProjectFilterConfiguration(projectConfiguration);

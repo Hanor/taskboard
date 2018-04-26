@@ -112,7 +112,7 @@ public abstract class AbstractFollowUpDataProviderTest {
     protected ProjectFilterConfiguration projectConfiguration;
 
     @InjectMocks
-    FollowUpDataProviderFromCurrentState subject;
+    protected FollowUpDataProviderFromCurrentState subject;
 
     protected static final long demandIssueType   = 13;
     protected static final long taskIssueType     = 12;
@@ -131,6 +131,8 @@ public abstract class AbstractFollowUpDataProviderTest {
     private static final String BLOCKED_ID = "1";
     private static final String LAST_BLOCK_REASON_ID = "2";
     private static final String ADDITIONAL_ESTIMATED_HOURS_ID = "3";
+
+    protected static final String DEFAULT_PROJECT = "PROJ";
 
     protected static final StatusCategory CATEGORY_UNDEFINED = new StatusCategory(
             1L
@@ -220,13 +222,10 @@ public abstract class AbstractFollowUpDataProviderTest {
 
         when(cycleTime.getCycleTime(any(), any(), anyLong())).thenReturn(1D);
 
-        projectConfiguration = new ProjectFilterConfiguration("PROJ");
+        projectConfiguration = new ProjectFilterConfiguration(DEFAULT_PROJECT);
 
         when(projectRepository.getProjectByKey(any())).thenReturn(Optional.of(projectConfiguration));
-    }
-
-    public String[] defaultProjects() {
-        return new String[]{"PROJ"};
+        when(projectRepository.getProjectByKeyOrCry(any())).thenReturn(projectConfiguration);
     }
 
     public void configureBallparkMappings(String... string) {
@@ -441,7 +440,7 @@ public abstract class AbstractFollowUpDataProviderTest {
             IssueScratch scratch = new IssueScratch(
                     id,
                     key,
-                    getProjectKey(project),
+                    project == null ? DEFAULT_PROJECT : project,
                     getProjectName(),
                     issueType,
                     summary,
@@ -519,14 +518,8 @@ public abstract class AbstractFollowUpDataProviderTest {
         return "A Project";
     }
 
-    private static String getProjectKey(String project) {
-        if (project != null)
-            return project;
-        return "PROJ";
-    }
-    
     protected void assertFromJiraRows(Function<FromJiraDataRow, List<Object>> fieldsExtractor, String... expectedRows) {
-        List<FromJiraDataRow> actualRows = subject.getJiraData(defaultProjects(), ZoneId.systemDefault()).getData().fromJiraDs.rows;
+        List<FromJiraDataRow> actualRows = subject.generate(ZoneId.systemDefault(), DEFAULT_PROJECT).fromJiraDs.rows;
         
         String actualString = actualRows.stream()
                 .map(fieldsExtractor)

@@ -1,5 +1,6 @@
 package objective.taskboard.followup.impl;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import objective.taskboard.followup.FollowUpDataSnapshot;
-import objective.taskboard.followup.FollowUpFacade;
+import objective.taskboard.followup.FollowUpDataSnapshotService;
 import objective.taskboard.followup.FollowUpScopeByTypeDataItem;
 import objective.taskboard.followup.FollowUpScopeByTypeDataSet;
-import objective.taskboard.followup.FollowupDataProvider;
 import objective.taskboard.followup.FromJiraRowService;
-import objective.taskboard.jira.FrontEndMessageException;
+import objective.taskboard.followup.FollowUpDataSnapshot.SnapshotRow;
+import objective.taskboard.followup.cluster.ClusterNotConfiguredException;
 
 @Service
 public class FollowUpScopeByTypeDataProvider {
@@ -30,21 +31,25 @@ public class FollowUpScopeByTypeDataProvider {
     public static final String BASELINE_DONE = "Baseline Done";
     public static final String BASELINE_BACKLOG = "Baseline Backlog";
 
+    private final FollowUpDataSnapshotService snapshotService;
+    private final FromJiraRowService rowService;
+    
     @Autowired
-    private FollowUpFacade followUpFacade;
+    public FollowUpScopeByTypeDataProvider(FollowUpDataSnapshotService snapshotService, FromJiraRowService rowService) {
+        this.snapshotService = snapshotService;
+        this.rowService = rowService;
+    }
 
-    @Autowired
-    private FromJiraRowService rowService;
+    public FollowUpScopeByTypeDataSet getScopeByTypeData(String projectKey, Optional<LocalDate> date, ZoneId zoneId) 
+            throws ClusterNotConfiguredException {
 
-    public FollowUpScopeByTypeDataSet getScopeByTypeData(String projectKey, String date, ZoneId zoneId) {
-
+        final FollowUpDataSnapshot snapshot = snapshotService.get(date, zoneId, projectKey);
         final Map<String, Double> map = initTypes();
 
-        FollowUpDataSnapshot snapshot = getSnapshot(projectKey, date, zoneId);
         if (!snapshot.hasClusterConfiguration())
-            throw new FrontEndMessageException("No cluster configuration found for project " + projectKey + ".");
+            throw new ClusterNotConfiguredException();
         
-        snapshot.forEachRow(r -> {
+        for (SnapshotRow r : snapshot.getSnapshotRows()) {
             Double effortEstimate = r.calcutatedData.getEffortEstimate();
             if (rowService.isIntangible(r.rowData) && rowService.isDone(r.rowData))
                 sum(map, INTANGIBLE_DONE, effortEstimate);
@@ -62,9 +67,9 @@ public class FollowUpScopeByTypeDataProvider {
                 sum(map, BASELINE_DONE, effortEstimate);
             else if (rowService.isBaselineBacklog(r.rowData))
                 sum(map, BASELINE_BACKLOG, effortEstimate);
-        });
+        };
 
-        return transform(map, projectKey, date, zoneId);
+        return transform(map, projectKey, zoneId);
     }
 
     private Map<String, Double> initTypes() {
@@ -85,11 +90,10 @@ public class FollowUpScopeByTypeDataProvider {
         map.put(type, actualEffortEstimate + effortEstimate);
     }
 
-    private FollowUpScopeByTypeDataSet transform(Map<String, Double> map, String projectKey, String date, ZoneId zoneId) {
+    private FollowUpScopeByTypeDataSet transform(Map<String, Double> map, String projectKey, ZoneId zoneId) {
         FollowUpScopeByTypeDataSet dataSet = new FollowUpScopeByTypeDataSet();
         dataSet.total = map.values().stream().mapToDouble(i -> i).sum();
         dataSet.projectKey = projectKey;
-        dataSet.date = date;
         dataSet.zoneId = zoneId.getId();
 
         Iterator<Entry<String, Double>> entries = map.entrySet().iterator();
@@ -104,11 +108,4 @@ public class FollowUpScopeByTypeDataProvider {
         Double percent = (value / total) * 100D;
         return percent.isNaN() ? 0D : percent;
     }
-
-    private FollowUpDataSnapshot getSnapshot(String projectKey, String date, ZoneId zoneId) {
-        FollowupDataProvider provider = followUpFacade.getProvider(Optional.of(date));
-        String[] projects = {projectKey};
-        return provider.getJiraData(projects, zoneId);
-    }
-
 }

@@ -3,6 +3,7 @@ package objective.taskboard.followup;
 import java.time.LocalDate;
 
 import objective.taskboard.domain.FollowupDailySynthesis;
+import objective.taskboard.followup.FromJiraRowCalculator.FromJiraRowCalculation;
 
 public class EffortHistoryRow {
     public final LocalDate date;
@@ -29,5 +30,9 @@ public class EffortHistoryRow {
 
     public static EffortHistoryRow from(FollowupDailySynthesis dailySynthesis) {
         return new EffortHistoryRow(dailySynthesis.getFollowupDate(), dailySynthesis.getSumEffortDone(), dailySynthesis.getSumEffortBacklog());
+    }
+    
+    public static EffortHistoryRow from(LocalDate date, FromJiraRowCalculation sumCalculation) {
+        return new EffortHistoryRow(date, sumCalculation.getEffortDone(), sumCalculation.getEffortOnBacklog());
     }
 }

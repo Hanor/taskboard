@@ -407,7 +407,7 @@
                     var selectedProject = findInArray(this.projects, function(p) {
                         return p.projectKey === projectKey;
                     })
-                    return selectedProject.followUpDataHistory.sort().reverse();
+                    return selectedProject.followUpDataHistory.slice(0).sort().reverse();
                 },
 
                 _onShowDashboard: function(showDashboard) {

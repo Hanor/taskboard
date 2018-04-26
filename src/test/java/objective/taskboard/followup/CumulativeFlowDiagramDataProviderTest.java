@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doReturn;
 
 import java.text.SimpleDateFormat;
@@ -30,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import objective.taskboard.Constants;
-import objective.taskboard.followup.impl.FollowUpDataProviderFromCurrentState;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.utils.DateTimeUtils;
 
@@ -43,7 +42,7 @@ public class CumulativeFlowDiagramDataProviderTest {
     private ProjectFilterConfigurationCachedRepository projectRepository;
 
     @Mock
-    private FollowUpDataProviderFromCurrentState followUpDataProviderFromCurrentState;
+    private FollowUpDataSnapshotService dataSnapshotService;
 
     @InjectMocks
     private CumulativeFlowDiagramDataProvider subject;
@@ -54,13 +53,13 @@ public class CumulativeFlowDiagramDataProviderTest {
     public void setup() {
         followupData = FollowUpHelper.getBiggerFollowupData();
         FollowUpTimeline timeline = new FollowUpTimeline(TODAY_DATE);
-        FollowUpDataSnapshot snapshot = new FollowUpDataSnapshot(timeline, followupData, new EmptyFollowupCluster());
-        doReturn(snapshot).when(followUpDataProviderFromCurrentState).getJiraData(eq("TASKB"));
+        FollowUpDataSnapshot snapshot = new FollowUpDataSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyList());
+        doReturn(snapshot).when(dataSnapshotService).getFromCurrentState(any(), eq("TASKB"));
         doReturn(true).when(projectRepository).exists(eq("TASKB"));
 
         FollowupData emptyFollowupData = new FollowupData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, emptyList()), emptyList(), emptySynthetics());
-        FollowUpDataSnapshot emptySnapshot = new FollowUpDataSnapshot(timeline, emptyFollowupData, new EmptyFollowupCluster());
-        doReturn(emptySnapshot).when(followUpDataProviderFromCurrentState).getJiraData(eq("EMPTY"));
+        FollowUpDataSnapshot emptySnapshot = new FollowUpDataSnapshot(timeline, emptyFollowupData, new EmptyFollowupCluster(), emptyList());
+        doReturn(emptySnapshot).when(dataSnapshotService).getFromCurrentState(any(), eq("EMPTY"));
         doReturn(true).when(projectRepository).exists(eq("EMPTY"));
     }
 
@@ -210,8 +209,8 @@ public class CumulativeFlowDiagramDataProviderTest {
 
     private AssertionContext setupProject(String projectKey, LocalDate projectStart, LocalDate projectDelivery) {
         FollowUpTimeline timeline = new FollowUpTimeline(TODAY_DATE, Optional.ofNullable(projectStart), Optional.ofNullable(projectDelivery));
-        FollowUpDataSnapshot snapshot = new FollowUpDataSnapshot(timeline, followupData, new EmptyFollowupCluster());
-        doReturn(snapshot).when(followUpDataProviderFromCurrentState).getJiraData(eq(projectKey));
+        FollowUpDataSnapshot snapshot = new FollowUpDataSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyList());
+        doReturn(snapshot).when(dataSnapshotService).getFromCurrentState(any(), eq(projectKey));
         doReturn(true).when(projectRepository).exists(eq(projectKey));
         return new AssertionContext(snapshot);
     }

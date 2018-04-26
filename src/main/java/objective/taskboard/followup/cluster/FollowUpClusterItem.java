@@ -1,6 +1,7 @@
 package objective.taskboard.followup.cluster;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -14,7 +15,7 @@ import objective.taskboard.domain.TaskboardEntity;
 @Table(name = "followup_cluster_item")
 public class FollowUpClusterItem extends TaskboardEntity {
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "project_key", referencedColumnName = "projectKey", nullable = false)
     private ProjectFilterConfiguration project;
 
