@@ -4,8 +4,10 @@ import static objective.taskboard.utils.IOUtilities.resourceToString;
 import static objective.taskboard.utils.XmlUtils.normalizeXml;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -289,6 +292,44 @@ public class SpreadsheetEditorTest {
                     .map(node -> (Element)node)
                     .filter(element -> currencyFormat.equals(element.getAttribute("formatCode")))
                     .count(), is(1L));
+        }
+    }
+    
+    @Test
+    public void getTableFromSheet() {
+        try (SimpleSpreadsheetEditor subject = new SimpleSpreadsheetEditor(getBasicTemplate())) {
+            subject.open();
+            
+            SimpleSheet tShirtSizeSheet = subject.getOrCreateSheet("T-shirt Size");
+            Optional<SheetTable> clustersTable = tShirtSizeSheet.getTable("Clusters");
+            
+            assertTrue(clustersTable.isPresent());
+            assertEquals("A", clustersTable.get().getReference().getStart().getColumnLetter());
+            assertEquals(  1, clustersTable.get().getReference().getStart().getRowNumber());
+            assertEquals("E", clustersTable.get().getReference().getEnd().getColumnLetter());
+            assertEquals(101, clustersTable.get().getReference().getEnd().getRowNumber());
+        }
+    }
+    
+    @Test
+    public void getTableFromSheet_nonexistentName() {
+        try (SimpleSpreadsheetEditor subject = new SimpleSpreadsheetEditor(getBasicTemplate())) {
+            subject.open();
+            
+            SimpleSheet tShirtSizeSheet = subject.getOrCreateSheet("T-shirt Size");
+            Optional<SheetTable> xTable = tShirtSizeSheet.getTable("Xtable");
+            assertFalse(xTable.isPresent());
+        }
+    }
+    
+    @Test
+    public void getTableFromSheet_sheetWithoutTables() {
+        try (SimpleSpreadsheetEditor subject = new SimpleSpreadsheetEditor(getBasicTemplate())) {
+            subject.open();
+            
+            SimpleSheet activitiesSheet = subject.getOrCreateSheet("Activities");
+            Optional<SheetTable> clustersTable = activitiesSheet.getTable("Clusters");
+            assertFalse(clustersTable.isPresent());
         }
     }
 

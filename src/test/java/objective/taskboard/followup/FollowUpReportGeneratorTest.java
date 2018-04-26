@@ -35,9 +35,9 @@ import static objective.taskboard.followup.FollowUpHelper.getEmptySyntheticTrans
 import static objective.taskboard.followup.FollowUpHelper.getSyntheticTransitionsDataSetWithNoRow;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -52,9 +52,12 @@ import org.springframework.core.io.Resource;
 
 import objective.taskboard.data.Worklog;
 import objective.taskboard.domain.ProjectFilterConfiguration;
+import objective.taskboard.followup.FollowUpReportGenerator.InvalidTableRangeException;
 import objective.taskboard.followup.cluster.EmptyFollowupCluster;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.followup.cluster.FollowupClusterImpl;
+import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
 import objective.taskboard.spreadsheet.Sheet;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditor;
 import objective.taskboard.spreadsheet.SimpleSpreadsheetEditorMock;
@@ -333,19 +336,18 @@ public class FollowUpReportGeneratorTest {
 
     @Test
     public void givenFollowUpClusterItems_whenGenerateTShirtSizeSheet_thenSheetShouldContainsItems() throws IOException {
+        editor.addTable("T-shirt Size", "Cluster", SpreadsheetA1Range.parse("A1:D4"));
+
         ProjectFilterConfiguration project = Mockito.mock(ProjectFilterConfiguration.class);
         doReturn("PROJ").when(project).getProjectKey();
 
-        List<FollowUpClusterItem> clusterItems = asList(
+        FollowupCluster cluster = new FollowupClusterImpl(asList(
             new FollowUpClusterItem(project, "Alpha Bug", "notused", "L", 12.0, 14.4),
             new FollowUpClusterItem(project, "Alpha Test", "notused", "M", 6.0, 7.2),
-            new FollowUpClusterItem(project, "UAT", "notused", "S", 4.0, 4.8));
-
-        when(followupCluster.getClusterItems()).thenReturn(clusterItems);
+            new FollowUpClusterItem(project, "UAT", "notused", "S", 4.0, 4.8)));
 
         subject.getEditor().open();
-        FollowUpSnapshot s = followUpDataEntry(null, emptyList(), emptyList());
-        subject.generateTShirtSizeSheet(s);
+        subject.generateTShirtSizeSheet(cluster);
         subject.getEditor().close();
 
         String expectedEditorLogger =
@@ -384,15 +386,36 @@ public class FollowUpReportGeneratorTest {
 
         assertEquals("T-shirt Size Sheet", expectedEditorLogger, editor.loggerString());
     }
+    
+    @Test
+    public void whenClustersTableRangeIsSmallerThanItemsSize_thenShouldThrowAnException() {
+        editor.addTable("T-shirt Size", "Clusters", SpreadsheetA1Range.parse("A1:D3"));
+        
+        ProjectFilterConfiguration project = Mockito.mock(ProjectFilterConfiguration.class);
+        doReturn("PROJ").when(project).getProjectKey();
+
+        FollowupCluster cluster = new FollowupClusterImpl(asList(
+            new FollowUpClusterItem(project, "Alpha Bug", "notused", "L", 12.0, 14.4),
+            new FollowUpClusterItem(project, "Alpha Test", "notused", "M", 6.0, 7.2),
+            new FollowUpClusterItem(project, "UAT", "notused", "S", 4.0, 4.8)));
+
+        subject.getEditor().open();
+        try {
+            subject.generateTShirtSizeSheet(cluster);
+            fail();
+        } catch (InvalidTableRangeException e) {
+            assertEquals("T-shirt Size", e.getSheetName());
+            assertEquals("Clusters", e.getTableName());
+            assertEquals(4, e.getMinRows());
+        }
+    }
 
     @Test
     public void givenNoFollowUpClusterItems_whenGenerateTShirtSize_thenShouldNotGenerateSheet() throws IOException {
-        when(followupCluster.getClusterItems()).thenReturn(emptyList());
+        FollowupCluster cluster = new EmptyFollowupCluster();
 
         subject.getEditor().open();
-        FollowUpSnapshot s = mock(FollowUpSnapshot.class);
-        Mockito.when(s.getCluster()).thenReturn(new EmptyFollowupCluster());
-        subject.generateTShirtSizeSheet(s );
+        subject.generateTShirtSizeSheet(cluster);
         subject.getEditor().close();
 
         String expectedEditorLogger =

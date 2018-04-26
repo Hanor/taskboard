@@ -1,5 +1,7 @@
 package objective.taskboard.spreadsheet;
 
+import java.util.Optional;
+
 public interface Sheet {
 
     void save();
@@ -11,5 +13,7 @@ public interface Sheet {
     void truncate();
 
     String getSheetPath();
+    
+    Optional<SheetTable> getTable(String tableName);
 
 }

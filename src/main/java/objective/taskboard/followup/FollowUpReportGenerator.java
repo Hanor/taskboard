@@ -37,8 +37,10 @@ import org.springframework.core.io.Resource;
 
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.followup.cluster.FollowupCluster;
+import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
 import objective.taskboard.spreadsheet.Sheet;
 import objective.taskboard.spreadsheet.SheetRow;
+import objective.taskboard.spreadsheet.SheetTable;
 import objective.taskboard.spreadsheet.SpreadsheetEditor;
 import objective.taskboard.utils.DateTimeUtils;
 import objective.taskboard.utils.IOUtilities;
@@ -62,7 +64,7 @@ public class FollowUpReportGenerator {
             generateFromJiraSheet(followupData);
             generateTransitionsSheets(followupData);
             generateEffortHistory(snapshot);
-            generateTShirtSizeSheet(snapshot);
+            generateTShirtSizeSheet(snapshot.getCluster());
             generateWorklogSheet(followupData, timezone);
 
             return IOUtilities.asResource(editor.toBytes());
@@ -366,11 +368,21 @@ public class FollowUpReportGenerator {
         sheet.save();
     }
 
-    void generateTShirtSizeSheet(FollowUpSnapshot snapshot) {
-        FollowupCluster followupCluster= snapshot.getCluster();
-
-        Sheet sheet = editor.getOrCreateSheet("T-shirt Size");
+    void generateTShirtSizeSheet(FollowupCluster cluster) {
+        String sheetName = "T-shirt Size";
+        String clustersTableName = "Clusters";
+        
+        Sheet sheet = editor.getOrCreateSheet(sheetName);
         sheet.truncate();
+        
+        Optional<SheetTable> clustersTable = sheet.getTable(clustersTableName);
+        if (clustersTable.isPresent()) {
+            SpreadsheetA1Range referenceRange = clustersTable.get().getReference();
+            int clusterSize = cluster.getClusterItems().size() + 1;
+            
+            if (referenceRange.getEnd().getRowNumber() < clusterSize)
+                throw new InvalidTableRangeException(sheetName, clustersTableName, clusterSize);
+        }
 
         SheetRow rowHeader = sheet.createRow();
         rowHeader.addColumn("Cluster Name");
@@ -379,22 +391,48 @@ public class FollowUpReportGenerator {
         rowHeader.addColumn("Effort");
         rowHeader.addColumn("Cycle");
         rowHeader.addColumn("Project");
-        
-        if (snapshot.hasClusterConfiguration())
-            for (FollowUpClusterItem cluster : followupCluster.getClusterItems()) {
-                SheetRow row = sheet.createRow();
-                row.addColumn(cluster.getSubtaskTypeName());
-                row.addColumn(cluster.getSizing());
-                row.addColumn("Hours");
-                row.addColumn(cluster.getEffort());
-                row.addColumn(cluster.getCycle());
-                row.addColumn(cluster.getProject().getProjectKey());
-            }
+
+        for (FollowUpClusterItem clusterItem : cluster.getClusterItems()) {
+            SheetRow row = sheet.createRow();
+            row.addColumn(clusterItem.getSubtaskTypeName());
+            row.addColumn(clusterItem.getSizing());
+            row.addColumn("Hours");
+            row.addColumn(clusterItem.getEffort());
+            row.addColumn(clusterItem.getCycle());
+            row.addColumn(clusterItem.getProject().getProjectKey());
+        }
+
         sheet.save();
     }
 
     
     public SpreadsheetEditor getEditor() {
         return editor;
+    }
+    
+    public static class InvalidTableRangeException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        
+        private final String sheetName;
+        private final String tableName;
+        private final int minRows;
+
+        public InvalidTableRangeException(String sheetName, String tableName, int minRows) {
+            this.sheetName = sheetName;
+            this.tableName = tableName;
+            this.minRows = minRows;
+        }
+        
+        public String getSheetName() {
+            return sheetName;
+        }
+        
+        public String getTableName() {
+            return tableName;
+        }
+        
+        public int getMinRows() {
+            return minRows;
+        }
     }
 }

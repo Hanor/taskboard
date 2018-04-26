@@ -8,15 +8,18 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import objective.taskboard.followup.FollowUpTemplate;
+import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
 
 public class SimpleSpreadsheetEditorMock implements SpreadsheetEditor {
 
     private Map<String,String> sheetPathByName = new LinkedHashMap<>();
+    private Map<String, SheetTable> tables = new HashMap<>();
     FollowUpTemplate template;
 
     private StringBuilder logger = new StringBuilder();
@@ -34,6 +37,10 @@ public class SimpleSpreadsheetEditorMock implements SpreadsheetEditor {
 
     public String loggerString() {
         return logger.toString();
+    }
+    
+    public void addTable(String sheetName, String tableName, SpreadsheetA1Range reference) {
+        tables.put(sheetName + ":" + tableName, new SheetTableMock(tableName, reference));
     }
 
     @Override
@@ -131,6 +138,11 @@ public class SimpleSpreadsheetEditorMock implements SpreadsheetEditor {
         @Override
         public String getSheetPath() {
             return null;
+        }
+
+        @Override
+        public Optional<SheetTable> getTable(String tableName) {
+            return Optional.ofNullable(tables.get(sheetName + ":" + tableName));
         }
     }
 
@@ -240,4 +252,23 @@ public class SimpleSpreadsheetEditorMock implements SpreadsheetEditor {
         }
     }
 
+    private static class SheetTableMock implements SheetTable {
+        private final String name;
+        private final SpreadsheetA1Range reference;
+        
+        public SheetTableMock(String name, SpreadsheetA1Range reference) {
+            this.name = name;
+            this.reference = reference;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public SpreadsheetA1Range getReference() {
+            return reference;
+        }
+    }
 }

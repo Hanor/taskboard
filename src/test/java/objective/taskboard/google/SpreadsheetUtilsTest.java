@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.Test;
 
 import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1;
+import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
 
 public class SpreadsheetUtilsTest {
 
@@ -41,16 +42,36 @@ public class SpreadsheetUtilsTest {
     
     @Test
     public void parseA1() {
-        SpreadsheetA1 a1 = SpreadsheetUtils.parseA1("A1");
+        SpreadsheetA1 a1 = SpreadsheetA1.parse("A1");
 
         assertEquals("A", a1.getColumnLetter());
         assertEquals(0, a1.getColumnIndex());
         assertEquals(1, a1.getRowNumber());
         
-        a1 = SpreadsheetUtils.parseA1("AZ199");
+        a1 = SpreadsheetA1.parse("AZ199");
 
         assertEquals("AZ", a1.getColumnLetter());
         assertEquals(51, a1.getColumnIndex());
         assertEquals(199, a1.getRowNumber());
+    }
+    
+    @Test
+    public void parseA1Range() {
+        SpreadsheetA1Range range = SpreadsheetA1Range.parse("A1:C9");
+        
+        assertEquals("A", range.getStart().getColumnLetter());
+        assertEquals(1, range.getStart().getRowNumber());
+        assertEquals("C", range.getEnd().getColumnLetter());
+        assertEquals(9, range.getEnd().getRowNumber());
+    }
+    
+    @Test
+    public void parseA1Range_singleValue() {
+        SpreadsheetA1Range range = SpreadsheetA1Range.parse("A1");
+        
+        assertEquals("A", range.getStart().getColumnLetter());
+        assertEquals(1, range.getStart().getRowNumber());
+        assertEquals("A", range.getEnd().getColumnLetter());
+        assertEquals(1, range.getEnd().getRowNumber());
     }
 }

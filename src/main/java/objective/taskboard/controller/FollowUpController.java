@@ -20,6 +20,7 @@
  */
 package objective.taskboard.controller;
 
+import static java.lang.String.format;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.util.Arrays.asList;
@@ -49,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 import objective.taskboard.auth.Authorizer;
 import objective.taskboard.followup.FollowUpFacade;
 import objective.taskboard.followup.FollowUpHistoryKeeper;
+import objective.taskboard.followup.FollowUpReportGenerator.InvalidTableRangeException;
 import objective.taskboard.followup.TemplateService;
 import objective.taskboard.followup.data.Template;
 
@@ -104,6 +106,13 @@ public class FollowUpController {
                   .header("Content-Disposition","attachment; filename=\"" + filename + "\"")
                   .header("Set-Cookie", "fileDownload=true; path=/")
                   .body(resource);
+        } catch (InvalidTableRangeException e) {//NOSONAR
+            return ResponseEntity.badRequest()
+                    .body(format(
+                            "The selected template is invalid. The range of table “%s” in sheet “%s” is smaller than the available data. " + 
+                            "Please increase the range to cover at least row %s.",
+                            e.getTableName(), e.getSheetName(), e.getMinRows()));
+
         } catch (Exception e) {
             log.warn("Error generating followup spreadsheet", e);
             return ResponseEntity.status(INTERNAL_SERVER_ERROR)

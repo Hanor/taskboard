@@ -2,6 +2,7 @@ package objective.taskboard.spreadsheet;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static objective.taskboard.google.SpreadsheetUtils.columnIndexToLetter;
 import static objective.taskboard.google.SpreadsheetUtils.columnLetterToIndex;
 import static objective.taskboard.utils.IOUtilities.write;
@@ -20,11 +21,13 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Attr;
@@ -40,8 +43,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import objective.taskboard.followup.FollowUpTemplate;
-import objective.taskboard.google.SpreadsheetUtils;
 import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1;
+import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
 import objective.taskboard.utils.IOUtilities;
 import objective.taskboard.utils.XmlUtils;
 
@@ -376,6 +379,7 @@ public class SimpleSpreadsheetEditor implements SpreadsheetEditor {
         private final File sheetFile;
         private final Document sheetDoc;
         private final Element sheetData;
+        private Map<String, Document> tablesByName;
 
         private int lastRowNumber;
 
@@ -492,6 +496,66 @@ public class SimpleSpreadsheetEditor implements SpreadsheetEditor {
         public String getSheetPath() {
             return sheetFile.getPath().replace(extractedSheetDirectory.getPath()+File.separator, "");
         }
+
+        private Map<String, Document> getTablesByName() {
+            if (tablesByName == null)
+                tablesByName = loadTablesByName();
+
+            return tablesByName;
+        }
+
+        private Map<String, Document> loadTablesByName() {
+            NodeList tableParts = XmlUtils.xpath(sheetDoc, "//tableParts/tablePart");
+            if (tableParts.getLength() == 0)
+                return Collections.emptyMap();
+            
+            File relsFile = getRelsFile(sheetFile);
+            Document relsDoc = XmlUtils.asDocument(relsFile);
+            
+            Map<String, String> targetsByRelId = XmlUtils.stream(relsDoc.getElementsByTagName("Relationship"))
+                    .collect(toMap(n -> getAttributeValueOrCry(n, "Id"), n -> getAttributeValueOrCry(n, "Target")));
+            
+            return XmlUtils.stream(tableParts)
+                    .map(tablePart -> {
+                        String tableId = getAttributeValueOrCry(tablePart, "r:id");
+                        String relTarget = targetsByRelId.get(tableId);
+                        File tableFile = new File(sheetFile.getParent(), relTarget);
+                        return XmlUtils.asDocument(tableFile);
+                    })
+                    .collect(toMap(d -> getAttributeValueOrCry(d.getDocumentElement(), "name"), Function.identity()));
+        }
+
+        @Override
+        public Optional<SheetTable> getTable(String tableName) {
+            Document tableDocument = getTablesByName().get(tableName);
+            if (tableDocument == null)
+                return Optional.empty();
+
+            return Optional.of(new SimpleSheetTable(tableDocument)) ;
+        }
+
+    }
+    
+    private class SimpleSheetTable implements SheetTable {
+        private final String name;
+        private final SpreadsheetA1Range reference;
+
+        public SimpleSheetTable(Document tableDocument) {
+            Element rootElement = tableDocument.getDocumentElement();
+            this.name = getAttributeValueOrCry(rootElement, "name");
+            this.reference = SpreadsheetA1Range.parse(getAttributeValueOrCry(tableDocument.getDocumentElement(), "ref"));
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public SpreadsheetA1Range getReference() {
+            return reference;
+        }
+        
     }
     
     private class SimpleSheetRow implements SheetRow {
@@ -609,7 +673,7 @@ public class SimpleSpreadsheetEditor implements SpreadsheetEditor {
         }
         
         private SpreadsheetA1 getCellReference(Node cell) {
-            return SpreadsheetUtils.parseA1(getAttributeValueOrCry(cell, "r"));
+            return SpreadsheetA1.parse(getAttributeValueOrCry(cell, "r"));
         }
         
         private int getColumnIndex(Node cell) {
@@ -826,4 +890,7 @@ public class SimpleSpreadsheetEditor implements SpreadsheetEditor {
         return "1".equals(value) || "true".equals(value);
     }
 
+    private static File getRelsFile(File file) {
+        return new File(file.getParent(), "_rels/" + file.getName() + ".rels");
+    }
 }

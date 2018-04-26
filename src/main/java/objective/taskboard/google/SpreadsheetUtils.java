@@ -41,19 +41,6 @@ public class SpreadsheetUtils {
         return result.toString();
     }
     
-    public static SpreadsheetA1 parseA1(String a1String) {
-        Matcher matcher = A1_PATTERN.matcher(a1String);
-        boolean found = matcher.find();
-        
-        if (!found || matcher.groupCount() != 2)
-            throw new IllegalArgumentException("A1 notation '" + a1String + "' is not valid!");
-        
-        String columnLetter = matcher.group(1);
-        int rowNumber = Integer.parseInt(matcher.group(2));
-        
-        return new SpreadsheetA1(columnLetter, rowNumber);
-    }
-    
     public static class SpreadsheetA1 {
         private final String columnLetter;
         private final int rowNumber;
@@ -62,6 +49,19 @@ public class SpreadsheetUtils {
         public SpreadsheetA1(String columnLetter, int rowNumber) {
             this.columnLetter = columnLetter;
             this.rowNumber = rowNumber;
+        }
+        
+        public static SpreadsheetA1 parse(String a1String) {
+            Matcher matcher = A1_PATTERN.matcher(a1String);
+            boolean found = matcher.find();
+            
+            if (!found || matcher.groupCount() != 2)
+                throw new IllegalArgumentException("A1 notation '" + a1String + "' is not valid!");
+            
+            String columnLetter = matcher.group(1);
+            int rowNumber = Integer.parseInt(matcher.group(2));
+            
+            return new SpreadsheetA1(columnLetter, rowNumber);
         }
 
         public String getColumnLetter() {
@@ -77,6 +77,40 @@ public class SpreadsheetUtils {
 
         public int getRowNumber() {
             return rowNumber;
+        }
+    }
+    
+    public static class SpreadsheetA1Range {
+        private final SpreadsheetA1 start;
+        private final SpreadsheetA1 end;
+        
+        public SpreadsheetA1Range(SpreadsheetA1 start, SpreadsheetA1 end) {
+            this.start = start;
+            this.end = end;
+        }
+        
+        public static SpreadsheetA1Range parse(String value) {
+            String[] parts = value.split(":");
+            
+            if (parts.length == 1) {
+                SpreadsheetA1 single = SpreadsheetA1.parse(parts[0]);
+                return new SpreadsheetA1Range(single, single);
+                
+            } else if (parts.length == 2) {
+                SpreadsheetA1 start = SpreadsheetA1.parse(parts[0]);
+                SpreadsheetA1 end   = SpreadsheetA1.parse(parts[1]);
+                return new SpreadsheetA1Range(start, end);
+            }
+            
+            throw new IllegalArgumentException("A1 range '" + value + "' is not valid!");
+        }
+        
+        public SpreadsheetA1 getStart() {
+            return start;
+        }
+        
+        public SpreadsheetA1 getEnd() {
+            return end;
         }
     }
 }
