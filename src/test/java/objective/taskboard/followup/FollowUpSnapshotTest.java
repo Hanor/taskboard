@@ -37,7 +37,7 @@ public class FollowUpSnapshotTest {
                 new FollowUpClusterItem(project, "UX", "na", "S", 1.0, 0.0),
                 new FollowUpClusterItem(project, "UX", "na", "M", 2.0, 0.0)));
         
-        FollowUpSnapshot subject = new FollowUpSnapshot(timeline, data, cluster, effortHistory);
+        FollowUpSnapshot subject = new FollowUpSnapshot(timeline, data, cluster, new FixedFollowUpSnapshotValuesProvider(effortHistory));
         
         assertEffortHistory(subject.getEffortHistory(), 
                 "2018-04-03 | 2.0 | 8.0",

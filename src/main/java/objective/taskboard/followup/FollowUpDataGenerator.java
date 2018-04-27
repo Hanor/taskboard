@@ -46,16 +46,15 @@ public class FollowUpDataGenerator {
     }
 
     public FollowUpData generate(ZoneId timezone, FollowupCluster cluster, String projectKey) {
-        return new CurrentStateSnapshot(timezone, cluster, projectKey).execute();
+        return new GenerationScope(timezone, cluster, projectKey).generate();
     }
-    
 
     public FollowUpData generate(ZoneId timezone, String projectKey) {
         FollowupCluster cluster = clusterProvider.getForProject(projectKey);
         return generate(timezone, cluster, projectKey);
     }
 
-    private class CurrentStateSnapshot {
+    private class GenerationScope {
 
         private final String projectKey;
         private final ZoneId timezone;
@@ -66,14 +65,14 @@ public class FollowUpDataGenerator {
         private Map<String, Issue> featuresByKey;
         private Map<String, FromJiraDataRow> followUpBallparks;
 
-        private CurrentStateSnapshot(ZoneId timezone, FollowupCluster cluster, String projectKey) {
+        private GenerationScope(ZoneId timezone, FollowupCluster cluster, String projectKey) {
             this.projectKey = projectKey;
             this.timezone = timezone;
             this.cluster = cluster;
             this.fromJiraRowCalculator = new FromJiraRowCalculator(cluster); 
         }
 
-        public FollowUpData execute() {
+        public FollowUpData generate() {
             List<Issue> issuesVisibleToUser = issueBufferService.getAllIssues().stream()
                     .filter(issue -> projectKey.equals(issue.getProjectKey()))
                     .filter(issue -> isAllowedStatus(issue.getStatus()))

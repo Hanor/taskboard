@@ -22,7 +22,7 @@ public class FollowUpDateRangeProvider {
             throw new FrontEndMessageException("Project " + projectKey + " doesn't exist");
 
         ProjectFilterConfiguration taskboardProject = taskboardProjectOpt.get();
-        if (taskboardProject.getStartDate() == null || taskboardProject.getDeliveryDate() == null)
+        if (!taskboardProject.getStartDate().isPresent() || !taskboardProject.getDeliveryDate().isPresent())
             throw new FrontEndMessageException("No \"Start Date\" or \"Delivery Date\" configuration found for project " + projectKey + ".");
 
         return new FollowUpProjectDataRangeDTO(taskboardProject);
@@ -34,8 +34,8 @@ public class FollowUpDateRangeProvider {
         public LocalDate deliveryDate;
         public FollowUpProjectDataRangeDTO(ProjectFilterConfiguration taskboardProject) {
             this.projectKey = taskboardProject.getProjectKey();
-            this.startDate = taskboardProject.getStartDate();
-            this.deliveryDate = taskboardProject.getDeliveryDate();
+            this.startDate = taskboardProject.getStartDate().orElse(null);
+            this.deliveryDate = taskboardProject.getDeliveryDate().orElse(null);
         }
     }
 

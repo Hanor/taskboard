@@ -2,6 +2,7 @@ package objective.taskboard.followup;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static objective.taskboard.followup.FixedFollowUpSnapshotValuesProvider.emptyValuesProvider;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -55,12 +57,12 @@ public class CumulativeFlowDiagramDataProviderTest {
     public void setup() {
         followupData = FollowUpHelper.getBiggerFollowupData();
         FollowUpTimeline timeline = new FollowUpTimeline(TODAY_DATE);
-        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyList());
+        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyValuesProvider());
         doReturn(snapshot).when(snapshotService).getFromCurrentState(any(), eq("TASKB"));
         doReturn(true).when(projectRepository).exists(eq("TASKB"));
 
         FollowUpData emptyFollowupData = new FollowUpData(new FromJiraDataSet(Constants.FROMJIRA_HEADERS, emptyList()), emptyList(), emptySynthetics());
-        FollowUpSnapshot emptySnapshot = new FollowUpSnapshot(timeline, emptyFollowupData, new EmptyFollowupCluster(), emptyList());
+        FollowUpSnapshot emptySnapshot = new FollowUpSnapshot(timeline, emptyFollowupData, new EmptyFollowupCluster(), emptyValuesProvider());
         doReturn(emptySnapshot).when(snapshotService).getFromCurrentState(any(), eq("EMPTY"));
         doReturn(true).when(projectRepository).exists(eq("EMPTY"));
     }
@@ -210,9 +212,16 @@ public class CumulativeFlowDiagramDataProviderTest {
     }
 
     private AssertionContext setupProject(String projectKey, LocalDate projectStart, LocalDate projectDelivery) {
-        FollowUpTimeline timeline = new FollowUpTimeline(TODAY_DATE, Optional.ofNullable(projectStart), Optional.ofNullable(projectDelivery));
-        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyList());
+        FollowUpTimeline timeline = new FollowUpTimeline(
+                TODAY_DATE, 
+                BigDecimal.ZERO, 
+                Optional.ofNullable(projectStart), 
+                Optional.ofNullable(projectDelivery), 
+                Optional.empty());
+
+        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyValuesProvider());
         doReturn(snapshot).when(snapshotService).getFromCurrentState(any(), eq(projectKey));
+
         doReturn(true).when(projectRepository).exists(eq(projectKey));
         return new AssertionContext(snapshot);
     }

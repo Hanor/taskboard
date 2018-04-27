@@ -21,6 +21,7 @@
 package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
+import static objective.taskboard.followup.FixedFollowUpSnapshotValuesProvider.emptyValuesProvider;
 import static objective.taskboard.followup.FollowUpHelper.getDefaultFollowupData;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -65,9 +66,11 @@ import org.xlsx4j.sml.Row;
 import org.xlsx4j.sml.Sheet;
 
 import objective.taskboard.database.directory.DataBaseDirectory;
+import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.cluster.EmptyFollowupCluster;
 import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.followup.data.Template;
+import objective.taskboard.jira.ProjectService;
 import objective.taskboard.rules.CleanupDataFolderRule;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -93,10 +96,19 @@ public class FollowUpFacadeTest {
     
     @Mock
     private FollowUpSnapshotService snapshotService;
+    
+    @Mock
+    private ReleaseHistoryProvider releaseHistoryProvider;
 
     @Spy
     @InjectMocks
     private FollowUpTemplateStorage followUpTemplateStorage = new FollowUpTemplateStorage();
+    
+    @Mock
+    private ProjectService projectService;
+    
+    @Mock
+    private FollowUpDataRepository historyRepository;
 
     @InjectMocks
     private FollowUpFacade followUpFacade = new FollowUpFacade();
@@ -118,6 +130,10 @@ public class FollowUpFacadeTest {
         String path = argCaptor.getValue();
         template = mock(Template.class);
         when(template.getPath()).thenReturn(path);
+        
+        when(releaseHistoryProvider.get(any())).thenReturn(Collections.emptyList());
+        when(projectService.getTaskboardProjectOrCry(PROJECT)).thenReturn(new ProjectFilterConfiguration(PROJECT));
+        when(historyRepository.getFirstDate(PROJECT)).thenReturn(Optional.empty());
     }
 
     @Before
@@ -130,7 +146,7 @@ public class FollowUpFacadeTest {
         LocalDate date = LocalDate.parse("2017-10-01");
         given(templateService.getTemplate(TEMPLATE_NAME)).willReturn(template);
         given(snapshotService.get(any(), any(), Mockito.eq(PROJECT)))
-            .willReturn(new FollowUpSnapshot(new FollowUpTimeline(date), getDefaultFollowupData(), new EmptyFollowupCluster(), Collections.emptyList()));
+            .willReturn(new FollowUpSnapshot(new FollowUpTimeline(date), getDefaultFollowupData(), new EmptyFollowupCluster(), emptyValuesProvider()));
 
         // when
         Resource resource = followUpFacade.generateReport(TEMPLATE_NAME, Optional.of(date), ZoneId.systemDefault(), PROJECT);

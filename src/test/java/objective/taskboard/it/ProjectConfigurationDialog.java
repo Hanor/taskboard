@@ -37,6 +37,9 @@ public class ProjectConfigurationDialog extends AbstractUiFragment {
     
     @FindBy(css="#projectRisk paper-input-error")
     private WebElement riskError;
+    
+    @FindBy(id="baselineDate")
+    private WebElement baselineDateDropdown;
 
     @FindBy(id="updateProjectConfiguration")
     private WebElement updateButton;
@@ -128,6 +131,15 @@ public class ProjectConfigurationDialog extends AbstractUiFragment {
         WebElement successMessage = dialog.findElement(By.cssSelector("#alertModalConfiguration .text"));
         waitTextInElement(successMessage, format(SUCCESS_MESSAGE, projectKey));
         return this;
+    }
+
+    public ProjectConfigurationDialog setBaselineDate(String value) {
+        selectPaperDropdownItem(baselineDateDropdown, value);
+        return this;
+    }
+
+    public void assertBaselineDate(String expectedValue) {
+        waitPaperDropdownMenuSelectedTextToBe(baselineDateDropdown, expectedValue);
     }
 
 }

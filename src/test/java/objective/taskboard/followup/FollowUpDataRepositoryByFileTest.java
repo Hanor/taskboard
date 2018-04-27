@@ -232,28 +232,28 @@ public class FollowUpDataRepositoryByFileTest {
         assertEquals(sydneyAnalyticsDates.get(2), DateTimeUtils.parseDateTime("2017-09-25", "13:00:00", sydneyTZ));
 
         List<SyntheticTransitionsDataRow> saoPauloSyntheticRows = dataSaoPaulo.syntheticsTransitionsDsList.get(0).rows;
-        assertEquals(saoPauloSyntheticRows.get(0).date, DateTimeUtils.parseDate("2017-09-25", saoPauloTZ));
-        assertEquals(saoPauloSyntheticRows.get(1).date, DateTimeUtils.parseDate("2017-09-25", saoPauloTZ));
-        assertEquals(saoPauloSyntheticRows.get(2).date, DateTimeUtils.parseDate("2017-09-26", saoPauloTZ));
-        assertEquals(saoPauloSyntheticRows.get(3).date, DateTimeUtils.parseDate("2017-09-26", saoPauloTZ));
-        assertEquals(saoPauloSyntheticRows.get(4).date, DateTimeUtils.parseDate("2017-09-27", saoPauloTZ));
-        assertEquals(saoPauloSyntheticRows.get(5).date, DateTimeUtils.parseDate("2017-09-27", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(0).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(1).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(2).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(3).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(4).date, DateTimeUtils.parseDateTime("2017-09-27", "00:00:00", saoPauloTZ));
+        assertEquals(saoPauloSyntheticRows.get(5).date, DateTimeUtils.parseDateTime("2017-09-27", "00:00:00", saoPauloTZ));
 
         List<SyntheticTransitionsDataRow> torontoSyntheticRows = dataToronto.syntheticsTransitionsDsList.get(0).rows;
-        assertEquals(torontoSyntheticRows.get(0).date, DateTimeUtils.parseDate("2017-09-24", torontoTZ));
-        assertEquals(torontoSyntheticRows.get(1).date, DateTimeUtils.parseDate("2017-09-24", torontoTZ));
-        assertEquals(torontoSyntheticRows.get(2).date, DateTimeUtils.parseDate("2017-09-25", torontoTZ));
-        assertEquals(torontoSyntheticRows.get(3).date, DateTimeUtils.parseDate("2017-09-25", torontoTZ));
-        assertEquals(torontoSyntheticRows.get(4).date, DateTimeUtils.parseDate("2017-09-26", torontoTZ));
-        assertEquals(torontoSyntheticRows.get(5).date, DateTimeUtils.parseDate("2017-09-26", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(0).date, DateTimeUtils.parseDateTime("2017-09-24", "00:00:00", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(1).date, DateTimeUtils.parseDateTime("2017-09-24", "00:00:00", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(2).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(3).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(4).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", torontoTZ));
+        assertEquals(torontoSyntheticRows.get(5).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", torontoTZ));
 
         List<SyntheticTransitionsDataRow> sydneySyntheticsRows = dataSydney.syntheticsTransitionsDsList.get(0).rows;
-        assertEquals(sydneySyntheticsRows.get(0).date, DateTimeUtils.parseDate("2017-09-25", sydneyTZ));
-        assertEquals(sydneySyntheticsRows.get(1).date, DateTimeUtils.parseDate("2017-09-25", sydneyTZ));
-        assertEquals(sydneySyntheticsRows.get(2).date, DateTimeUtils.parseDate("2017-09-26", sydneyTZ));
-        assertEquals(sydneySyntheticsRows.get(3).date, DateTimeUtils.parseDate("2017-09-26", sydneyTZ));
-        assertEquals(sydneySyntheticsRows.get(4).date, DateTimeUtils.parseDate("2017-09-27", sydneyTZ));
-        assertEquals(sydneySyntheticsRows.get(5).date, DateTimeUtils.parseDate("2017-09-27", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(0).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(1).date, DateTimeUtils.parseDateTime("2017-09-25", "00:00:00", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(2).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(3).date, DateTimeUtils.parseDateTime("2017-09-26", "00:00:00", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(4).date, DateTimeUtils.parseDateTime("2017-09-27", "00:00:00", sydneyTZ));
+        assertEquals(sydneySyntheticsRows.get(5).date, DateTimeUtils.parseDateTime("2017-09-27", "00:00:00", sydneyTZ));
     }
   
     private void assertGeneratedFile(String project, String dataHistoryExpected) throws IOException {

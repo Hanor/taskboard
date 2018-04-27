@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -69,6 +70,9 @@ public class ProjectFilterConfiguration implements Serializable {
 
     @Column
     private Integer projectionTimespan;
+    
+    @Column
+    private LocalDate baselineDate;
 
     protected ProjectFilterConfiguration() {} //NOSONAR
 
@@ -92,19 +96,26 @@ public class ProjectFilterConfiguration implements Serializable {
     }
 
     public void setStartDate(LocalDate startDate) {
+        validateProjectDates(startDate, this.deliveryDate);
         this.startDate = startDate;
     }
 
-    public LocalDate getStartDate() {
-        return startDate;
+    public Optional<LocalDate> getStartDate() {
+        return Optional.ofNullable(startDate);
     }
 
-    public LocalDate getDeliveryDate() {
-        return deliveryDate;
+    public Optional<LocalDate> getDeliveryDate() {
+        return Optional.ofNullable(deliveryDate);
     }
 
     public void setDeliveryDate(LocalDate deliveryDate) {
+        validateProjectDates(this.startDate, deliveryDate);
         this.deliveryDate = deliveryDate;
+    }
+    
+    private static void validateProjectDates(LocalDate startDate, LocalDate deliveryDate) {
+        if (startDate != null && deliveryDate != null && startDate.isAfter(deliveryDate))
+            throw new IllegalArgumentException("'startDate' should be before or equal to 'deliveryDate'");
     }
 
     public boolean isArchived() {
@@ -147,4 +158,12 @@ public class ProjectFilterConfiguration implements Serializable {
         return projectTeams.stream().map(el->el.getTeamId()).collect(Collectors.toList());
     }
 
+    
+    public void setBaselineDate(LocalDate baselineDate) {
+        this.baselineDate = baselineDate;
+    }
+    
+    public Optional<LocalDate> getBaselineDate() {
+        return Optional.ofNullable(baselineDate);
+    }
 }

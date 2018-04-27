@@ -36,6 +36,7 @@ public class ProjectConfigurationUiIT extends AuthenticatedIntegrationTest {
             .setStartDate("01/25/2018")
             .setDeliveryDate("10/20/2018")
             .setRisk("60.99")
+            .setBaselineDate("03/30/2018")
             .update()
             .assertSuccessAlertIsOpen()
             .closeSuccessAlert();
@@ -43,7 +44,8 @@ public class ProjectConfigurationUiIT extends AuthenticatedIntegrationTest {
         openProjectConfigurationDialog("TASKB")
             .assertStartDate("01/25/2018")
             .assertDeliveryDate("10/20/2018")
-            .assertRisk("60.99");
+            .assertRisk("60.99")
+            .assertBaselineDate("03/30/2018");
     }
 
     private ProjectConfigurationDialog openProjectConfigurationDialog(String projectKey) {

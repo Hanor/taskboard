@@ -1,7 +1,7 @@
 package objective.taskboard.followup;
 
 import static java.util.Arrays.asList;
-import static objective.taskboard.utils.DateTimeUtils.parseDate;
+import static objective.taskboard.utils.DateTimeUtils.parseDateTime;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -71,13 +71,13 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
         assertThat(subtaskTransitionsDatesFirstRow.size(), is(7));
-        assertThat(subtaskTransitionsDatesFirstRow.get(0), is(parseDate("2020-01-07")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDate("2020-01-06")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDate("2020-01-05")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDate("2020-01-04")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDate("2020-01-03")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(0), is(parseDateTime("2020-01-07")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDateTime("2020-01-06")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDateTime("2020-01-05")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDateTime("2020-01-04")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDateTime("2020-01-03")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-01")));
     }
 
     @Test
@@ -104,12 +104,12 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
         assertThat(subtaskTransitionsDatesFirstRow.size(), is(7));
         assertThat(subtaskTransitionsDatesFirstRow.get(0), nullValue());
-        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDate("2020-01-10")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDate("2020-01-09")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDate("2020-01-08")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDate("2020-01-05")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDate("2020-01-04")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-03")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDateTime("2020-01-10")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDateTime("2020-01-09")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDateTime("2020-01-08")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDateTime("2020-01-05")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDateTime("2020-01-04")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-03")));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         assertThat(subtaskTransitionsDatesFirstRow.get(3), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(4), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(5), nullValue());
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-05")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-05")));
     }
 
     @Test
@@ -158,12 +158,12 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
         assertThat(subtaskTransitionsDatesFirstRow.get(0), nullValue());
-        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDate("2020-01-01")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDate("2020-01-01")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDate("2020-01-01")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDate("2020-01-01")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDate("2020-01-01")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDateTime("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDateTime("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDateTime("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDateTime("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDateTime("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-01")));
     }
 
     @Test
@@ -180,13 +180,13 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
 
         // then
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = dataList.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
-        assertThat(subtaskTransitionsDatesFirstRow.get(0), is(parseDate("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(0), is(parseDateTime("2020-01-02")));
         assertThat(subtaskTransitionsDatesFirstRow.get(1), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(2), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(3), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(4), nullValue());
         assertThat(subtaskTransitionsDatesFirstRow.get(5), nullValue());
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-01")));
     }
 
     @Test
@@ -204,7 +204,7 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         List<SyntheticTransitionsDataRow> rows = sets.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
         assertThat(rows.size(), is(1));
         SyntheticTransitionsDataRow firstRow = rows.get(0);
-        assertThat(firstRow.date, is(parseDate("2017-01-01")));
+        assertThat(firstRow.date, is(parseDateTime("2017-01-01")));
         assertThat(firstRow.amountOfIssueInStatus, equalTo(asList(0, 0, 0, 0, 0, 0, 1)));
     }
 
@@ -374,21 +374,21 @@ public class FollowUpDataMinerTransitionsTest extends FollowUpDataMinerTestBase 
         List<ZonedDateTime> subtaskTransitionsDatesFirstRow = analytics.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(0).transitionsDates;
         assertThat(subtaskTransitionsDatesFirstRow.size(), is(7));
         assertThat(subtaskTransitionsDatesFirstRow.get(0), nullValue());
-        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDate("2020-01-02")));
-        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDate("2020-01-01")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(1), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(2), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(3), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(4), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(5), is(parseDateTime("2020-01-02")));
+        assertThat(subtaskTransitionsDatesFirstRow.get(6), is(parseDateTime("2020-01-01")));
         List<ZonedDateTime> subtaskTransitionsDatesSecondRow = analytics.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows.get(1).transitionsDates;
         assertThat(subtaskTransitionsDatesSecondRow.size(), is(7));
-        assertThat(subtaskTransitionsDatesSecondRow.get(0), is(parseDate("2020-01-03")));
+        assertThat(subtaskTransitionsDatesSecondRow.get(0), is(parseDateTime("2020-01-03")));
         assertThat(subtaskTransitionsDatesSecondRow.get(1), nullValue());
         assertThat(subtaskTransitionsDatesSecondRow.get(2), nullValue());
         assertThat(subtaskTransitionsDatesSecondRow.get(3), nullValue());
         assertThat(subtaskTransitionsDatesSecondRow.get(4), nullValue());
         assertThat(subtaskTransitionsDatesSecondRow.get(5), nullValue());
-        assertThat(subtaskTransitionsDatesSecondRow.get(6), is(parseDate("2020-01-02")));
+        assertThat(subtaskTransitionsDatesSecondRow.get(6), is(parseDateTime("2020-01-02")));
 
         List<SyntheticTransitionsDataRow> rows = synthetic.get(SUBTASK_TRANSITIONS_DATASET_INDEX).rows;
         assertThat(rows.size(), is(3));

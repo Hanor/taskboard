@@ -122,7 +122,12 @@ public class MainPage extends AbstractUiFragment {
     }
 
     public MainPage assertLabelRelease(String expected) {
-        waitPaperDropdownMenuSelectedValueToBe(searchReleaseDropdown, expected);
+        waitTextInElement(searchReleaseDropdown.findElement(By.tagName("label")), expected);
+        return this;
+    }
+    
+    public MainPage assertSelectedRelease(String expected) {
+        waitPaperDropdownMenuSelectedTextToBe(searchReleaseDropdown, expected);
         return this;
     }
 

@@ -1,0 +1,1 @@
+ALTER TABLE project_filter_configuration ADD baseline_date date DEFAULT NULL;

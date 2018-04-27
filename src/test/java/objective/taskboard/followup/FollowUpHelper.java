@@ -26,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_DEMAND;
 import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_FEATURES;
 import static objective.taskboard.followup.FollowUpTransitionsDataProvider.TYPE_SUBTASKS;
-import static objective.taskboard.utils.DateTimeUtils.parseDateList;
 import static objective.taskboard.utils.IOUtilities.resourceToString;
 import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
 import static org.junit.Assert.assertEquals;
@@ -41,6 +40,7 @@ import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -77,14 +77,14 @@ public class FollowUpHelper {
         followUpData.demandPriorityOrder = 0l;
         followUpData.demandStartDateStepMillis = 0L;
         followUpData.demandAssignee = "assignee.demand.test";
-        followUpData.demandDueDate = DateTimeUtils.get(DateTimeUtils.parseDate("2025-05-25"), ZoneId.of(TIMEZONE_ID));
-        followUpData.demandCreated = DateTimeUtils.get(DateTimeUtils.parseDate("2012-01-01"), ZoneId.of(TIMEZONE_ID));
+        followUpData.demandDueDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2025-05-25"), ZoneId.of(TIMEZONE_ID));
+        followUpData.demandCreated = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-01-01"), ZoneId.of(TIMEZONE_ID));
         followUpData.demandLabels = "";
         followUpData.demandComponents = "";
         followUpData.demandReporter = "reporter.demand.test";
         followUpData.demandCoAssignees = "";
         followUpData.demandClassOfService = "Standard";
-        followUpData.demandUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDate("2012-02-01"), ZoneId.of(TIMEZONE_ID));
+        followUpData.demandUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-02-01"), ZoneId.of(TIMEZONE_ID));
         followUpData.demandCycletime = 1.111111;
         followUpData.demandIsBlocked = false;
         followUpData.demandLastBlockReason = "Demand last block reason";
@@ -102,14 +102,14 @@ public class FollowUpHelper {
         followUpData.taskPriorityOrder = 0l;
         followUpData.taskStartDateStepMillis = 0L;
         followUpData.taskAssignee = "assignee.task.test";
-        followUpData.taskDueDate = DateTimeUtils.get(DateTimeUtils.parseDate("2025-05-24"), ZoneId.of(TIMEZONE_ID));
-        followUpData.taskCreated = DateTimeUtils.get(DateTimeUtils.parseDate("2012-01-02"), ZoneId.of(TIMEZONE_ID));
+        followUpData.taskDueDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2025-05-24"), ZoneId.of(TIMEZONE_ID));
+        followUpData.taskCreated = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-01-02"), ZoneId.of(TIMEZONE_ID));
         followUpData.taskLabels = "";
         followUpData.taskComponents = "";
         followUpData.taskReporter = "reporter.demand.test";
         followUpData.taskCoAssignees = "";
         followUpData.taskClassOfService = "Standard";
-        followUpData.taskUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDate("2012-02-02"), ZoneId.of(TIMEZONE_ID));
+        followUpData.taskUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-02-02"), ZoneId.of(TIMEZONE_ID));
         followUpData.taskCycletime = 2.222222;
         followUpData.taskIsBlocked = false;
         followUpData.taskLastBlockReason = "Task last block reason";
@@ -125,14 +125,14 @@ public class FollowUpHelper {
         followUpData.subtaskPriorityOrder = 0l;
         followUpData.subtaskStartDateStepMillis = 0L;
         followUpData.subtaskAssignee = "assignee.subtask.test";
-        followUpData.subtaskDueDate = DateTimeUtils.get(DateTimeUtils.parseDate("2025-05-23"), ZoneId.of(TIMEZONE_ID));
-        followUpData.subtaskCreated = DateTimeUtils.get(DateTimeUtils.parseDate("2012-01-03"), ZoneId.of(TIMEZONE_ID));
+        followUpData.subtaskDueDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2025-05-23"), ZoneId.of(TIMEZONE_ID));
+        followUpData.subtaskCreated = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-01-03"), ZoneId.of(TIMEZONE_ID));
         followUpData.subtaskLabels = "";
         followUpData.subtaskComponents = "";
         followUpData.subtaskReporter = "reporter.subtask.test";
         followUpData.subtaskCoAssignees = "";
         followUpData.subtaskClassOfService = "Standard";
-        followUpData.subtaskUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDate("2012-02-03"), ZoneId.of(TIMEZONE_ID));
+        followUpData.subtaskUpdatedDate = DateTimeUtils.get(DateTimeUtils.parseDateTime("2012-02-03"), ZoneId.of(TIMEZONE_ID));
         followUpData.subtaskCycletime = 3.333333;
         followUpData.subtaskIsBlocked = false;
         followUpData.subtaskLastBlockReason = "Subtask last block reason";
@@ -322,27 +322,27 @@ public class FollowUpHelper {
 
         AnalyticsTransitionsDataRow rowDemand = new AnalyticsTransitionsDataRow("I-1", "Demand"
                 , asList(
-                        DateTimeUtils.parseDate("2017-09-27")
-                        , DateTimeUtils.parseDate("2017-09-26")
-                        , DateTimeUtils.parseDate("2017-09-25")));
+                        DateTimeUtils.parseDateTime("2017-09-27")
+                        , DateTimeUtils.parseDateTime("2017-09-26")
+                        , DateTimeUtils.parseDateTime("2017-09-25")));
 
         AnalyticsTransitionsDataRow rowOs = new AnalyticsTransitionsDataRow("I-4", "OS"
                 , asList(
                         null
-                        , DateTimeUtils.parseDate("2017-09-26")
-                        , DateTimeUtils.parseDate("2017-09-25")));
+                        , DateTimeUtils.parseDateTime("2017-09-26")
+                        , DateTimeUtils.parseDateTime("2017-09-25")));
 
         AnalyticsTransitionsDataRow rowFeature = new AnalyticsTransitionsDataRow("I-2", "Feature"
                 , asList(
                         null
-                        , DateTimeUtils.parseDate("2017-09-26")
-                        , DateTimeUtils.parseDate("2017-09-25")));
+                        , DateTimeUtils.parseDateTime("2017-09-26")
+                        , DateTimeUtils.parseDateTime("2017-09-25")));
 
         AnalyticsTransitionsDataRow rowSubtask = new AnalyticsTransitionsDataRow("I-3", "Sub-task"
                 , asList(
                         null
                         , null
-                        , DateTimeUtils.parseDate("2017-09-25")));
+                        , DateTimeUtils.parseDateTime("2017-09-25")));
 
         return asList(new AnalyticsTransitionsDataSet(TYPE_DEMAND, headers, asList(rowDemand, rowOs)),
                 new AnalyticsTransitionsDataSet(TYPE_FEATURES, headers, asList(rowFeature)),
@@ -443,7 +443,7 @@ public class FollowUpHelper {
                 , asList(
                         null
                         , null
-                        , DateTimeUtils.parseDate("2017-09-25")));
+                        , DateTimeUtils.parseDateTime("2017-09-25")));
 
         return asList(new AnalyticsTransitionsDataSet(TYPE_DEMAND, headers, null),
                 new AnalyticsTransitionsDataSet(TYPE_FEATURES, headers, emptyList()),
@@ -463,19 +463,19 @@ public class FollowUpHelper {
         headers.add("To Do");
 
         List<SyntheticTransitionsDataRow> rowsDemand = new LinkedList<>();
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), "Demand", Ints.asList(0, 0, 1)));
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), "OS", Ints.asList(0, 0, 1)));
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), "Demand", Ints.asList(0, 1, 0)));
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), "OS", Ints.asList(0, 1, 0)));
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), "Demand", Ints.asList(1, 0, 0)));
-        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-27"), "OS", Ints.asList(0, 1, 0)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-25"), "Demand", Ints.asList(0, 0, 1)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-25"), "OS", Ints.asList(0, 0, 1)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-26"), "Demand", Ints.asList(0, 1, 0)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-26"), "OS", Ints.asList(0, 1, 0)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-27"), "Demand", Ints.asList(1, 0, 0)));
+        rowsDemand.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-27"), "OS", Ints.asList(0, 1, 0)));
 
         List<SyntheticTransitionsDataRow> rowsFeature = new LinkedList<>();
-        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), "Feature", Ints.asList(0, 0, 1)));
-        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-26"), "Feature", Ints.asList(0, 1, 0)));
+        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-25"), "Feature", Ints.asList(0, 0, 1)));
+        rowsFeature.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-26"), "Feature", Ints.asList(0, 1, 0)));
 
         List<SyntheticTransitionsDataRow> rowsSubtask = new LinkedList<>();
-        rowsSubtask.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), "Sub-task", Ints.asList(0, 0, 1)));
+        rowsSubtask.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-25"), "Sub-task", Ints.asList(0, 0, 1)));
 
         return asList(new SyntheticTransitionsDataSet(TYPE_DEMAND, headers, rowsDemand),
                 new SyntheticTransitionsDataSet(TYPE_FEATURES, headers, rowsFeature),
@@ -532,7 +532,7 @@ public class FollowUpHelper {
         headers.add("To Do");
 
         List<SyntheticTransitionsDataRow> rowsSubtask = new LinkedList<>();
-        rowsSubtask.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDate("2017-09-25"), "Sub-task", Ints.asList(0, 0, 1)));
+        rowsSubtask.add(new SyntheticTransitionsDataRow(DateTimeUtils.parseDateTime("2017-09-25"), "Sub-task", Ints.asList(0, 0, 1)));
 
         return asList(new SyntheticTransitionsDataSet(TYPE_DEMAND, headers, null),
                 new SyntheticTransitionsDataSet(TYPE_FEATURES, headers, emptyList()),
@@ -644,5 +644,11 @@ public class FollowUpHelper {
              +"\n demandBallpark                : " + row.demandBallpark
              +"\n taskBallpark                  : " + row.taskBallpark
              +"\n queryType                     : " + row.queryType;
+    }
+
+    private static List<ZonedDateTime> parseDateList(String... yyyymmdd) {
+        return Arrays.stream(yyyymmdd)
+                .map(DateTimeUtils::parseDateTime)
+                .collect(Collectors.toList());
     }
 }

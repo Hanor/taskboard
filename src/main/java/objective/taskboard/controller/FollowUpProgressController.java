@@ -101,7 +101,7 @@ public class FollowUpProgressController {
             return new ResponseEntity<>("No cluster configuration found for project " + projectKey + ".", HttpStatus.INTERNAL_SERVER_ERROR);
 
         } catch (ProjectDatesNotConfiguredException e) {//NOSONAR
-            return new ResponseEntity<>("The project " + projectKey + " has no start or delivery date.", INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("The project " + projectKey + " has no start or delivery date.", BAD_REQUEST);
         }
     }
 

@@ -35,6 +35,7 @@ import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 
+import objective.taskboard.followup.ReleaseHistoryProvider.ProjectRelease;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.followup.cluster.FollowupCluster;
 import objective.taskboard.google.SpreadsheetUtils.SpreadsheetA1Range;
@@ -59,13 +60,17 @@ public class FollowUpReportGenerator {
             editor.open();
 
             FollowUpData followupData = snapshot.getData();
+            Optional<FollowUpData> scopeBaseline = snapshot.getScopeBaseline();
 
-            updateTimelineDates(snapshot.getTimeline());
+            updateTimelineDates(snapshot.getTimeline(), snapshot.getReleases());
             generateFromJiraSheet(followupData);
             generateTransitionsSheets(followupData);
             generateEffortHistory(snapshot);
             generateTShirtSizeSheet(snapshot.getCluster());
             generateWorklogSheet(followupData, timezone);
+            
+            if (scopeBaseline.isPresent())
+                generateScopeBaselineSheet(scopeBaseline.get());
 
             return IOUtilities.asResource(editor.toBytes());
         } catch (Exception e) {
@@ -76,11 +81,23 @@ public class FollowUpReportGenerator {
         }
     }
 
-    void updateTimelineDates(FollowUpTimeline timeline) {
-        Sheet sheet = editor.getSheet("Timeline");
-        timeline.getStart().ifPresent(start -> sheet.getOrCreateRow(2).setValue("B", start));
-        timeline.getEnd().ifPresent(end -> sheet.getOrCreateRow(5).setValue("B", end));
+    void updateTimelineDates(FollowUpTimeline timeline, List<ProjectRelease> releases) {
+        Sheet sheet = editor.getOrCreateSheet("Timeline");
+
+        sheet.getOrCreateRow(2).setValue("B", timeline.getStart().orElse(null));
+        sheet.getOrCreateRow(5).setValue("B", timeline.getEnd().orElse(null));
         sheet.getOrCreateRow(6).setValue("B", timeline.getReference());
+        sheet.getOrCreateRow(8).setValue("B", timeline.getRiskPercentage());
+        sheet.getOrCreateRow(9).setValue("B", timeline.getBaselineDate().orElse(null));
+        
+        for (int i = 0; i < releases.size(); i++) {
+            ProjectRelease release = releases.get(i);
+            
+            SheetRow row = sheet.getOrCreateRow(i + 2);
+            row.setValue("L", release.getDate());
+            row.setValue("N", release.getName());
+        }
+
         sheet.save();
     }
 
@@ -106,9 +123,17 @@ public class FollowUpReportGenerator {
         });
         sheet.save();
     }
+    
+    void generateFromJiraSheet(FollowUpData followupData) {
+        generateFollowUpDataSheet("From Jira", followupData);
+    }
+    
+    void generateScopeBaselineSheet(FollowUpData scopeBaseline) {
+        generateFollowUpDataSheet("Scope Baseline", scopeBaseline);
+    }
 
-    Sheet generateFromJiraSheet(FollowUpData followupData) {
-        Sheet sheet = editor.getSheet("From Jira");
+    private void generateFollowUpDataSheet(String sheetName, FollowUpData followupData) {
+        Sheet sheet = editor.getOrCreateSheet(sheetName);
         sheet.truncate();
 
         SheetRow rowHeader = sheet.createRow();
@@ -232,8 +257,6 @@ public class FollowUpReportGenerator {
             addTransitionsDatesIfExist(followupData.analyticsTransitionsDsList, TYPE_SUBTASKS, fromJiraDataRow.subtaskNum, row);
         }
         sheet.save();
-
-        return sheet;
     }
 
     private void addAnalyticsHeadersIfExist(List<AnalyticsTransitionsDataSet> analyticsDataSets, String type, SheetRow rowHeader) {

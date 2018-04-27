@@ -40,7 +40,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public abstract class AbstractUiFragment {
     protected WebDriver webDriver;
@@ -142,12 +141,27 @@ public abstract class AbstractUiFragment {
         waitAttributeValueInElement(input, "value", value);
     }
     
-    protected void waitPaperDropdownMenuSelectedValueToBe(WebElement element, String expected) {
+    protected void waitPaperDropdownMenuSelectedTextToBe(WebElement element, String expected) {
         waitVisibilityOfElement(element);
-        waitUntil(ExpectedConditions.or(
-                textToBePresentInElement(element, expected)
-                , attributeToBe(element.findElement(By.cssSelector("#labelAndInputContainer input")), "value", expected)
-        ));
+
+        waitUntil(new ExpectedCondition<Boolean>() {
+            private String actual;
+            
+            @Override
+            public Boolean apply(WebDriver driver) {
+                actual = element.findElements(By.cssSelector("paper-item[aria-selected='true']")).stream()
+                        .map(i -> i.getAttribute("textContent").trim())
+                        .findFirst()
+                        .orElse("<not-selected>");
+                
+                return actual.equals(expected);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("selected item text ('%s'), actual ('%s') ", expected, actual);
+            }
+        });
     }
 
     protected void waitPaperDropdownMenuContains(WebElement dropDownMenu, String expected) {
@@ -170,23 +184,26 @@ public abstract class AbstractUiFragment {
         });
     }
 
-    protected WebElement getPaperDropdownMenuItemByValue(WebElement dropDownMenu, String itemValue) {
+    protected WebElement getPaperDropdownMenuItemByText(WebElement dropDownMenu, String itemText) {
         WebElement menuItem = dropDownMenu.findElements(By.tagName("paper-item")).stream()
-                .filter(paperItem -> ObjectUtils.equals(itemValue, paperItem.getAttribute("value")))
+                .filter(paperItem -> ObjectUtils.equals(itemText, paperItem.getText().trim()))
                 .findFirst().orElse(null);
 
         if (menuItem == null)
-            throw new IllegalArgumentException("Element \"" + itemValue + "\" not found");
+            throw new IllegalArgumentException("Dropdown item with text \"" + itemText + "\" not found");
 
         return menuItem;
     }
 
-    protected void waitPaperDropdownMenuItemIsSelected(WebElement dropDownMenuItem, Boolean selected) {
-        waitUntil(attributeToBe(dropDownMenuItem, "aria-selected", String.valueOf(selected)));
-    }
-
     protected void waitUntilPaperCheckboxSelectionStateToBe(WebElement element, Boolean selected) {
         waitUntil(attributeToBe(element, "aria-checked", String.valueOf(selected)));
+    }
+    
+    protected void selectPaperDropdownItem(WebElement dropdown, String itemText) {
+        waitForClick(dropdown);
+        WebElement dateElement = getPaperDropdownMenuItemByText(dropdown, itemText);
+        waitForClick(dateElement);
+        waitPaperDropdownMenuSelectedTextToBe(dropdown, itemText);
     }
 
     /**

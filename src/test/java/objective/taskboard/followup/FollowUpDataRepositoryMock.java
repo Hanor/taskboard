@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -48,5 +49,10 @@ public class FollowUpDataRepositoryMock implements FollowUpDataRepository {
                 .collect(joining("\n"));
         
         assertEquals(StringUtils.join(expected, "\n"), actual);
+    }
+
+    @Override
+    public Optional<LocalDate> getFirstDate(String projectKey) {
+        return getHistoryByProject(projectKey).stream().findFirst();
     }
 }

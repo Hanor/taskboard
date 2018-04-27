@@ -59,7 +59,7 @@ public class ReleaseFilterIT extends AuthenticatedIntegrationTest {
         emulateVersionUpdate("1.0-changed");
         MainPage.produce(webDriver)
                 .assertUpdatedIssues(updatedIssues)
-                .assertLabelRelease("TASKB - 1.0-changed")
+                .assertSelectedRelease("TASKB - 1.0-changed")
                 .assertVisibleIssues(updatedIssues);
     }
 

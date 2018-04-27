@@ -52,6 +52,7 @@ import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
 
+import objective.taskboard.config.converter.TaskboardJacksonModule;
 import objective.taskboard.jira.JiraClientFactory;
 import objective.taskboard.jira.JiraProperties;
 import objective.taskboard.jira.JiraServiceException;
@@ -121,6 +122,7 @@ public class JiraEndpoint {
         });
         
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new TaskboardJacksonModule());
         objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
         RestAdapter retrofit = new RestAdapter.Builder()
                 .setEndpoint(jiraProperties.getUrl())

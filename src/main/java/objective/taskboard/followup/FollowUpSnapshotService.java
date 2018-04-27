@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import objective.taskboard.domain.FollowupDailySynthesis;
 import objective.taskboard.domain.ProjectFilterConfiguration;
+import objective.taskboard.followup.ReleaseHistoryProvider.ProjectRelease;
 import objective.taskboard.followup.cluster.FollowupCluster;
 import objective.taskboard.followup.cluster.FollowupClusterProvider;
 import objective.taskboard.repository.FollowupDailySynthesisRepository;
@@ -32,6 +33,7 @@ public class FollowUpSnapshotService {
     private final FollowupDailySynthesisRepository dailySynthesisRepository;
     private final FollowUpDataGenerator dataGenerator;
     private final FollowupClusterProvider clusterProvider;
+    private final ReleaseHistoryProvider releaseHistoryProvider;
     
     @Autowired
     public FollowUpSnapshotService(
@@ -40,22 +42,24 @@ public class FollowUpSnapshotService {
             ProjectFilterConfigurationCachedRepository projectRepository,
             FollowupDailySynthesisRepository dailySynthesisRepository, 
             FollowUpDataGenerator dataGenerator,
-            FollowupClusterProvider clusterProvider) {
+            FollowupClusterProvider clusterProvider,
+            ReleaseHistoryProvider releaseHistoryProvider) {
         this.clock = clock;
         this.historyRepository = historyRepository;
         this.projectRepository = projectRepository;
         this.dailySynthesisRepository = dailySynthesisRepository;
         this.dataGenerator = dataGenerator;
         this.clusterProvider = clusterProvider;
+        this.releaseHistoryProvider = releaseHistoryProvider;
     }
 
     public FollowUpSnapshot getFromCurrentState(ZoneId timezone, String projectKey) {
-        return createSnapshot(LocalDate.now(), projectKey,
+        return createSnapshot(timezone, LocalDate.now(), projectKey,
                 (cluster) -> dataGenerator.generate(timezone, cluster, projectKey));
     }
 
     public FollowUpSnapshot getFromHistory(LocalDate date, ZoneId timezone, String projectKey) {
-        return createSnapshot(date, projectKey, 
+        return createSnapshot(timezone, date, projectKey, 
                 (cluster) -> historyRepository.get(date, timezone, projectKey));
     }
 
@@ -69,19 +73,34 @@ public class FollowUpSnapshotService {
                 : getFromCurrentState(timezone, projectKey);
     }
 
-    private FollowUpSnapshot createSnapshot(LocalDate date, String projectKey, FollowupDataSupplier dataSupplier) {
+    private FollowUpSnapshot createSnapshot(ZoneId timezone, LocalDate date, String projectKey, FollowupDataSupplier dataSupplier) {
         ProjectFilterConfiguration project = projectRepository.getProjectByKeyOrCry(projectKey);
-        FollowUpTimeline timeline = FollowUpTimeline.getTimeline(date, Optional.of(project));
+        FollowUpTimeline timeline = FollowUpTimeline.build(date, project, historyRepository);
         FollowupCluster cluster = clusterProvider.getFor(project);
         FollowUpData data = dataSupplier.get(cluster);
 
-        List<EffortHistoryRow> effortHistory = dailySynthesisRepository.listAllBefore(project.getId(), date).stream()
-                .map(EffortHistoryRow::from)
-                .collect(toList());
+        FollowUpSnapshotValuesProvider valuesProvider = new FollowUpSnapshotValuesProvider() {
+            @Override
+            public List<EffortHistoryRow> getEffortHistory() {
+                return dailySynthesisRepository.listAllBefore(project.getId(), timeline.getReference()).stream()
+                        .map(EffortHistoryRow::from)
+                        .collect(toList());
+            }
 
-        return new FollowUpSnapshot(timeline, data, cluster, effortHistory);
+            @Override
+            public List<ProjectRelease> getReleases() {
+                return releaseHistoryProvider.get(project.getProjectKey());
+            }
+
+            @Override
+            public Optional<FollowUpData> getScopeBaseline() {
+                return timeline.getBaselineDate().map(d -> historyRepository.get(d, timezone, project.getProjectKey()));
+            }
+        };
+
+        return new FollowUpSnapshot(timeline, data, cluster, valuesProvider);
     }
-    
+  
     public void storeSnapshots(ZoneId timezone) {
         log.info("Snapshots storage started...");
         for (ProjectFilterConfiguration pf : projectRepository.getProjects()) {

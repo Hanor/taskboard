@@ -68,10 +68,7 @@ public class FollowupDialog extends AbstractUiFragment {
     }
 
     public FollowupDialog selectADate(String date) {
-        waitForClick(dateDropdown);
-        WebElement dateElement = getPaperDropdownMenuItemByValue(dateDropdown, date);
-        waitForClick(dateElement);
-        waitPaperDropdownMenuItemIsSelected(dateElement, true);
+        selectPaperDropdownItem(dateDropdown, date);
         return this;
     }
 

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,21 +30,30 @@ public class FollowUpSnapshotServiceTest {
     private FollowupDailySynthesisRepositoryMock dailySynthesisRepository = new FollowupDailySynthesisRepositoryMock();
     private FollowUpDataGenerator dataGenerator = mock(FollowUpDataGenerator.class);
     private FollowupClusterProvider clusterProvider = mock(FollowupClusterProvider.class);
+    private ReleaseHistoryProvider releaseHistoryProvider = mock(ReleaseHistoryProvider.class);
     
     private ZoneId timezone = ZoneId.of("UTC");
     private ProjectFilterConfiguration project1 = mock(ProjectFilterConfiguration.class);
     private ProjectFilterConfiguration project2 = mock(ProjectFilterConfiguration.class);
     
     private FollowUpSnapshotService subject = new FollowUpSnapshotService(
-            clock, historyRepository, projectRepository, dailySynthesisRepository, dataGenerator, clusterProvider);
-    
+            clock, 
+            historyRepository, 
+            projectRepository, 
+            dailySynthesisRepository, 
+            dataGenerator, 
+            clusterProvider, 
+            releaseHistoryProvider);
+
     @Before
     public void setup() {
         when(project1.getProjectKey()).thenReturn("PROJ1");
         when(project1.getId()).thenReturn(91);
+        when(project1.getBaselineDate()).thenReturn(Optional.empty());
         
         when(project2.getProjectKey()).thenReturn("PROJ2");
         when(project2.getId()).thenReturn(92);
+        when(project2.getBaselineDate()).thenReturn(Optional.empty());
         
         when(projectRepository.getProjects()).thenReturn(asList(project1, project2));
         when(projectRepository.getProjectByKeyOrCry(eq("PROJ1"))).thenReturn(project1);

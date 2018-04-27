@@ -1,6 +1,7 @@
 package objective.taskboard.jira;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static objective.taskboard.config.CacheConfiguration.ALL_PROJECTS;
 import static objective.taskboard.jira.AuthorizedJiraEndpointTest.JIRA_MASTER_PASSWORD;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ import objective.taskboard.auth.Authorizer;
 import objective.taskboard.domain.Project;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.jira.data.Version;
+import objective.taskboard.project.ProjectBaselineProvider;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 import objective.taskboard.repository.ProjectFilterConfigurationRepository;
 import objective.taskboard.testUtils.JiraMockServer;
@@ -90,6 +93,9 @@ public class ProjectServiceTest {
 
     @MockBean
     private Authorizer authorizer;
+    
+    @MockBean
+    private ProjectBaselineProvider projectBaselineProvider;
 
     @Autowired
     private ProjectFilterConfigurationCachedRepository projectRepository;
@@ -161,8 +167,10 @@ public class ProjectServiceTest {
     }
 
     @Before
-    public void setupAuthorizer() {
+    public void setupOtherMocks() {
         doReturn(asList(PROJECT_ARCHIVED, PROJECT_REGULAR_1, PROJECT_REGULAR_2, PROJECT_WITHOUT_METADATA)).when(authorizer).getAllowedProjectsForPermissions(any());
+        
+        when(projectBaselineProvider.getAvailableDates(any())).thenReturn(emptyList());
     }
 
     @Test

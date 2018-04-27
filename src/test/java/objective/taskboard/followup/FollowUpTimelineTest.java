@@ -22,9 +22,6 @@
 package objective.taskboard.followup;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,27 +35,29 @@ import objective.taskboard.domain.ProjectFilterConfiguration;
 public class FollowUpTimelineTest {
 
     @Test
-    public void givenNoProjectConfiguration_whenGetTimelineWithReferenceDateNull_thenAllTimelineDatesShouldBeNull() {
-        FollowUpTimeline timeline = FollowUpTimeline.getTimeline(null, Optional.empty());
+    public void shouldBuild() {
+        ProjectFilterConfiguration project = new ProjectFilterConfiguration("PX");
+        project.setStartDate(LocalDate.parse("2018-03-01"));
+        project.setDeliveryDate(LocalDate.parse("2018-04-01"));
+        project.setBaselineDate(LocalDate.parse("2018-03-05"));
 
-        assertNull("Timeline reference date should be null", timeline.getReference());
-        assertFalse("Timeline start date should be empty", timeline.getStart().isPresent());
-        assertFalse("Timeline end date should be empty", timeline.getEnd().isPresent());
+        FollowUpDataRepository dataRepository = mock(FollowUpDataRepository.class);
+        FollowUpTimeline timeline = FollowUpTimeline.build(LocalDate.parse("2018-03-15"), project, dataRepository);
+
+        assertEquals("2018-03-15", timeline.getReference().toString());
+        assertEquals("2018-03-01", timeline.getStart().map(LocalDate::toString).orElse(null));
+        assertEquals("2018-04-01", timeline.getEnd().map(LocalDate::toString).orElse(null));
+        assertEquals("2018-03-05", timeline.getBaselineDate().map(LocalDate::toString).orElse(null));
     }
 
     @Test
-    public void givenProjectConfiguration_whenGetTimelineWithReferenceDateNotNull_thenAllTimelineDatesShouldBeNotNull() {
-        ProjectFilterConfiguration projectConfiguration = mock(ProjectFilterConfiguration.class);
-        when(projectConfiguration.getStartDate()).thenReturn(LocalDate.parse("2018-03-01"));
-        when(projectConfiguration.getDeliveryDate()).thenReturn(LocalDate.parse("2018-04-01"));
-
-        FollowUpTimeline timeline = FollowUpTimeline.getTimeline(LocalDate.parse("2018-03-15"), Optional.of(projectConfiguration));
-
-        assertEquals("Timeline reference date", "2018-03-15", timeline.getReference().toString());
-        assertTrue("Timeline start date should not be empty", timeline.getStart().isPresent());
-        assertEquals("Timeline start date", "2018-03-01", timeline.getStart().get().toString());
-        assertTrue("Timeline end date should not be empty", timeline.getEnd().isPresent());
-        assertEquals("Timeline end date", "2018-04-01", timeline.getEnd().get().toString());
+    public void whenProjectBaselineIsEmpy_timelineBaselineShouldBeTheFirstFollowUpDate() {
+        ProjectFilterConfiguration project = new ProjectFilterConfiguration("PX");
+        
+        FollowUpDataRepository dataRepository = mock(FollowUpDataRepository.class);
+        when(dataRepository.getFirstDate("PX")).thenReturn(Optional.of(LocalDate.parse("2018-03-02")));
+        
+        FollowUpTimeline timeline = FollowUpTimeline.build(LocalDate.parse("2018-03-15"), project, dataRepository);
+        assertEquals("2018-03-02", timeline.getBaselineDate().map(LocalDate::toString).orElse(null));
     }
-
 }

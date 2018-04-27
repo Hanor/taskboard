@@ -23,6 +23,7 @@ package objective.taskboard.followup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static objective.taskboard.Constants.FROMJIRA_HEADERS;
+import static objective.taskboard.followup.FixedFollowUpSnapshotValuesProvider.emptyValuesProvider;
 import static objective.taskboard.followup.FollowUpHelper.getAnalyticsTransitionsDataSetWitNoRow;
 import static objective.taskboard.followup.FollowUpHelper.getDefaultAnalyticsTransitionsDataSet;
 import static objective.taskboard.followup.FollowUpHelper.getDefaultFollowupData;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.LinkedList;
@@ -53,6 +55,7 @@ import org.springframework.core.io.Resource;
 import objective.taskboard.data.Worklog;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.followup.FollowUpReportGenerator.InvalidTableRangeException;
+import objective.taskboard.followup.ReleaseHistoryProvider.ProjectRelease;
 import objective.taskboard.followup.cluster.EmptyFollowupCluster;
 import objective.taskboard.followup.cluster.FollowUpClusterItem;
 import objective.taskboard.followup.cluster.FollowupCluster;
@@ -157,20 +160,20 @@ public class FollowUpReportGeneratorTest {
     public void generateTest() throws IOException {
         FollowUpTemplate testTemplate = new FollowUpTemplate(resolve("followup/Followup-template.xlsm"));
         subject = new FollowUpReportGenerator(new SimpleSpreadsheetEditor(testTemplate));
+        
+        List<EffortHistoryRow> effortHistory = asList(
+                new EffortHistoryRow(LocalDate.parse("2018-04-03"), 2d, 8d),
+                new EffortHistoryRow(LocalDate.parse("2018-04-04"), 3d, 7d));
 
-        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, getDefaultFollowupData(), new EmptyFollowupCluster(), emptyList());
+        List<ProjectRelease> releases = asList(
+                new ProjectRelease("Release 1", LocalDate.parse("2017-10-15")),
+                new ProjectRelease("Release 2", LocalDate.parse("2017-10-22")));
+        
+        FollowUpData scopeBaseline = getDefaultFollowupData();
 
-        Resource resource = subject.generate(snapshot, ZoneId.systemDefault());
-        assertNotNull("Resource shouldn't be null", resource);
-    }
-
-    @Test
-    public void generateUsingGenericTemplateTest() throws IOException {
-        FollowUpTemplate testTemplate = new FollowUpTemplate(resolve("followup/Followup-template.xlsm"));
-        subject = new FollowUpReportGenerator(new SimpleSpreadsheetEditor(testTemplate));
-
-        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, getDefaultFollowupData(), new EmptyFollowupCluster(), emptyList());
-
+        FollowUpSnapshotValuesProvider valuesProvider = new FixedFollowUpSnapshotValuesProvider(effortHistory, releases, scopeBaseline);
+        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, getDefaultFollowupData(), new EmptyFollowupCluster(), valuesProvider);
+        
         Resource resource = subject.generate(snapshot, ZoneId.systemDefault());
         assertNotNull("Resource shouldn't be null", resource);
     }
@@ -187,7 +190,7 @@ public class FollowUpReportGeneratorTest {
         FromJiraDataSet fromJiraDs = new FromJiraDataSet(FROMJIRA_HEADERS, fromJiraDataRowList);
         FollowUpData followupData = new FollowUpData(fromJiraDs, getDefaultAnalyticsTransitionsDataSet(), getDefaultSyntheticTransitionsDataSet());
         
-        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyList());
+        FollowUpSnapshot snapshot = new FollowUpSnapshot(timeline, followupData, new EmptyFollowupCluster(), emptyValuesProvider());
 
         Resource resource = subject.generate(snapshot, ZoneId.systemDefault());
         assertNotNull("Resource shouldn't be null", resource);
@@ -279,21 +282,40 @@ public class FollowUpReportGeneratorTest {
 
     @Test
     public void updateTimelineDatesTest() throws IOException {
+        FollowUpTimeline timeline = new FollowUpTimeline(
+                LocalDate.parse("2017-10-03"), 
+                new BigDecimal("0.6098"), 
+                Optional.of(LocalDate.parse("2017-10-01")), 
+                Optional.of(LocalDate.parse("2017-11-01")),
+                Optional.of(LocalDate.parse("2017-09-03")));
+        
+        List<ProjectRelease> releases = asList(
+                new ProjectRelease("Release 1", LocalDate.parse("2017-10-15")),
+                new ProjectRelease("Release 2", LocalDate.parse("2017-10-22")));
+        
         subject.getEditor().open();
-        subject.updateTimelineDates(new FollowUpTimeline(LocalDate.parse("2017-10-03")
-                                                         , Optional.of(LocalDate.parse("2017-10-01"))
-                                                         , Optional.of(LocalDate.parse("2017-11-01"))));
+        subject.updateTimelineDates(timeline, releases);
         subject.getEditor().close();
 
         String expectedEditorLogger = 
                 "Spreadsheet Open\n" + 
                 "Sheet Create: Timeline\n" + 
                 "Sheet \"Timeline\" Row Get/Create: 2\n" + 
-                "Sheet \"Timeline\" Row \"2\" SetValue (date) \"B2\": 2017-10-01\n" + 
+                "Sheet \"Timeline\" Row \"2\" SetValue (date) \"B2\": 2017-10-01\n" + //First Day
                 "Sheet \"Timeline\" Row Get/Create: 5\n" + 
-                "Sheet \"Timeline\" Row \"5\" SetValue (date) \"B5\": 2017-11-01\n" + 
+                "Sheet \"Timeline\" Row \"5\" SetValue (date) \"B5\": 2017-11-01\n" + //Project Deadline
                 "Sheet \"Timeline\" Row Get/Create: 6\n" + 
-                "Sheet \"Timeline\" Row \"6\" SetValue (date) \"B6\": 2017-10-03\n" + 
+                "Sheet \"Timeline\" Row \"6\" SetValue (date) \"B6\": 2017-10-03\n" + //Reference
+                "Sheet \"Timeline\" Row Get/Create: 8\n" + 
+                "Sheet \"Timeline\" Row \"8\" SetValue (number) \"B8\": 0.6098\n" +   //Risk
+                "Sheet \"Timeline\" Row Get/Create: 9\n" + 
+                "Sheet \"Timeline\" Row \"9\" SetValue (date) \"B9\": 2017-09-03\n" + //Baseline Date
+                "Sheet \"Timeline\" Row Get/Create: 2\n" + 
+                "Sheet \"Timeline\" Row \"2\" SetValue (date) \"L2\": 2017-10-15\n" +
+                "Sheet \"Timeline\" Row \"2\" SetValue (string) \"N2\": Release 1\n" +
+                "Sheet \"Timeline\" Row Get/Create: 3\n" + 
+                "Sheet \"Timeline\" Row \"3\" SetValue (date) \"L3\": 2017-10-22\n" +
+                "Sheet \"Timeline\" Row \"3\" SetValue (string) \"N3\": Release 2\n" +
                 "Sheet \"Timeline\" Save\n" + 
                 "Spreadsheet Close\n";
 
@@ -466,7 +488,9 @@ public class FollowUpReportGeneratorTest {
     private FollowUpSnapshot followUpDataEntry(LocalDate date, List<FromJiraDataRow> rows, FollowupCluster followupCluster, List<EffortHistoryRow> effortHistory) {
         FromJiraDataSet dataSet = new FromJiraDataSet(FROMJIRA_HEADERS, rows);
         FollowUpData followupData = new FollowUpData(dataSet, emptyList(), emptyList());
-        return new FollowUpSnapshot(new FollowUpTimeline(date), followupData, followupCluster, effortHistory);
+        FixedFollowUpSnapshotValuesProvider valuesProvider = new FixedFollowUpSnapshotValuesProvider(effortHistory);
+
+        return new FollowUpSnapshot(new FollowUpTimeline(date), followupData, followupCluster, valuesProvider);
     }
 
     private String txtResourceAsString(String pathResource) {

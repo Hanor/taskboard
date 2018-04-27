@@ -205,10 +205,7 @@
 
                 openProjectConfigurationModal: function(e) {
                     var projectKey = e.model.item.projectKey;
-                    var project = findInArray(this.projectsConfigurations, function(p) {
-                        return p.projectKey === projectKey;
-                    });
-                    this.fire('iron-signal', {name: 'open-project-configuration-modal', data: project})
+                    this.fire('iron-signal', {name: 'open-project-configuration-modal', data: projectKey})
                 },
 
                 _getArchivedText: function(isArchived) {

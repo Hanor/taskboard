@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -106,7 +107,7 @@ public class FollowUpDataRepositoryByFile implements FollowUpDataRepository {
         LocalDate today = LocalDate.now();
         
         try {
-            return Files.walk(pathProject)
+            return Files.walk(pathProject) //TODO
                     .map(Path::toFile)
                     .filter(file -> file.isFile())
                     .filter(file -> file.getName().toLowerCase().endsWith(fileExtension))
@@ -172,5 +173,10 @@ public class FollowUpDataRepositoryByFile implements FollowUpDataRepository {
         } finally {
             deleteQuietly(pathJSON.toFile());
         }
+    }
+
+    @Override
+    public Optional<LocalDate> getFirstDate(String projectKey) {
+        return getHistoryByProject(projectKey).stream().findFirst();
     }
 }

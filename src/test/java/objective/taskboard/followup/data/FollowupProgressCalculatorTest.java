@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -185,8 +186,15 @@ public class FollowupProgressCalculatorTest {
     }
     
     private void currentSnapshot(LocalDate startDate, LocalDate endDate, EffortHistoryRow... history) {
+        FollowUpTimeline timeline = new FollowUpTimeline(
+                LocalDate.of(2019, 1, 1), 
+                BigDecimal.ZERO, 
+                Optional.of(startDate), 
+                Optional.of(endDate), 
+                Optional.empty());
+
         FollowUpSnapshot snapshot = mock(FollowUpSnapshot.class);
-        when(snapshot.getTimeline()).thenReturn(new FollowUpTimeline(LocalDate.of(2019, 1, 1), Optional.of(startDate), Optional.of(endDate)));
+        when(snapshot.getTimeline()).thenReturn(timeline);
         when(snapshot.getEffortHistory()).thenReturn(asList(history));
         when(snapshot.hasClusterConfiguration()).thenReturn(true);
         

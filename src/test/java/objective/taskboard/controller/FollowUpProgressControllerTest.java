@@ -140,11 +140,11 @@ public class FollowUpProgressControllerTest {
     }
 
     @Test
-    public void ifProjectDatesIsNotConfigured_returnInternalServerError() throws Exception {
+    public void ifProjectDateIsNull_returnBadRequestError() throws Exception {
         when(calculator.calculate(any(), any(), anyInt())).thenThrow(new ProjectDatesNotConfiguredException());
 
         AssertResponse.of(subject.progress(PROJECT_KEY, ZONE_ID, Optional.empty()))
-                .httpStatus(INTERNAL_SERVER_ERROR)
+                .httpStatus(BAD_REQUEST)
                 .bodyAsString("The project "+ PROJECT_KEY +" has no start or delivery date.");
     }
 

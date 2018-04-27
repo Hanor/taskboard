@@ -24,6 +24,7 @@ package objective.taskboard.jira;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -37,6 +38,7 @@ import objective.taskboard.auth.Authorizer;
 import objective.taskboard.domain.Project;
 import objective.taskboard.domain.ProjectFilterConfiguration;
 import objective.taskboard.jira.data.Version;
+import objective.taskboard.project.ProjectBaselineProvider;
 import objective.taskboard.repository.ProjectFilterConfigurationCachedRepository;
 
 @Service
@@ -50,6 +52,9 @@ public class ProjectService {
 
     @Autowired
     private Authorizer authorizer;
+    
+    @Autowired
+    private ProjectBaselineProvider baselineProvider;
 
     public List<Project> getNonArchivedJiraProjectsForUser() {
         return jiraProjectService.getUserProjects().values().stream()
@@ -118,6 +123,10 @@ public class ProjectService {
     public Optional<ProjectFilterConfiguration> getTaskboardProject(String projectKey) {
         return projectRepository.getProjectByKey(projectKey);
     }
+    
+    public ProjectFilterConfiguration getTaskboardProjectOrCry(String projectKey) {
+        return projectRepository.getProjectByKeyOrCry(projectKey);
+    }
 
     public Optional<ProjectFilterConfiguration> getTaskboardProject(String projectKey, String... permissions) {
         List<String> allowedProjectsKeys = authorizer.getAllowedProjectsForPermissions(permissions);
@@ -140,4 +149,7 @@ public class ProjectService {
                 .orElse(null);
     }
 
+    public List<LocalDate> getAvailableBaselineDates(String projectKey) {
+        return baselineProvider.getAvailableDates(projectKey);
+    }
 }

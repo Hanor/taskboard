@@ -23,7 +23,7 @@ public class DateTimeUtilsTest {
 
     @Test
     public void parseDate() {
-        assertThat(DateTimeUtils.parseDate("2020-01-01"), equalTo(ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault())));
+        assertThat(DateTimeUtils.parseDateTime("2020-01-01"), equalTo(ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault())));
     }
 
     @Test

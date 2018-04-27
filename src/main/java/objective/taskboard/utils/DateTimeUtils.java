@@ -10,15 +10,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Range;
@@ -34,27 +30,18 @@ import com.google.gson.JsonSerializer;
 
 public class DateTimeUtils {
 
-    public static ZonedDateTime parseDate(String yyyymmdd) {
-        return parseDate(yyyymmdd, ZoneId.systemDefault());
-    }
-
-    public static ZonedDateTime parseDate(String yyyymmdd, ZoneId timezone) {
-        if(yyyymmdd == null)
-            return null;
-        return LocalDate.parse(yyyymmdd, DateTimeFormatter.ISO_LOCAL_DATE).atTime(0, 0, 0).atZone(timezone);
-    }
-
-    public static List<ZonedDateTime> parseDateList(String... yyyymmdd) {
-        return Arrays.stream(yyyymmdd)
-                .map(DateTimeUtils::parseDate)
-                .collect(Collectors.toList());
-    }
-
     public static ZonedDateTime parseDateTime(String yyyymmdd, String hhmmss) {
         return parseDateTime(yyyymmdd, hhmmss, ZoneId.systemDefault());
     }
 
+    public static ZonedDateTime parseDateTime(String yyyymmdd) {
+        return parseDateTime(yyyymmdd, "00:00:00");
+    }
+
     public static ZonedDateTime parseDateTime(String yyyymmdd, String hhmmss, ZoneId timezone) {
+        if (yyyymmdd == null)
+            return null;
+
         return LocalDateTime.parse(yyyymmdd + "T" + hhmmss, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atZone(timezone);
     }
     
@@ -165,15 +152,6 @@ public class DateTimeUtils {
     
     public static LocalDate toLocalDate(Date date, ZoneId zone) {
         return date.toInstant().atZone(zone).toLocalDate();
-    }
-
-    public static boolean isValidDate(String yyyymmdd) {
-        try {
-            parseDate(yyyymmdd);
-        } catch (DateTimeParseException e) {
-            return false;
-        }
-        return true;
     }
 
     @SuppressWarnings("unchecked")

@@ -3,6 +3,7 @@ package objective.taskboard.followup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static objective.taskboard.Constants.FROMJIRA_HEADERS;
+import static objective.taskboard.followup.FixedFollowUpSnapshotValuesProvider.emptyValuesProvider;
 import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.BASELINE_BACKLOG;
 import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.BASELINE_DONE;
 import static objective.taskboard.followup.FollowUpScopeByTypeDataProvider.INTANGIBLE_BACKLOG;
@@ -239,7 +240,7 @@ public class FollowUpScopeByTypeDataProviderTest {
         FollowUpData followupData = new FollowUpData(dataSet, emptyList(), emptyList());
         FollowupCluster fc = new FollowupClusterImpl(
                 asList(new FollowUpClusterItem(mock(ProjectFilterConfiguration.class), "a", "a", "a", 1.0, 1.0)));
-        return new FollowUpSnapshot(new FollowUpTimeline(date), followupData, fc, emptyList());
+        return new FollowUpSnapshot(new FollowUpTimeline(date), followupData, fc, emptyValuesProvider());
     }
 
     private void assertEffortEstimateByType(String type, Double exceptedValue) {

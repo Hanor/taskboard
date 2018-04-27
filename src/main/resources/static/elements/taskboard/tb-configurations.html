@@ -74,7 +74,7 @@
 
                 _getProjectsConfigurations: function() {
                     var self = this;
-                    $.get('/api/projects/configurations', function(data) {
+                    $.get('/ws/project/config/items', function(data) {
                         self.set('projectsConfigurations', data);
                     });
                 }

@@ -21,32 +21,38 @@
 
 package objective.taskboard.followup;
 
-import static java.util.Optional.ofNullable;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
 import objective.taskboard.domain.ProjectFilterConfiguration;
+import objective.taskboard.utils.Optionals;
 
 public class FollowUpTimeline {
     private final LocalDate reference;
+    private final BigDecimal riskPercentage;
     private final Optional<LocalDate> start;
     private final Optional<LocalDate> end;
+    private final Optional<LocalDate> baselineDate;
 
-    public FollowUpTimeline(LocalDate reference, Optional<LocalDate> start, Optional<LocalDate> end) {
+    public FollowUpTimeline(LocalDate reference, BigDecimal riskPercentage, Optional<LocalDate> start, Optional<LocalDate> end, Optional<LocalDate> baselineDate) {
         this.reference = reference;
+        this.riskPercentage = riskPercentage;
         this.start = start;
         this.end = end;
+        this.baselineDate = baselineDate;
     }
 
     public FollowUpTimeline(LocalDate reference) {
-        this.reference = reference;
-        this.start = Optional.empty();
-        this.end = Optional.empty();
+        this(reference, BigDecimal.ZERO, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public LocalDate getReference() {
         return reference;
+    }
+    
+    public BigDecimal getRiskPercentage() {
+        return riskPercentage;
     }
 
     public Optional<LocalDate> getStart() {
@@ -56,10 +62,21 @@ public class FollowUpTimeline {
     public Optional<LocalDate> getEnd() {
         return end;
     }
+    
+    public Optional<LocalDate> getBaselineDate() {
+        return baselineDate;
+    }
 
-    public static FollowUpTimeline getTimeline(LocalDate reference, Optional<ProjectFilterConfiguration> projectConfiguration) {
-        return projectConfiguration.isPresent() ?
-                new FollowUpTimeline(reference, ofNullable(projectConfiguration.get().getStartDate()), ofNullable(projectConfiguration.get().getDeliveryDate())) :
-                new FollowUpTimeline(reference);
+    public static FollowUpTimeline build(LocalDate reference, ProjectFilterConfiguration project, FollowUpDataRepository dataRepository) {
+        Optional<LocalDate> baselineDate = Optionals.or(
+                () -> project.getBaselineDate(),
+                () -> dataRepository.getFirstDate(project.getProjectKey()));
+        
+        return new FollowUpTimeline(
+                reference, 
+                project.getRiskPercentage(), 
+                project.getStartDate(), 
+                project.getDeliveryDate(),
+                baselineDate);
     }
 }

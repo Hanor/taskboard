@@ -27,6 +27,10 @@
             paper-button[disabled].colorful {
                 opacity: .6;
             }
+            
+            paper-dropdown-menu {
+                display: block;
+            }
         </style>
 
         <iron-signals
@@ -80,6 +84,18 @@
                                  step="any"
                                  error-message="Please enter a positive value"
                                  ></paper-input>
+                                 
+                    <paper-dropdown-menu id="baselineDate" always-float-label
+                        label="Baseline Date *" 
+                        on-iron-select="baselineDateSelected"
+                        error-message="Please enter a valid date">
+                        <paper-menu class="dropdown-content" selected="[[projectConfiguration.baselineDateIndex]]">
+                            <paper-item value=""><span style="white-space: nowrap">Project Start</span></paper-item>
+                            <template id="baselineDateTemplate" is="dom-repeat" items="{{availableBaselineDates}}" as="date">
+                                <paper-item value="{{date}}">{{getDisplayDate(date)}}</paper-item>
+                            </template>
+                        </paper-menu>
+                    </paper-dropdown-menu>
 
                     <div class="input-wrapper">
                         <paper-toggle-button class="tb-toggle-button" checked="{{!projectConfiguration.isArchived}}"
@@ -120,7 +136,8 @@
                     _updateButton: {
                         type: Object,
                         value: function () { return {} }
-                    }
+                    },
+                    availableBaselineDates: Array
                 },
 
                 ready: function() {
@@ -128,26 +145,44 @@
                     this.set('_updateButton', updateButton);
                 },
 
-                open: function(projectConfiguration) {
-                    this.set('dateFormatPlaceholder', moment.localeData().longDateFormat("L").toLowerCase());
-                    this.set('errorMessage', '');
-                    this._setProjectFilterConfiguration(projectConfiguration);
-                    this.showLoading(false);
+                open: function(projectKey) {
+                    var self = this;
+                    
+                    this.dateFormatPlaceholder = moment.localeData().longDateFormat("L").toLowerCase();
+                    this.errorMessage = '';
+
                     this.$.projectStartDate.invalid = false;
                     this.$.projectDeliveryDate.invalid = false;
                     this.$.projectRisk.invalid = false;
                     this.$.projectionTimespan.invalid = false;
-
+                    
+                    this.projectConfiguration = {};
+                    this.showLoading(true);
                     this.$.modal.open();
-                    this.$.projectStartDate.$.input.focus();
-                },
 
-                _setProjectFilterConfiguration: function(projectFilterConfiguration) {
-                    var newProjFilterConf = clone(projectFilterConfiguration);
-                    newProjFilterConf.startDate = this._getLocaleDate(newProjFilterConf.startDate);
-                    newProjFilterConf.deliveryDate = this._getLocaleDate(newProjFilterConf.deliveryDate);
-                    this.set('projectConfiguration', {});
-                    this.set('projectConfiguration', newProjFilterConf);
+                    $.getJSON('/ws/project/config/crud/' + projectKey + '/init-data')
+                        .done(function(data) {
+                            self.availableBaselineDates = data.availableBaselineDates;
+                            self.$.baselineDateTemplate.render(); //Forces sync render. Without this, the selected item may be wrong.
+
+                            self.projectConfiguration = {
+                                    projectKey: data.config.projectKey,
+                                    startDate: self.getDisplayDate(data.config.startDate),
+                                    deliveryDate: self.getDisplayDate(data.config.deliveryDate),
+                                    isArchived: data.config.isArchived,
+                                    risk: data.config.risk,
+                                    projectionTimespan: data.config.projectionTimespan,
+                                    baselineDate: data.config.baselineDate,
+                                    baselineDateIndex: self.availableBaselineDates.indexOf(data.config.baselineDate) + 1
+                            };
+                            
+                            self.showLoading(false);
+                            self.$.projectStartDate.$.input.focus();
+                        })
+                        .fail(function() {
+                            self.errorMessage = 'Failed to load project configuration.';
+                            self.showLoading(false);
+                        });
                 },
 
                 openByEvent: function(projectConfigurationEvent) {
@@ -171,14 +206,15 @@
                         deliveryDate: self._getISODate(self.projectConfiguration.deliveryDate),
                         isArchived: self.projectConfiguration.isArchived,
                         risk: self.projectConfiguration.risk,
-                        projectionTimespan: self.projectConfiguration.projectionTimespan
+                        projectionTimespan: self.projectConfiguration.projectionTimespan,
+                        baselineDate: self.projectConfiguration.baselineDate
                     };
 
                     $.ajax({
                         data: JSON.stringify(data),
                         type: 'POST',
                         contentType: "application/json; charset=utf-8",
-                        url: '/api/projects/' + projectKey + '/configuration'
+                        url: '/ws/project/config/crud/' + projectKey
                     }).done(function () {
                         self.showLoading(false);
                         self.$.modal.close();
@@ -193,6 +229,11 @@
                     });
                 },
 
+                baselineDateSelected: function(e) {
+                    var selectedItem = e.target.selectedItem;
+                    this.projectConfiguration.baselineDate = selectedItem ? selectedItem.value : null;
+                },
+                
                 showLoading: function(show) {
                     this.showLoadingSpinner = show;
                 },
@@ -211,15 +252,32 @@
                     return this.$.projectStartDate.validate() &
                         this.$.projectDeliveryDate.validate() &
                         this.$.projectRisk.validate() &
-                        this.$.projectionTimespan.validate();
+                        this.$.projectionTimespan.validate() &
+                        this._validateProjectDates();
+                },
+                
+                _validateProjectDates: function() {
+                    var startDate = this._getMoment(this.projectConfiguration.startDate);
+                    var deliveryDate = this._getMoment(this.projectConfiguration.deliveryDate);
+                    
+                    if (startDate && deliveryDate && startDate.isAfter(deliveryDate)) {
+                        this.errorMessage = 'End Date should be greater than Start Date';
+                        return false;
+                    }
+                    
+                    return true;
                 },
 
-                _getLocaleDate: function(date) {
-                    return date ? moment(date).format("L") : null;
+                getDisplayDate: function(isoDate) {
+                    return isoDate ? moment(isoDate, 'YYYY-MM-DD').format('L') : null;
+                },
+                
+                _getMoment:  function(displayDate) {
+                    return displayDate ? moment(displayDate, "L") : null;
                 },
 
-                _getISODate: function(date) {
-                    return date ? moment(date, "L").format("YYYY-MM-DD") : null;
+                _getISODate: function(displayDate) {
+                    return displayDate ? this._getMoment(displayDate).format("YYYY-MM-DD") : null;
                 },
 
                 _getArchivedText: function(isArchived, capitalize) {
