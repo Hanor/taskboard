@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class CacheGenerate implements CommandLineRunner {
 
     public static void main(String[] args ) {
+        System.out.println("Running the cache generate!!");
         SpringApplication.run(CacheGenerate.class, args);
     }
 

@@ -78,9 +78,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<mainClass>objective.taskboard.Application</mainClass>
-				</configuration>
+                <configuration>
+                    <mainClass>objective.taskboard.Application</mainClass>
+                </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -282,6 +282,18 @@
 		</pluginManagement>
 	</build>
 	<profiles>
+        <profile>
+            <id>Application</id>
+            <properties>
+                <spring.boot.mainclass>objective.taskboard.Application</spring.boot.mainclass>
+            </properties>
+        </profile>
+        <profile>
+            <id>CacheGenerate</id>
+            <properties>
+                <spring.boot.mainclass>objective.taskboard.CacheGenerate</spring.boot.mainclass>
+            </properties>
+        </profile>
 		<profile>
 			<id>packaging-jar</id>
 			<activation>
